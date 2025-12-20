@@ -1,0 +1,31 @@
+## Interface: 120001
+## Title: Weekly
+## Author: Jason Falk
+## Version: 0.2.1
+## Notes: Track weekly to-dos, currencies, and stats
+## SavedVariables: WeeklyDB
+
+embeds.xml
+Core.lua
+
+# Data Layer
+Data\Loader.lua
+Data\TheWarWithin\Season3.lua
+Data\Midnight\Season1.lua
+
+Config.lua
+ConfigUI.lua
+UI.lua
+
+# Shared Infrastructure
+TrackerCore.lua
+
+# Weekly Journal (Collectibles Tracker)
+Journal\Journal.lua
+Journal\JournalUI.lua
+Journal\JournalBroker.lua
+
+# Dev Tools (excluded from CurseForge via .pkgmeta)
+DevMarker.lua
+Dev\TrackerCore.lua
+Dev\Discovery.lua
