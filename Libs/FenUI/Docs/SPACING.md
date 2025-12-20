@@ -30,6 +30,46 @@ The `Layout` component uses a small `DEFAULT_BG_INSET` (2px) by default when a b
 
 ---
 
+## Background Insets (NineSlice Compatibility)
+
+FenUI uses a dedicated **background frame architecture** to ensure backgrounds render correctly with NineSlice borders.
+
+### Why This Matters
+
+In WoW 9.1.5+, frames using NineSlice borders cannot reliably render textures created directly on them. FenUI creates a child frame (`bgFrame`) at `frameLevel 0` specifically for backgrounds, following Blizzard's pattern in `FlatPanelBackgroundTemplate`.
+
+### Asymmetric Insets
+
+Different border types have different chamfered corner sizes. FenUI uses **asymmetric insets** to handle this:
+
+| Border Type | Left | Right | Top | Bottom | Notes |
+|-------------|------|-------|-----|--------|-------|
+| `Panel` | 6px | 2px | 6px | 2px | ButtonFrameTemplateNoPortrait |
+| `Inset` | 2px | 2px | 2px | 2px | InsetFrameTemplate |
+| `Dialog` | 6px | 6px | 6px | 6px | DialogBorderTemplate |
+
+### Custom Override
+
+To override the default insets for a specific Layout:
+
+```lua
+FenUI:CreateLayout(parent, {
+    border = "Panel",
+    background = "surfacePanel",
+    backgroundInset = { left = 8, right = 4, top = 8, bottom = 4 },
+})
+```
+
+### Troubleshooting
+
+| Problem | Cause | Solution |
+|---------|-------|----------|
+| Background bleeding outside corners | Inset too small | Increase inset values |
+| Transparent gaps at edges | Inset too large | Decrease inset values |
+| Background not showing at all | Frame has 0x0 size at Init | OnSizeChanged handler should fix this automatically |
+
+---
+
 ## Spacing Tokens
 
 | Token | Type | Value | Use Case |

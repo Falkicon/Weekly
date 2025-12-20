@@ -281,6 +281,44 @@ Stored in `FenUIDB`:
 - **Validation**: `/fenui validate` checks for Blizzard API changes
 - **Globals**: `FenUI` (main namespace), `FenUIDB` (saved variables)
 
+## Troubleshooting
+
+### Background Issues
+
+FenUI uses a dedicated background frame architecture for NineSlice compatibility. Common issues and solutions:
+
+| Problem | Cause | Solution |
+|---------|-------|----------|
+| **Background not showing** | Frame has 0x0 size at Init time | The `OnSizeChanged` handler should auto-fix this. If not, ensure the frame gets sized via anchors or explicit `SetSize()`. |
+| **Background bleeding outside corners** | Inset too small for chamfered border | Increase the inset values in `BORDER_INSETS` table or use `backgroundInset` config override. |
+| **Transparent gaps at edges** | Inset too large | Decrease the inset values. Panel uses asymmetric insets (6/2/6/2) to balance this. |
+| **Background visible but wrong color** | Token not resolving | Check that the color token exists in `Tokens.lua`. Use `/fenui tokens` to debug. |
+
+### Adding Custom Border Types
+
+To add support for a new NineSlice border:
+
+1. Find the layout name used in `BlizzardBridge.lua` or `NineSliceLayouts.lua`
+2. Test in-game to find the minimum inset that prevents bleeding
+3. Add an entry to `BORDER_INSETS` in `Layout.lua`:
+
+```lua
+local BORDER_INSETS = {
+    -- existing entries...
+    MyCustomBorder = { left = 4, right = 4, top = 4, bottom = 4 },
+}
+```
+
+### Architecture Reference
+
+```
+Layout Frame (NineSlice border)
+  └── bgFrame (frameLevel 0)
+        └── bgTexture (color/gradient/image)
+```
+
+The `bgFrame` child exists because WoW 9.1.5+ has conflicts between NineSlice and textures created directly on the same frame. This follows Blizzard's pattern in `FlatPanelBackgroundTemplate`.
+
 ## Consuming Addons
 
 FenUI is used by:

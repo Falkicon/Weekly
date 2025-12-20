@@ -164,7 +164,7 @@ FenUI.Tokens.semantic = {
     spacingInset = "sm",                -- Inset content padding
     
     -- MARGINS (external spacing)
-    marginPanel = "reg",                -- Space between panel border and main content
+    marginPanel = "lg",                 -- Space between panel border and main content
     marginContainer = "sm",             -- Space between adjacent containers
     
     -- INSETS (internal spacing)
@@ -185,7 +185,7 @@ FenUI.Tokens.semantic = {
 
 FenUI.Tokens.layout = {
     -- Panel structure
-    panelPadding = 12,          -- Default internal edge padding
+    panelPadding = 24,          -- Default internal edge padding (24px safe for Blizzard borders)
     headerHeight = 24,          -- Standard Blizzard header bar height
     footerHeight = 32,          -- Standard footer area height
     
@@ -196,7 +196,7 @@ FenUI.Tokens.layout = {
     iconSizeLarge = 32,         -- Large icon size
     
     -- Layout margins (standard gaps from container edges)
-    marginPanel = 12,           -- Space from Panel border to first inner element
+    marginPanel = 24,           -- Space from Panel border to first inner element (24px safe for Blizzard borders)
     marginInset = 8,            -- Space between inset content and its border
     
     -- Scroll

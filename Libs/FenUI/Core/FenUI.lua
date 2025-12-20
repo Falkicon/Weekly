@@ -15,7 +15,7 @@ FenUI = FenUI or {}
 -- Version and Metadata
 --------------------------------------------------------------------------------
 
-FenUI.VERSION = "2.3.1"
+FenUI.VERSION = "2.4.0"
 FenUI.AUTHOR = "Fen"
 FenUI.NAME = "FenUI"
 
@@ -220,6 +220,13 @@ SlashCmdList["FENUI"] = function(msg)
     elseif cmd == "version" then
         FenUI:Print("Version", FenUI.VERSION, "by", FenUI.AUTHOR)
         
+    elseif cmd == "tokens" then
+        FenUI:Print("Current Tokens (Resolution):")
+        FenUI:Print("  marginPanel:", FenUI:GetSpacing("marginPanel"))
+        FenUI:Print("  panelPadding:", FenUI:GetLayout("panelPadding"))
+        FenUI:Print("  headerHeight:", FenUI:GetLayout("headerHeight"))
+        FenUI:Print("  footerHeight:", FenUI:GetLayout("footerHeight"))
+        
     elseif cmd == "frames" then
         local count = 0
         for _ in pairs(FenUI.registeredFrames) do count = count + 1 end
@@ -236,6 +243,7 @@ SlashCmdList["FENUI"] = function(msg)
         FenUI:Print("  /fenui theme [name] - Get/set global theme")
         FenUI:Print("  /fenui themes - List available themes")
         FenUI:Print("  /fenui frames - Show registered frame count")
+        FenUI:Print("  /fenui tokens - Show current spacing tokens")
         FenUI:Print("  /fenui debug - Toggle debug mode")
         FenUI:Print("  /fenui version - Show version info")
     end

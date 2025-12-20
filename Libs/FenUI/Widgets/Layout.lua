@@ -124,6 +124,26 @@ end
 --------------------------------------------------------------------------------
 -- Background Layer
 --------------------------------------------------------------------------------
+--
+-- ARCHITECTURE: NineSlice Compatibility
+-- -------------------------------------
+-- In WoW 9.1.5+, frames using NineSlice borders cannot reliably render textures
+-- created directly on them. The NineSlice system takes over texture management.
+--
+-- SOLUTION: Create a dedicated child frame (bgFrame) at frameLevel 0.
+-- The background texture lives on bgFrame, which renders BELOW the NineSlice
+-- border pieces. This follows Blizzard's pattern in FlatPanelBackgroundTemplate.
+--
+-- Frame Hierarchy:
+--   Layout Frame (NineSlice border at level 1+)
+--     └── bgFrame (frameLevel 0)
+--           └── bgTexture (fills bgFrame)
+--
+-- DEFERRED SIZING FIX:
+-- Frames positioned via anchor points (TOPLEFT + BOTTOMRIGHT) have 0x0 size
+-- at Init() time. The OnSizeChanged handler reapplies background anchors
+-- when the frame receives its actual size.
+--
 
 -- Default inset for backgrounds when borders are applied
 -- We use a small 2px inset by default to ensure the background stays within 
@@ -131,15 +151,29 @@ end
 local DEFAULT_BG_INSET = 2
 
 function LayoutMixin:CreateBackgroundLayer()
-    -- Color/gradient background texture
-    self.bgTexture = self:CreateTexture(nil, "BACKGROUND")
+    -- Create a dedicated background frame at frameLevel 0
+    -- This avoids NineSlice conflicts (see architecture notes above)
+    self.bgFrame = CreateFrame("Frame", nil, self)
+    self.bgFrame:SetFrameLevel(0)
+    
+    -- Create the background texture on bgFrame (not self)
+    self.bgTexture = self.bgFrame:CreateTexture(nil, "BACKGROUND")
+    self.bgTexture:SetAllPoints(self.bgFrame)
     self.bgTexture:Hide()
+    
+    -- Reapply background anchors when frame gets its actual size
+    -- This handles deferred sizing from anchor-based positioning
+    self:SetScript("OnSizeChanged", function(frame, width, height)
+        if width > 0 and height > 0 and frame.bgFrame then
+            frame:ApplyBackgroundAnchors()
+        end
+    end)
     
     -- Image background frame (for Image component)
     self.bgImageFrame = nil
     
     -- Background inset (applied when border is set)
-    -- This controls the distance from the frame's edge to the background's edge
+    -- Supports both number (symmetric) and table (asymmetric) values
     self.bgInset = 0
 end
 
@@ -152,21 +186,36 @@ end
 
 --- Apply background anchors with inset
 function LayoutMixin:ApplyBackgroundAnchors()
-    -- NOTE: Systematic Background Anchoring
-    -- We use bgInset to control how close the background gets to the edge.
-    -- For most borders, a 2px inset is sufficient. 
-    -- For edge-to-edge images, this can be set to 0.
-    local inset = self.bgInset or 0
+    -- NOTE: Systematic Background Anchoring (NineSlice Compatible)
+    -- We position bgFrame (not bgTexture) inside the border area.
+    -- bgTexture fills bgFrame via SetAllPoints.
+    -- This avoids NineSlice conflicts by using a dedicated child frame.
     
-    self.bgTexture:ClearAllPoints()
-    self.bgTexture:SetPoint("TOPLEFT", self, "TOPLEFT", inset, -inset)
-    self.bgTexture:SetPoint("BOTTOMRIGHT", self, "BOTTOMRIGHT", -inset, inset)
+    -- Support both single-value inset (number) and asymmetric inset (table)
+    local inset = self.bgInset or 0
+    local left, right, top, bottom
+    
+    if type(inset) == "table" then
+        left = inset.left or 0
+        right = inset.right or 0
+        top = inset.top or 0
+        bottom = inset.bottom or 0
+    else
+        left, right, top, bottom = inset, inset, inset, inset
+    end
+    
+    -- Position the background frame inside the border (asymmetric)
+    self.bgFrame:ClearAllPoints()
+    self.bgFrame:SetPoint("TOPLEFT", self, "TOPLEFT", left, -top)
+    self.bgFrame:SetPoint("BOTTOMRIGHT", self, "BOTTOMRIGHT", -right, bottom)
+    
+    -- bgTexture already fills bgFrame via SetAllPoints in CreateBackgroundLayer
     
     -- Also apply to image background if present
     if self.bgImageFrame then
         self.bgImageFrame:ClearAllPoints()
-        self.bgImageFrame:SetPoint("TOPLEFT", self, "TOPLEFT", inset, -inset)
-        self.bgImageFrame:SetPoint("BOTTOMRIGHT", self, "BOTTOMRIGHT", -inset, inset)
+        self.bgImageFrame:SetPoint("TOPLEFT", self, "TOPLEFT", left, -top)
+        self.bgImageFrame:SetPoint("BOTTOMRIGHT", self, "BOTTOMRIGHT", -right, bottom)
     end
 end
 
@@ -213,9 +262,18 @@ function LayoutMixin:ApplyColorBackground(values)
         a = values.alpha
     end
     
+    -- #region agent log H4c
+    print("[FenUI:DBG:H4c] ApplyColorBackground: token=" .. tostring(values.token) .. " rgba=" .. tostring(r) .. "," .. tostring(g) .. "," .. tostring(b) .. "," .. tostring(a))
+    -- #endregion
+    
     self.bgTexture:SetColorTexture(r, g, b, a)
     self:ApplyBackgroundAnchors()
     self.bgTexture:Show()
+    
+    -- #region agent log H2
+    local bgW, bgH = self.bgFrame:GetSize()
+    print("[FenUI:DBG:H2] ApplyColorBackground: bgTexture:Show() called, IsShown=" .. tostring(self.bgTexture:IsShown()) .. ", bgFrame:IsShown=" .. tostring(self.bgFrame:IsShown()) .. ", bgFrame size=" .. tostring(bgW) .. "x" .. tostring(bgH))
+    -- #endregion
 end
 
 function LayoutMixin:ApplyGradientBackground(values)
@@ -283,6 +341,36 @@ function LayoutMixin:CreateBorderLayer()
     self.borderApplied = false
 end
 
+--------------------------------------------------------------------------------
+-- Background Insets for Border Types
+--------------------------------------------------------------------------------
+-- 
+-- WHY ASYMMETRIC INSETS:
+-- NineSlice borders like ButtonFrameTemplateNoPortrait have chamfered (angled)
+-- corners. The background must be inset far enough to not "bleed" outside
+-- these chamfers, but not so far that it creates visible gaps on straight edges.
+--
+-- Blizzard uses this same pattern in FlatPanelBackgroundTemplate:
+--   TOPLEFT x="6" y="-20", BOTTOMRIGHT x="-2" y="2"
+--
+-- HOW TO ADD NEW BORDER TYPES:
+-- 1. Find the NineSlice layout name (e.g., "Panel", "Inset", "Dialog")
+-- 2. Test in-game to find the minimum inset that prevents bleeding
+-- 3. Add an entry: BorderName = { left = N, right = N, top = N, bottom = N }
+--
+-- HOW TO OVERRIDE FOR A SPECIFIC LAYOUT:
+-- Pass `backgroundInset` in the config table:
+--   FenUI:CreateLayout(parent, {
+--       border = "Panel",
+--       backgroundInset = { left = 8, right = 4, top = 8, bottom = 4 },
+--   })
+--
+local BORDER_INSETS = {
+    Panel = { left = 6, right = 2, top = 6, bottom = 2 },  -- ButtonFrameTemplateNoPortrait (chamfered corners)
+    Inset = { left = 2, right = 2, top = 2, bottom = 2 },  -- InsetFrameTemplate (small uniform edges)
+    Dialog = { left = 6, right = 6, top = 6, bottom = 6 }, -- DialogBorderTemplate (symmetric chamfers)
+}
+
 --- Set the border using NineSlice
 ---@param borderName string|false NineSlice layout name or false to remove
 function LayoutMixin:SetBorder(borderName)
@@ -305,8 +393,8 @@ function LayoutMixin:SetBorder(borderName)
         -- Can be overridden via config.backgroundInset
         local inset = self.config.backgroundInset
         if inset == nil then
-            -- Default inset when border is applied
-            inset = DEFAULT_BG_INSET
+            -- Use border-specific inset (asymmetric table) or default
+            inset = BORDER_INSETS[borderName] or DEFAULT_BG_INSET
         end
         self:SetBackgroundInset(inset)
     end
@@ -802,8 +890,10 @@ end
 function FenUI:CreateLayout(parent, config)
     config = config or {}
     
-    -- Create base frame with BackdropTemplate for border support
-    local layout = CreateFrame("Frame", config.name, parent or UIParent, "BackdropTemplate")
+    -- NOTE: Don't use BackdropTemplate when using NineSlice
+    -- NineSlice and BackdropTemplate conflict in WoW 9.1.5+.
+    -- We use a dedicated bgFrame child at frameLevel 0 for backgrounds instead.
+    local layout = CreateFrame("Frame", config.name, parent or UIParent)
     
     -- Apply mixin
     FenUI.Mixin(layout, LayoutMixin)

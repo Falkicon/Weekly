@@ -19,9 +19,9 @@ local WINDOW_WIDTH = 620  -- Wide enough to fit all tabs comfortably
 local WINDOW_HEIGHT = 500
 local TAB_HEIGHT = GetLayout("tabHeight", 28)
 local ROW_HEIGHT = GetLayout("rowHeight", 24)
-local HEADER_HEIGHT = GetLayout("headerHeight", 40)
-local FOOTER_HEIGHT = GetLayout("footerHeight", 40)
-local PANEL_PADDING = GetLayout("panelPadding", 12)
+local HEADER_HEIGHT = GetLayout("headerHeight", 24)
+local FOOTER_HEIGHT = GetLayout("footerHeight", 32)
+local PANEL_PADDING = GetLayout("marginPanel", 24)
 
 -- Colors (use FenUI v2 tokens if available, fallback to local)
 -- Uses GetColorTableRGB which returns {r, g, b} for safe use with unpack()
@@ -57,9 +57,8 @@ function JournalUI:CreateWindow()
             theme = FenUI:GetGlobalTheme(),
             movable = true,
             closable = true,
-            -- No custom background - Panel border has transparent corners
-            -- The content inset provides the dark background
-            background = false,
+            -- Re-enable panel background with proper inset for chamfered corners
+            background = "surfacePanel",
             onMoved = function()
                 self:SavePosition()
             end,
@@ -105,41 +104,52 @@ function JournalUI:CreateWindow()
     
     -- Tab container (for internal tabs at top)
     frame.tabContainer = CreateFrame("Frame", nil, frame)
-    frame.tabContainer:SetPoint("TOPLEFT", PANEL_PADDING, -HEADER_HEIGHT)
-    frame.tabContainer:SetPoint("TOPRIGHT", -PANEL_PADDING, -HEADER_HEIGHT)
+    if frame.safeZone then
+        -- Anchor to systematic SafeZone
+        frame.tabContainer:SetPoint("TOPLEFT", frame.safeZone, "TOPLEFT", 0, -HEADER_HEIGHT)
+        frame.tabContainer:SetPoint("TOPRIGHT", frame.safeZone, "TOPRIGHT", 0, -HEADER_HEIGHT)
+    else
+        -- Fallback to manual padding
+        frame.tabContainer:SetPoint("TOPLEFT", PANEL_PADDING, -HEADER_HEIGHT)
+        frame.tabContainer:SetPoint("TOPRIGHT", -PANEL_PADDING, -HEADER_HEIGHT)
+    end
     frame.tabContainer:SetHeight(TAB_HEIGHT)
     
     -- Content container with scroll (use FenUI if available)
     -- NOTE: Systematic Spacing Refactor
-    -- We now use marginPanel (12px) for horizontal padding and standard
-    -- header/footer heights for vertical offsets.
-    local headerH = GetLayout("headerHeight", 24)
+    -- We now anchor to the tabContainer or SafeZone to ensure consistency.
     local footerH = GetLayout("footerHeight", 32)
-    local contentTopOffset = headerH + TAB_HEIGHT + 8
     
     if FenUI and FenUI.CreateScrollInset then
         -- Use FenUI's combined inset+scroll widget with background
+        -- NOTE: Using solid color instead of gradient for reliability
         frame.contentContainer, frame.scrollChild = FenUI:CreateScrollInset(frame, {
-            padding = "marginPanel",
-            topOffset = contentTopOffset,
-            bottomOffset = footerH + 8,
+            -- padding = 0 since we are anchoring to SafeZone/Tabs which already have margins
+            padding = 0,
             alpha = 0.95,
-            -- Subtle gradient for the content area
-            background = {
-                gradient = {
-                    orientation = "VERTICAL",
-                    from = "gray950",
-                    to = "gray900",
-                },
-            },
+            -- Let CreateInset use its default surfaceInset background
+            -- (gradient was not rendering reliably)
         })
+        
+        -- Position the content inset relative to tabs and footer
+        frame.contentContainer:ClearAllPoints()
+        frame.contentContainer:SetPoint("TOPLEFT", frame.tabContainer, "BOTTOMLEFT", 0, -4)
+        if frame.safeZone then
+            frame.contentContainer:SetPoint("BOTTOMRIGHT", frame.safeZone, "BOTTOMRIGHT", 0, footerH)
+        else
+            frame.contentContainer:SetPoint("BOTTOMRIGHT", -PANEL_PADDING, footerH + 8)
+        end
+        
         frame.scrollFrame = frame.contentContainer.scrollPanel.scrollFrame
     else
         -- Fallback to manual creation
-        local padding = PANEL_PADDING
         frame.contentContainer = CreateFrame("Frame", nil, frame, "BackdropTemplate")
-        frame.contentContainer:SetPoint("TOPLEFT", padding, -contentTopOffset)
-        frame.contentContainer:SetPoint("BOTTOMRIGHT", -padding, footerH + 8)
+        frame.contentContainer:SetPoint("TOPLEFT", frame.tabContainer, "BOTTOMLEFT", 0, -4)
+        if frame.safeZone then
+            frame.contentContainer:SetPoint("BOTTOMRIGHT", frame.safeZone, "BOTTOMRIGHT", 0, footerH)
+        else
+            frame.contentContainer:SetPoint("BOTTOMRIGHT", -PANEL_PADDING, footerH + 8)
+        end
         
         frame.contentContainer:SetBackdrop({
             bgFile = "Interface\\Buttons\\WHITE8X8",
@@ -163,7 +173,6 @@ function JournalUI:CreateWindow()
     -- This handles the left-aligned buttons and right-aligned text in a single robust unit.
     if FenUI and FenUI.CreateLayout then
         local footerH = GetLayout("footerHeight", 32)
-        local margin = GetLayout("marginPanel", 12)
         
         -- Create a horizontal 2-column layout for the footer
         -- NOTE: We use 1fr/1fr to give both sides equal space, then justify content within.
@@ -175,10 +184,16 @@ function JournalUI:CreateWindow()
         })
         
         -- Position the footer layout precisely within the frame's bottom area
-        -- NOTE: We anchor directly to the bottom edges with marginPanel.
-        self.footerLayout:SetPoint("BOTTOMLEFT", margin, 8)
-        self.footerLayout:SetPoint("BOTTOMRIGHT", -margin, 8)
-        self.footerLayout:SetHeight(footerH)
+        -- NOTE: We anchor via the systematic slot if available.
+        if frame.SetSlot then
+            frame:SetSlot("footer", self.footerLayout)
+            self.footerLayout:SetHeight(footerH)
+        else
+            local margin = GetLayout("marginPanel", 24)
+            self.footerLayout:SetPoint("BOTTOMLEFT", margin, 8)
+            self.footerLayout:SetPoint("BOTTOMRIGHT", -margin, 8)
+            self.footerLayout:SetHeight(footerH)
+        end
         
         -- LEFT CELL: Buttons
         local leftCell = self.footerLayout:GetCell(1)

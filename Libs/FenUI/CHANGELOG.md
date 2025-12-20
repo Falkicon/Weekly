@@ -4,6 +4,32 @@ All notable changes to FenUI will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [2.4.0] - 2025-12-19
+
+### Fixed
+
+- **NineSlice background compatibility** - Background textures now render correctly with NineSlice borders
+  - Created dedicated `bgFrame` child at frameLevel 0 (follows Blizzard's FlatPanelBackgroundTemplate pattern)
+  - Removed BackdropTemplate inheritance from Layout frames (conflicts with NineSlice in WoW 9.1.5+)
+- **Deferred sizing issue** - Backgrounds now display correctly for frames sized via anchor points
+  - Added `OnSizeChanged` handler that reapplies background anchors when frame gets actual size
+- **Asymmetric chamfer support** - Different border edges now get appropriate insets
+  - Panel: left=6, right=2, top=6, bottom=2 (chamfered corners vs straight edges)
+  - Inset: uniform 2px
+  - Dialog: uniform 6px
+
+### Added
+
+- **`BORDER_INSETS` table** - Per-border-type asymmetric inset definitions
+- **Asymmetric inset support** - `SetBackgroundInset()` now accepts `{ left, right, top, bottom }` table
+- **Troubleshooting guide** - Added to AGENTS.md for common background issues
+- **Background architecture docs** - Added to SPACING.md explaining the bgFrame pattern
+
+### Changed
+
+- `ApplyBackgroundAnchors()` now supports both number (symmetric) and table (asymmetric) insets
+- Enhanced code comments in Layout.lua explaining the NineSlice compatibility architecture
+
 ## [2.3.1] - 2025-12-19
 
 ### Fixed

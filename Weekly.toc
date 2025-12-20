@@ -1,8 +1,9 @@
 ## Interface: 120001
 ## Title: Weekly
 ## Author: Jason Falk
-## Version: 0.2.1
+## Version: 0.2.2
 ## Notes: Track weekly to-dos, currencies, and stats
+## X-License: GPL-3.0
 ## SavedVariables: WeeklyDB
 
 embeds.xml

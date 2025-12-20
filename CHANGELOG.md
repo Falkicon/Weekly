@@ -5,7 +5,22 @@ All notable changes to Weekly will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.2.1] - 2024-12-19
+## [0.2.2] - 2025-12-19
+
+### Added
+- **CurseForge Metadata**: Added `## X-License: GPL-3.0` to .toc file
+- **CurseForge Integration**: Added project ID and webhook info to AGENTS.md
+- **Cursor Ignore**: Added `.cursorignore` to reduce indexing overhead
+- **Deep-Dive Docs**: Moved Discovery Tool documentation to `Docs/` folder
+
+### Changed
+- **Documentation**: Consolidated shared documentation to central `ADDON_DEV/AGENTS.md`; trimmed addon-specific AGENTS.md
+- **FenUI**: Updated embedded FenUI library with Layout, Image widgets and NineSlice fixes
+
+### Fixed
+- **JournalUI**: Minor UI adjustments
+
+## [0.2.1] - 2025-12-19
 
 ### Added
 

@@ -39,6 +39,10 @@ function PanelMixin:Init(config)
         self:SetSize(config.width or 400, config.height or 300)
     end
     
+    -- Create SafeZone frame for systematic anchoring
+    -- This frame is inset to clear the thick Blizzard metal borders
+    self:CreateSafeZone()
+    
     if config.title then
         self:SetTitle(config.title)
     end
@@ -118,6 +122,34 @@ function PanelMixin:MakeMovable()
     end)
     self:SetClampedToScreen(true)
 end
+
+--------------------------------------------------------------------------------
+-- Safe Zone (Systematic Anchoring)
+--------------------------------------------------------------------------------
+
+function PanelMixin:CreateSafeZone()
+    if self.safeZone then return end
+    
+    -- The SafeZone is a logical frame that represents the "safe" usable area
+    -- within the Blizzard metal border art.
+    self.safeZone = CreateFrame("Frame", nil, self)
+    
+    -- NOTE: Blizzard Metal Border Safe-Zones
+    -- Standard ButtonFrameTemplate has:
+    -- - Top: ~24px header bar
+    -- - Left: ~16-20px thick metal trim
+    -- - Right: ~8-12px thin metal trim
+    -- - Bottom: ~12-16px metal trim
+    
+    local left = FenUI:GetSpacing("marginPanel") -- 24px
+    local right = 12
+    local top = 6
+    local bottom = 8
+    
+    self.safeZone:SetPoint("TOPLEFT", self, "TOPLEFT", left, -top)
+    self.safeZone:SetPoint("BOTTOMRIGHT", self, "BOTTOMRIGHT", -right, bottom)
+end
+
 --------------------------------------------------------------------------------
 -- Close Button
 --------------------------------------------------------------------------------
@@ -162,28 +194,28 @@ function PanelMixin:SetSlot(slotName, frame)
     -- Parent and position the frame
     frame:SetParent(self)
     
-    -- NOTE: Systematic Slot Positioning
-    -- We use layout constants and margin tokens to ensure slots are placed
-    -- precisely within the Blizzard border's safe areas.
-    local padding = FenUI:GetSpacing("marginPanel")
+    -- NOTE: Systematic Slot Positioning via SafeZone
+    -- We anchor slots to the SafeZone frame rather than the main frame.
+    -- This ensures they are automatically clear of the Blizzard metal border textures.
+    local safeZone = self.safeZone
     local headerH = FenUI:GetLayout("headerHeight")
     local footerH = FenUI:GetLayout("footerHeight")
     
     if slotName == "headerLeft" then
-        frame:SetPoint("TOPLEFT", padding, -6)
+        frame:SetPoint("TOPLEFT", safeZone, "TOPLEFT", 0, 0)
     elseif slotName == "headerRight" then
-        local offset = self.closeButton and -28 or -padding
-        frame:SetPoint("TOPRIGHT", offset, -6)
+        local offset = self.closeButton and -28 or 0
+        frame:SetPoint("TOPRIGHT", safeZone, "TOPRIGHT", offset, 0)
     elseif slotName == "content" then
-        frame:SetPoint("TOPLEFT", padding, -headerH - 8)
-        frame:SetPoint("BOTTOMRIGHT", -padding, footerH + 8)
+        frame:SetPoint("TOPLEFT", safeZone, "TOPLEFT", 0, -headerH)
+        frame:SetPoint("BOTTOMRIGHT", safeZone, "BOTTOMRIGHT", 0, footerH)
     elseif slotName == "footerLeft" then
-        frame:SetPoint("BOTTOMLEFT", padding, 8)
+        frame:SetPoint("BOTTOMLEFT", safeZone, "BOTTOMLEFT", 0, 0)
     elseif slotName == "footerRight" then
-        frame:SetPoint("BOTTOMRIGHT", -padding, 8)
+        frame:SetPoint("BOTTOMRIGHT", safeZone, "BOTTOMRIGHT", 0, 0)
     elseif slotName == "footer" then
-        frame:SetPoint("BOTTOMLEFT", padding, 8)
-        frame:SetPoint("BOTTOMRIGHT", -padding, 8)
+        frame:SetPoint("BOTTOMLEFT", safeZone, "BOTTOMLEFT", 0, 0)
+        frame:SetPoint("BOTTOMRIGHT", safeZone, "BOTTOMRIGHT", 0, 0)
     end
     
     frame:Show()
@@ -209,12 +241,12 @@ end
 function PanelMixin:GetContentFrame()
     if not self.contentFrame then
         self.contentFrame = CreateFrame("Frame", nil, self)
-        local padding = FenUI:GetSpacing("marginPanel")
+        local safeZone = self.safeZone
         local headerH = FenUI:GetLayout("headerHeight")
         local footerH = FenUI:GetLayout("footerHeight")
         
-        self.contentFrame:SetPoint("TOPLEFT", padding, -headerH - 8)
-        self.contentFrame:SetPoint("BOTTOMRIGHT", -padding, footerH + 8)
+        self.contentFrame:SetPoint("TOPLEFT", safeZone, "TOPLEFT", 0, -headerH)
+        self.contentFrame:SetPoint("BOTTOMRIGHT", safeZone, "BOTTOMRIGHT", 0, footerH)
     end
     return self.contentFrame
 end
@@ -288,12 +320,15 @@ function FenUI:CreatePanel(parent, config)
     local panel
     if FenUI.CreateLayout then
         -- Use Layout as base (preferred)
+        -- NOTE: Explicit nil check for background to respect `false` (disable background)
+        -- Using `or` would convert `false` to "surfacePanel" which is incorrect
+        local bgConfig = (config.background == nil) and "surfacePanel" or config.background
         panel = FenUI:CreateLayout(parent or UIParent, {
             name = config.name,
             width = config.width or 400,
             height = config.height or 300,
             border = layoutName,
-            background = config.background or "surfacePanel",
+            background = bgConfig,
             shadow = config.shadow,
             padding = config.padding,
             textureKit = textureKit,
