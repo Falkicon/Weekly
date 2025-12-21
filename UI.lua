@@ -575,12 +575,22 @@ function UI:CreateRowFrame()
     row.iconBtn:SetScript("OnEnter", function(self)
         -- Quests: No tooltip, click to open quest log
         if self.type == "quest" then
+            GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+            GameTooltip:SetText(self.label or "Quest", 1, 1, 1)
+            
             -- Show hint tooltip only if player has the quest
             if self.isOnQuest then
-                GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-                GameTooltip:SetText("Click to open Quest Log", 1, 1, 1)
-                GameTooltip:Show()
+                GameTooltip:AddLine("Left-click: Open Quest Log", 0.7, 0.7, 0.7)
+            elseif self.coords and self.coords.mapID then
+                GameTooltip:AddLine("Left-click: Set Map Marker", 0.7, 0.7, 0.7)
+                
+                -- Add zone name if available
+                local mapInfo = C_Map.GetMapInfo(self.coords.mapID)
+                if mapInfo and mapInfo.name then
+                    GameTooltip:AddLine("Location: " .. mapInfo.name, 0.5, 0.5, 0.8)
+                end
             end
+            GameTooltip:Show()
             return
         end
         
@@ -615,15 +625,23 @@ function UI:CreateRowFrame()
     end)
     row.iconBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
     
-    -- Click handler for quests - opens quest log
+    -- Click handler for quests - opens quest log or sets waypoint
     row.iconBtn:SetScript("OnClick", function(self)
-        if self.type == "quest" and self.id and self.isOnQuest then
-            -- Open quest log to this quest
-            if QuestMapFrame_OpenToQuestDetails then
-                QuestMapFrame_OpenToQuestDetails(self.id)
-            else
-                -- Fallback: just open the quest log
-                ToggleQuestLog()
+        if self.type == "quest" then
+            if self.isOnQuest and self.id then
+                -- Open quest log to this quest
+                if QuestMapFrame_OpenToQuestDetails then
+                    QuestMapFrame_OpenToQuestDetails(self.id)
+                else
+                    -- Fallback: just open the quest log
+                    ToggleQuestLog()
+                end
+            elseif not self.isOnQuest and self.coords and self.coords.mapID then
+                -- Set Map Waypoint
+                local point = UiMapPoint.CreateFromCoordinates(self.coords.mapID, self.coords.x, self.coords.y)
+                C_Map.SetUserWaypoint(point)
+                C_SuperTrack.SetSuperTrackedUserWaypoint(true)
+                print(string.format("|cff00ff00[Weekly]|r Set map marker for: %s", self.label or "Quest"))
             end
         end
     end)
@@ -838,6 +856,7 @@ function UI:UpdateRow(row, data, ctx)
         row.iconBtn.id = resolvedId -- Use resolved ID for quest log navigation (nil for multi-ID with none active)
         row.iconBtn.label = data.label
         row.iconBtn.isOnQuest = isOnQuest -- For click-to-open-quest-log
+        row.iconBtn.coords = data.coords -- For map marker navigation
         
         row.label:SetPoint("LEFT", row.iconBtn, "RIGHT", 4, 0)
         row.label:SetText(data.label)

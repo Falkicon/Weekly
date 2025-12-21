@@ -1,7 +1,7 @@
-## Interface: 120001
+## Interface: 120001, 120000
 ## Title: Weekly
 ## Author: Jason Falk
-## Version: 0.2.2
+## Version: 0.3.0
 ## Notes: Track weekly to-dos, currencies, and stats
 ## X-License: GPL-3.0
 ## SavedVariables: WeeklyDB
@@ -12,6 +12,7 @@ Core.lua
 # Data Layer
 Data\Loader.lua
 Data\TheWarWithin\Season3.lua
+Data\TheWarWithin\MidnightPrePatch.lua
 Data\Midnight\Season1.lua
 
 Config.lua

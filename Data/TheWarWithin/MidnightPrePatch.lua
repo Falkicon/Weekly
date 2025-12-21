@@ -108,5 +108,5 @@ local data = {
     }
 }
 
--- Register as Expansion 11, Season 3
-ns.Data:Register(11, 3, data)
+-- Register as Expansion 11, Season 3.5 (Midnight Pre-Patch)
+ns.Data:Register(11, 3.5, data)

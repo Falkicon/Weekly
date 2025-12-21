@@ -104,99 +104,81 @@ end
 -- Context Menu
 --------------------------------------------------------------------------------
 
-local menuFrame = nil
-
 function JournalBroker:ShowContextMenu()
-    if not menuFrame then
-        menuFrame = CreateFrame("Frame", "WeeklyJournalBrokerMenu", UIParent, "UIDropDownMenuTemplate")
-    end
-    
-    local menuList = {
-        {
-            text = "Weekly Journal",
-            isTitle = true,
-            notCheckable = true,
-        },
-        {
-            text = "Open Journal",
-            notCheckable = true,
-            func = function()
-                if ns.JournalUI then
-                    ns.JournalUI:Show()
-                end
-            end,
-        },
-        {
-            text = "Open Weekly Tracker",
-            notCheckable = true,
-            func = function()
-                if ns.UI then
-                    ns.UI:Toggle()
-                end
-            end,
-        },
-        {
-            text = " ",
-            isTitle = true,
-            notCheckable = true,
-        },
-        {
-            text = "Settings",
-            notCheckable = true,
-            func = function()
-                -- Open Weekly settings
-                Settings.OpenToCategory("Weekly")
-            end,
-        },
-    }
-    
-    -- Add category quick-access submenu
-    if ns.Journal and ns.Journal.tracker then
-        local categories = ns.Journal:GetOrderedCategories()
-        local categoryMenu = {}
+    -- Modern Menu API (Retail 11.0+)
+    MenuUtil.CreateContextMenu(UIParent, function(owner, rootDescription)
+        rootDescription:CreateTitle("Weekly")
         
-        for _, cat in ipairs(categories) do
-            local count = ns.Journal:GetCategoryCount(cat.key)
-            local catKey = cat.key
-            table.insert(categoryMenu, {
-                text = string.format("%s (%d)", cat.name, count),
-                notCheckable = true,
-                func = function()
+        -- Weekly Tracker Section
+        rootDescription:CreateCheckbox("Show Weekly", 
+            function() return ns.UI.frame and ns.UI.frame:IsShown() end,
+            function() 
+                if ns.UI then ns.UI:Toggle() end
+            end
+        )
+        
+        rootDescription:CreateCheckbox("Lock Weekly", 
+            function() return ns.Config.locked end,
+            function() 
+                ns.Config.locked = not ns.Config.locked
+                if ns.UI then ns.UI:ApplyFrameStyle() end
+            end
+        )
+
+        rootDescription:CreateDivider()
+
+        -- Journal Section
+        rootDescription:CreateCheckbox("Show Journal", 
+            function() return ns.JournalUI and ns.JournalUI:IsShown() end,
+            function() 
+                if ns.JournalUI then ns.JournalUI:Toggle() end
+            end
+        )
+        
+        -- Add category quick-access submenu
+        if ns.Journal and ns.Journal.tracker then
+            local categories = ns.Journal:GetOrderedCategories()
+            local submenu = rootDescription:CreateButton("Jump to Journal Category")
+            
+            for _, cat in ipairs(categories) do
+                local count = ns.Journal:GetCategoryCount(cat.key)
+                local catKey = cat.key
+                submenu:CreateButton(string.format("%s (%d)", cat.name, count), function()
                     if ns.JournalUI then
                         ns.JournalUI:Show()
                         ns.JournalUI:SelectTab(catKey)
                     end
-                end,
-            })
+                end)
+            end
         end
+
+        rootDescription:CreateDivider()
         
-        table.insert(menuList, 4, {
-            text = "Jump to Category",
-            notCheckable = true,
-            hasArrow = true,
-            menuList = categoryMenu,
-        })
-    end
-    
-    -- Add minimap icon toggle
-    if LDBIcon then
-        table.insert(menuList, {
-            text = " ",
-            isTitle = true,
-            notCheckable = true,
-        })
-        table.insert(menuList, {
-            text = "Hide Minimap Icon",
-            notCheckable = true,
-            func = function()
-                WeeklyDB.journalMinimapIcon.hide = true
-                LDBIcon:Hide("WeeklyJournal")
-                ns.Weekly:Printf("Journal minimap icon hidden. Use /weekly journal to toggle.")
-            end,
-        })
-    end
-    
-    EasyMenu(menuList, menuFrame, "cursor", 0, 0, "MENU")
+        -- Settings & Minimap Section
+        rootDescription:CreateButton("Settings", function()
+            -- Open Weekly settings
+            if ns.ConfigUI and ns.ConfigUI.categoryID then
+                Settings.OpenToCategory(ns.ConfigUI.categoryID)
+            else
+                -- Last resort fallback
+                Settings.OpenToCategory(Settings.GetCategory("Weekly"))
+            end
+        end)
+        
+        -- Add minimap icon toggle
+        if LDBIcon then
+            rootDescription:CreateCheckbox("Show Minimap Icon",
+                function() return self:IsMinimapIconShown() end,
+                function()
+                    if self:IsMinimapIconShown() then
+                        self:HideMinimapIcon()
+                    else
+                        self:ShowMinimapIcon()
+                    end
+                end
+            )
+        end
+    end)
 end
 
 --------------------------------------------------------------------------------

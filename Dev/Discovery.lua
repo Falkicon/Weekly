@@ -74,10 +74,26 @@ local function GetCurrentZoneInfo()
     local zoneName = GetRealZoneText() or "Unknown"
     local subZone = GetSubZoneText() or ""
     
+    -- Get player position
+    local x, y = 0, 0
+    if mapID then
+        local pos = C_Map.GetPlayerMapPosition(mapID, "player")
+        if pos then
+            x, y = pos:GetXY()
+        end
+    end
+    
+    -- Get client build info
+    local _, build, _, tocversion = GetBuildInfo()
+    
     return {
         mapID = mapID,
         zoneName = zoneName,
         subZone = subZone,
+        x = x,
+        y = y,
+        build = build,
+        tocversion = tocversion,
         expansion = GetExpansionFromCurrentZone(),
     }
 end
@@ -290,6 +306,9 @@ function Discovery:OnCurrencyUpdate(currencyID, quantity, quantityChange)
     local hasCap = info.maxWeeklyQuantity and info.maxWeeklyQuantity > 0
     local hasMax = info.maxQuantity and info.maxQuantity > 0
     
+    -- Get extended info (coords, build)
+    local extended = GetCurrentZoneInfo()
+    
     -- Log it
     self.tracker:LogItem("currency", currencyID, {
         name = info.name,
@@ -301,6 +320,12 @@ function Discovery:OnCurrencyUpdate(currencyID, quantity, quantityChange)
         maxWeekly = info.maxWeeklyQuantity,
         maxTotal = info.maxQuantity,
         quality = info.quality,
+        -- Extended metadata
+        mapID = extended.mapID,
+        x = extended.x,
+        y = extended.y,
+        build = extended.build,
+        tocversion = extended.tocversion,
     })
 end
 
@@ -341,6 +366,11 @@ function Discovery:OnQuestEvent(questID, eventType)
         -- Zone info for additional context
         zoneName = zoneInfo.zoneName,
         zoneMapID = zoneInfo.mapID,
+        -- Extended metadata (coords at time of event)
+        x = zoneInfo.x,
+        y = zoneInfo.y,
+        build = zoneInfo.build,
+        tocversion = zoneInfo.tocversion,
     })
 end
 
@@ -649,26 +679,38 @@ end
 
 function Discovery:ExportData()
     local function formatter(category, id, data)
+        local metadata = {}
+        if data.tocversion then table.insert(metadata, "v" .. data.tocversion) end
+        if data.build then table.insert(metadata, "build " .. data.build) end
+        if data.zoneName then table.insert(metadata, data.zoneName) end
+        if data.x and data.y and data.x > 0 then
+            table.insert(metadata, string.format("coords: %d, %.2f, %.2f", data.zoneMapID or data.mapID or 0, data.x * 100, data.y * 100))
+        end
+        local metaStr = #metadata > 0 and ("  -- " .. table.concat(metadata, ", ")) or ""
+
         if category == "currency" then
             local funcName = data.hasCap and "Cap" or "Currency"
-            local comment = data.icon and ("  -- icon: " .. data.icon) or ""
-            if data.expansionName then
-                comment = comment .. (comment ~= "" and ", " or "  -- ") .. data.expansionName
-            end
+            local expansionInfo = data.expansionName and ("  -- " .. data.expansionName) or ""
+            -- If we have metadata, use it, otherwise use expansion info
+            local comment = metaStr ~= "" and metaStr or expansionInfo
             return string.format('%s(%d, "%s"),%s', funcName, id, data.name or "Unknown", comment)
             
         elseif category == "quest" then
-            local parts = {}
-            if data.isWeekly then table.insert(parts, "Weekly") end
-            if data.isDaily then table.insert(parts, "Daily") end
-            if data.expansionName then
-                table.insert(parts, data.expansionName)
-            elseif data.zoneName then
-                -- Include zone if expansion unknown
-                table.insert(parts, "Zone: " .. data.zoneName)
+            local types = {}
+            if data.isWeekly then table.insert(types, "Weekly") end
+            if data.isDaily then table.insert(types, "Daily") end
+            if data.expansionName then table.insert(types, data.expansionName) end
+            
+            local typeStr = #types > 0 and (table.concat(types, ", ") .. " | ") or ""
+            local comment = "  -- " .. typeStr .. metaStr:gsub("^%s*%-%-%s*", "")
+            
+            -- Prepare coords table if available for the function call
+            local coordArg = ""
+            if data.zoneMapID and data.x and data.x > 0 then
+                coordArg = string.format(', { mapID = %d, x = %.4f, y = %.4f }', data.zoneMapID, data.x, data.y)
             end
-            local comment = #parts > 0 and ("  -- " .. table.concat(parts, ", ")) or ""
-            return string.format('Quest(%d, "%s"),%s', id, data.name or "Unknown", comment)
+            
+            return string.format('Quest(%d, "%s", nil%s),%s', id, data.name or "Unknown", coordArg, comment)
         end
         
         return nil

@@ -87,6 +87,9 @@ Quest(91175, "Weekly Cache", "Interface\\Icons\\INV_Box_02")
 
 -- Multi-ID (rotating quests with different IDs each week)
 Quest({83363, 83365, 83359}, "Timewalking Event", "Interface\\Icons\\spell_holy_borrowedtime")
+
+-- With Coordinates (Enables map marker navigation)
+Quest(82483, "Worldsoul Weekly", nil, { mapID = 2274, x = 0.45, y = 0.50 })
 ```
 
 For detailed quest/currency IDs, see `Data/AGENTS.md`.

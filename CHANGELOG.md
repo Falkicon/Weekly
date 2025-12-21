@@ -5,6 +5,29 @@ All notable changes to Weekly will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2025-12-20
+
+### Added
+- **Midnight Pre-patch Support**: Added a new database for Season 3.5 (Midnight Pre-patch) with automatic transition logic.
+- **Auto-Detection**: The addon now automatically selects the correct expansion and season data based on the game client version (supports TWW S3, Midnight Pre-patch, and future Midnight launch).
+- **Waypoint Navigation**: Clickable quest icons in the tracker now set map waypoints for quests you don't have yet (when coordinates are available in the database).
+- **Discovery Tool V2**: (Dev only) Enhanced data collection to capture player coordinates, client version, and build info for easier database maintenance.
+
+### Changed
+- **Default Settings**: New installations now default to "Automatic" expansion and season selection.
+
+## [0.2.3] - 2025-12-20
+
+### Fixed
+- **Midnight Compatibility**: Replaced deprecated `EasyMenu` with modern `MenuUtil` API in `JournalBroker.lua` for WoW 11.2.8/12.0. Removed legacy `UIDropDownMenu` fallback to reduce technical debt and potential taints.
+- **Settings API**: Fixed `bad argument #1 to OpenSettingsPanel` error and corrected navigation issues in WoW 11.2.8/12.0. The addon now properly retrieves and uses the numeric category ID for the Blizzard Settings panel.
+- **Broker Menu**: Refactored the context menu for better organization.
+  - Renamed title to "Weekly".
+  - Grouped Weekly Tracker options (Show Weekly, Lock Weekly).
+  - Grouped Journal options (Show Journal, Jump to Category).
+  - Converted "Show Weekly", "Lock Weekly", "Show Journal", and "Show Minimap Icon" into checkboxes for easier toggling and better state visibility.
+  - Fixed issue where the minimap icon could not be easily re-enabled from the menu.
+
 ## [0.2.2] - 2025-12-19
 
 ### Added

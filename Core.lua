@@ -62,7 +62,12 @@ function Weekly:SlashHandler(msg)
     
     -- Settings
     if cmd == "settings" or cmd == "config" or cmd == "options" then
-        Settings.OpenToCategory("Weekly")
+        if ns.ConfigUI and ns.ConfigUI.categoryID then
+            Settings.OpenToCategory(ns.ConfigUI.categoryID)
+        else
+            -- Last resort fallback
+            Settings.OpenToCategory(Settings.GetCategory("Weekly"))
+        end
         return
     end
     

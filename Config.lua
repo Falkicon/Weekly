@@ -5,8 +5,8 @@ local AceDB = LibStub("AceDB-3.0")
 ns.ConfigDefaults = {
     profile = {
         -- Data Selection
-        selectedExpansion = 11, -- The War Within
-        selectedSeason = 3, -- Season 3
+        selectedExpansion = "auto", -- Automatic detection
+        selectedSeason = "auto",    -- Automatic detection
         
         -- UI
         sortCompletedBottom = true,

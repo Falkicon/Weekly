@@ -2,7 +2,7 @@ local _, ns = ...
 
 -- Helper for easier reading
 local function Vault(id, label) return { type = "vault_visual", id = id, label = label } end
-local function Quest(id, label, icon) return { type = "quest", id = id, label = label, icon = icon } end
+local function Quest(id, label, icon, coords) return { type = "quest", id = id, label = label, icon = icon, coords = coords } end
 local function Currency(id, label) return { type = "currency", id = id, label = label } end
 local function Cap(id, label) return { type = "currency_cap", id = id, label = label } end
 

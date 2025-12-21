@@ -94,7 +94,8 @@ Right-click the Minimap icon or use `/weekly config` to access options.
 ## Technical Notes
 
 - **Ace3 Framework** – Uses AceAddon, AceDB, AceConfig for robust infrastructure
-- **Data-Driven** – Centralized `Data.lua` allows easy seasonal updates
+- **Data-Driven** – Centralized `Data/` folder allows easy seasonal updates
+- **Auto-Detection** – Automatically selects the correct Expansion/Season data based on game client version
 - **Auto-Sizing Layout** – Window calculates height/width based on content
 - **LibDataBroker** – Minimap and panel integration
 

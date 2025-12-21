@@ -30,9 +30,8 @@ function ConfigUI:Initialize()
                                 name = "Expansion",
                                 order = 1,
                                 values = function()
-                                    -- Convert list to key-value [11] = "11" for now, or map to names
                                     local exps = ns.Data:GetExpansions()
-                                    local t = {}
+                                    local t = { ["auto"] = "Automatic (Recommended)" }
                                     for _, id in ipairs(exps) do
                                         if id == 11 then t[id] = "The War Within"
                                         elseif id == 12 then t[id] = "Midnight"
@@ -43,10 +42,14 @@ function ConfigUI:Initialize()
                                 get = function() return ns.Config.selectedExpansion end,
                                 set = function(_, val)
                                     ns.Config.selectedExpansion = val
-                                    -- Reset Season to first available
-                                    local seasons = ns.Data:GetSeasons(val)
-                                    if seasons and #seasons > 0 then
-                                        ns.Config.selectedSeason = seasons[#seasons] -- Default to latest
+                                    if val == "auto" then
+                                        ns.Config.selectedSeason = "auto"
+                                    else
+                                        -- Reset Season to latest available for this expansion
+                                        local seasons = ns.Data:GetSeasons(val)
+                                        if seasons and #seasons > 0 then
+                                            ns.Config.selectedSeason = seasons[#seasons]
+                                        end
                                     end
                                     ns.UI:RefreshRows()
                                 end,
@@ -56,10 +59,24 @@ function ConfigUI:Initialize()
                                 name = "Season",
                                 order = 2,
                                 values = function()
-                                    local seasons = ns.Data:GetSeasons(ns.Config.selectedExpansion)
-                                    local t = {}
+                                    local t = { ["auto"] = "Automatic (Recommended)" }
+                                    local selectedExp = ns.Config.selectedExpansion
+                                    
+                                    -- If Expansion is Auto, we show all seasons for the RECOMMENDED expansion
+                                    -- but labeled as Auto. Actually, better to just show "Auto" or specific 
+                                    -- seasons for the CURRENTLY ACTIVE expansion.
+                                    local activeExp = selectedExp
+                                    if activeExp == "auto" then
+                                        activeExp = ns.Data:GetRecommendedSeason()
+                                    end
+                                    
+                                    local seasons = ns.Data:GetSeasons(activeExp)
                                     for _, id in ipairs(seasons) do
-                                        t[id] = "Season " .. id
+                                        if id == 3.5 then
+                                            t[id] = "Season 3 (Midnight Pre-Patch)"
+                                        else
+                                            t[id] = "Season " .. id
+                                        end
                                     end
                                     return t
                                 end,
@@ -68,6 +85,22 @@ function ConfigUI:Initialize()
                                     ns.Config.selectedSeason = val
                                     ns.UI:RefreshRows()
                                 end,
+                            },
+                            status = {
+                                type = "description",
+                                name = function()
+                                    local exp, sea = ns.Data:GetRecommendedSeason()
+                                    local expName = (exp == 11 and "The War Within") or (exp == 12 and "Midnight") or ("Expansion " .. exp)
+                                    local seaName = (sea == 3.5 and "Season 3 (Midnight Pre-Patch)") or ("Season " .. sea)
+                                    
+                                    local currentStatus = ""
+                                    if ns.Config.selectedExpansion == "auto" or ns.Config.selectedSeason == "auto" then
+                                        currentStatus = string.format("\n|cff888888Currently detecting:|r %s, %s", expName, seaName)
+                                    end
+                                    return currentStatus
+                                end,
+                                order = 3,
+                                width = "full",
                             },
                         },
                     },
@@ -281,7 +314,19 @@ function ConfigUI:Initialize()
 
     -- Register Main
     AceConfig:RegisterOptionsTable("Weekly", mainOptions)
-    self.optionsFrame = AceConfigDialog:AddToBlizOptions("Weekly", "Weekly")
+    local optionsFrame = AceConfigDialog:AddToBlizOptions("Weekly", "Weekly")
+    
+    -- In WoW 11.0+, AddToBlizOptions returns the frame, but we need the Category object
+    -- to get the correct ID for Settings.OpenToCategory.
+    local category = Settings.GetCategory("Weekly")
+    if category then
+        self.category = category
+        self.categoryID = category:GetID()
+    else
+        -- Fallback for older versions or if GetCategory fails
+        self.category = optionsFrame
+        self.categoryID = optionsFrame and optionsFrame.name or "Weekly"
+    end
     
     -- Register Sub-Categories
     AceConfig:RegisterOptionsTable("Weekly_Appearance", appearanceOptions)

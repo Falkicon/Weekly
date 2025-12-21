@@ -15,6 +15,24 @@ function ns.Data:Register(expansionID, seasonID, data)
     self.Registry[expansionID][seasonID] = data
 end
 
+--- Get the recommended expansion and season based on client version/date
+function ns.Data:GetRecommendedSeason()
+    local _, _, _, tocversion = GetBuildInfo()
+    
+    -- Expansion 12+ (Midnight)
+    if tocversion >= 120000 then
+        return 12, 1
+    end
+    
+    -- Expansion 11 (TWW) - Midnight Pre-patch (11.2.8+)
+    if tocversion >= 110208 then
+        return 11, 3.5
+    end
+    
+    -- Expansion 11 (TWW) - Season 3
+    return 11, 3
+end
+
 --- Get a specific season dataset
 function ns.Data:Get(expansionID, seasonID)
     if self.Registry[expansionID] and self.Registry[expansionID][seasonID] then
@@ -50,8 +68,19 @@ function ns:GetCurrentSeasonData()
     local cfg = ns.Config
     if not cfg then return {} end
     
-    local exp = cfg.selectedExpansion or 11
-    local sea = cfg.selectedSeason or 3
+    local exp = cfg.selectedExpansion
+    local sea = cfg.selectedSeason
+    
+    -- Handle Automatic selection
+    if exp == "auto" or sea == "auto" then
+        local autoExp, autoSea = self.Data:GetRecommendedSeason()
+        if exp == "auto" then exp = autoExp end
+        if sea == "auto" then sea = autoSea end
+    end
+    
+    -- Fallbacks
+    exp = exp or 11
+    sea = sea or 3
     
     return self.Data:Get(exp, sea) or {}
 end
