@@ -1,0 +1,779 @@
+Checking Config.lua                               6 warnings
+
+    Config.lua:10:1: (W611) line contains only whitespace
+    Config.lua:22:1: (W611) line contains only whitespace
+    Config.lua:26:1: (W611) line contains only whitespace
+    Config.lua:36:1: (W611) line contains only whitespace
+    Config.lua:47:1: (W611) line contains only whitespace
+    Config.lua:50:1: (W611) line contains only whitespace
+
+Checking ConfigUI.lua                             43 warnings
+
+    ConfigUI.lua:64:1: (W611) line contains only whitespace
+    ConfigUI.lua:66:109: (W614) trailing whitespace in a comment
+    ConfigUI.lua:72:1: (W611) line contains only whitespace
+    ConfigUI.lua:93:121: (W631) line is too long (139 > 120)
+    ConfigUI.lua:94:121: (W631) line is too long (122 > 120)
+    ConfigUI.lua:95:1: (W611) line contains only whitespace
+    ConfigUI.lua:98:121: (W631) line is too long (132 > 120)
+    ConfigUI.lua:113:47: (W612) line contains trailing whitespace
+    ConfigUI.lua:115:48: (W612) line contains trailing whitespace
+    ConfigUI.lua:124:47: (W612) line contains trailing whitespace
+    ConfigUI.lua:125:51: (W612) line contains trailing whitespace
+    ConfigUI.lua:135:47: (W612) line contains trailing whitespace
+    ConfigUI.lua:149:47: (W612) line contains trailing whitespace
+    ConfigUI.lua:249:1: (W611) line contains only whitespace
+    ConfigUI.lua:253:1: (W611) line contains only whitespace
+    ConfigUI.lua:264:1: (W611) line contains only whitespace
+    ConfigUI.lua:269:121: (W631) line is too long (142 > 120)
+    ConfigUI.lua:273:1: (W611) line contains only whitespace
+    ConfigUI.lua:288:1: (W611) line contains only whitespace
+    ConfigUI.lua:292:1: (W611) line contains only whitespace
+    ConfigUI.lua:298:37: (W612) line contains trailing whitespace
+    ConfigUI.lua:299:67: (W612) line contains trailing whitespace
+    ConfigUI.lua:318:1: (W611) line contains only whitespace
+    ConfigUI.lua:321:22: (W113) accessing undefined variable 'Settings'
+    ConfigUI.lua:330:1: (W611) line contains only whitespace
+    ConfigUI.lua:334:1: (W611) line contains only whitespace
+    ConfigUI.lua:337:1: (W611) line contains only whitespace
+    ConfigUI.lua:342:1: (W611) line contains only whitespace
+    ConfigUI.lua:350:121: (W631) line is too long (190 > 120)
+    ConfigUI.lua:444:1: (W611) line contains only whitespace
+    ConfigUI.lua:447:1: (W611) line contains only whitespace
+    ConfigUI.lua:453:1: (W611) line contains only whitespace
+    ConfigUI.lua:461:1: (W611) line contains only whitespace
+    ConfigUI.lua:469:1: (W611) line contains only whitespace
+    ConfigUI.lua:472:1: (W611) line contains only whitespace
+    ConfigUI.lua:482:121: (W631) line is too long (150 > 120)
+    ConfigUI.lua:484:121: (W631) line is too long (150 > 120)
+    ConfigUI.lua:503:121: (W631) line is too long (168 > 120)
+    ConfigUI.lua:516:1: (W611) line contains only whitespace
+    ConfigUI.lua:525:1: (W611) line contains only whitespace
+    ConfigUI.lua:526:121: (W631) line is too long (169 > 120)
+    ConfigUI.lua:526:169: (W612) line contains trailing whitespace
+    ConfigUI.lua:568:1: (W611) line contains only whitespace
+
+Checking Core.lua                                 33 warnings
+
+    Core.lua:7:1: (W611) line contains only whitespace
+    Core.lua:10:1: (W611) line contains only whitespace
+    Core.lua:15:1: (W611) line contains only whitespace
+    Core.lua:18:1: (W611) line contains only whitespace
+    Core.lua:20:8: (W113) accessing undefined variable 'AddonCompartmentFrame'
+    Core.lua:20:34: (W113) accessing undefined variable 'AddonCompartmentFrame'
+    Core.lua:21:9: (W113) accessing undefined variable 'AddonCompartmentFrame'
+    Core.lua:42:1: (W611) line contains only whitespace
+    Core.lua:52:1: (W611) line contains only whitespace
+    Core.lua:62:1: (W611) line contains only whitespace
+    Core.lua:66:13: (W113) accessing undefined variable 'Settings'
+    Core.lua:69:13: (W113) accessing undefined variable 'Settings'
+    Core.lua:69:37: (W113) accessing undefined variable 'Settings'
+    Core.lua:73:1: (W611) line contains only whitespace
+    Core.lua:83:1: (W611) line contains only whitespace
+    Core.lua:94:1: (W611) line contains only whitespace
+    Core.lua:97:22: (W113) accessing undefined variable 'C_WeeklyRewards'
+    Core.lua:99:1: (W611) line contains only whitespace
+    Core.lua:103:30: (W113) accessing undefined variable 'format'
+    Core.lua:103:121: (W631) line is too long (185 > 120)
+    Core.lua:109:1: (W611) line contains only whitespace
+    Core.lua:114:31: (W113) accessing undefined variable 'C_WeeklyRewards'
+    Core.lua:115:34: (W612) line contains trailing whitespace
+    Core.lua:117:26: (W612) line contains trailing whitespace
+    Core.lua:123:1: (W611) line contains only whitespace
+    Core.lua:124:30: (W113) accessing undefined variable 'EJ_GetEncounterInfo'
+    Core.lua:131:1: (W611) line contains only whitespace
+    Core.lua:134:21: (W113) accessing undefined variable 'GetNumSavedInstances'
+    Core.lua:137:121: (W631) line is too long (166 > 120)
+    Core.lua:137:144: (W113) accessing undefined variable 'GetSavedInstanceInfo'
+    Core.lua:139:29: (W113) accessing undefined variable 'format'
+    Core.lua:142:56: (W113) accessing undefined variable 'GetSavedInstanceEncounterInfo'
+    Core.lua:144:42: (W113) accessing undefined variable 'format'
+
+Checking Data\Loader.lua                          7 warnings
+
+    Data\Loader.lua:21:1: (W611) line contains only whitespace
+    Data\Loader.lua:26:1: (W611) line contains only whitespace
+    Data\Loader.lua:31:1: (W611) line contains only whitespace
+    Data\Loader.lua:70:1: (W611) line contains only whitespace
+    Data\Loader.lua:73:1: (W611) line contains only whitespace
+    Data\Loader.lua:80:1: (W611) line contains only whitespace
+    Data\Loader.lua:84:1: (W611) line contains only whitespace
+
+Checking Data\Midnight\Season1.lua                2 warnings
+
+    Data\Midnight\Season1.lua:5:121: (W631) line is too long (129 > 120)
+    Data\Midnight\Season1.lua:40:40: (W612) line contains trailing whitespace
+
+Checking Data\TheWarWithin\MidnightPrePatch.lua   4 warnings
+
+    Data\TheWarWithin\MidnightPrePatch.lua:29:121: (W631) line is too long (129 > 120)
+    Data\TheWarWithin\MidnightPrePatch.lua:47:121: (W631) line is too long (123 > 120)
+    Data\TheWarWithin\MidnightPrePatch.lua:56:92: (W612) line contains trailing whitespace
+    Data\TheWarWithin\MidnightPrePatch.lua:58:121: (W631) line is too long (142 > 120)
+
+Checking Data\TheWarWithin\Season3.lua            4 warnings
+
+    Data\TheWarWithin\Season3.lua:29:121: (W631) line is too long (129 > 120)
+    Data\TheWarWithin\Season3.lua:47:121: (W631) line is too long (123 > 120)
+    Data\TheWarWithin\Season3.lua:56:92: (W612) line contains trailing whitespace
+    Data\TheWarWithin\Season3.lua:58:121: (W631) line is too long (142 > 120)
+
+Checking DevMarker.lua                            OK
+Checking Dev\Discovery.lua                        100 warnings
+
+    Dev\Discovery.lua:14:27: (W113) accessing undefined variable 'GetExpansionLevel'
+    Dev\Discovery.lua:46:1: (W611) line contains only whitespace
+    Dev\Discovery.lua:50:1: (W611) line contains only whitespace
+    Dev\Discovery.lua:53:1: (W611) line contains only whitespace
+    Dev\Discovery.lua:58:1: (W611) line contains only whitespace
+    Dev\Discovery.lua:67:1: (W611) line contains only whitespace
+    Dev\Discovery.lua:74:22: (W113) accessing undefined variable 'GetRealZoneText'
+    Dev\Discovery.lua:75:21: (W113) accessing undefined variable 'GetSubZoneText'
+    Dev\Discovery.lua:76:1: (W611) line contains only whitespace
+    Dev\Discovery.lua:85:1: (W611) line contains only whitespace
+    Dev\Discovery.lua:88:1: (W611) line contains only whitespace
+    Dev\Discovery.lua:119:1: (W611) line contains only whitespace
+    Dev\Discovery.lua:123:21: (W113) accessing undefined variable 'time'
+    Dev\Discovery.lua:124:30: (W113) accessing undefined variable 'date'
+    Dev\Discovery.lua:126:1: (W611) line contains only whitespace
+    Dev\Discovery.lua:133:1: (W611) line contains only whitespace
+    Dev\Discovery.lua:136:1: (W611) line contains only whitespace
+    Dev\Discovery.lua:145:1: (W611) line contains only whitespace
+    Dev\Discovery.lua:151:1: (W611) line contains only whitespace
+    Dev\Discovery.lua:163:1: (W611) line contains only whitespace
+    Dev\Discovery.lua:168:1: (W611) line contains only whitespace
+    Dev\Discovery.lua:172:1: (W611) line contains only whitespace
+    Dev\Discovery.lua:180:1: (W611) line contains only whitespace
+    Dev\Discovery.lua:192:1: (W611) line contains only whitespace
+    Dev\Discovery.lua:201:1: (W611) line contains only whitespace
+    Dev\Discovery.lua:223:1: (W611) line contains only whitespace
+    Dev\Discovery.lua:231:1: (W611) line contains only whitespace
+    Dev\Discovery.lua:238:121: (W631) line is too long (122 > 120)
+    Dev\Discovery.lua:240:101: (W612) line contains trailing whitespace
+    Dev\Discovery.lua:243:1: (W611) line contains only whitespace
+    Dev\Discovery.lua:251:1: (W611) line contains only whitespace
+    Dev\Discovery.lua:255:121: (W631) line is too long (132 > 120)
+    Dev\Discovery.lua:258:1: (W611) line contains only whitespace
+    Dev\Discovery.lua:266:1: (W611) line contains only whitespace
+    Dev\Discovery.lua:272:1: (W611) line contains only whitespace
+    Dev\Discovery.lua:275:1: (W611) line contains only whitespace
+    Dev\Discovery.lua:292:1: (W611) line contains only whitespace
+    Dev\Discovery.lua:296:1: (W611) line contains only whitespace
+    Dev\Discovery.lua:301:1: (W611) line contains only whitespace
+    Dev\Discovery.lua:304:1: (W611) line contains only whitespace
+    Dev\Discovery.lua:308:1: (W611) line contains only whitespace
+    Dev\Discovery.lua:311:1: (W611) line contains only whitespace
+    Dev\Discovery.lua:334:1: (W611) line contains only whitespace
+    Dev\Discovery.lua:339:1: (W611) line contains only whitespace
+    Dev\Discovery.lua:342:1: (W611) line contains only whitespace
+    Dev\Discovery.lua:345:1: (W611) line contains only whitespace
+    Dev\Discovery.lua:348:1: (W611) line contains only whitespace
+    Dev\Discovery.lua:353:1: (W611) line contains only whitespace
+    Dev\Discovery.lua:357:1: (W611) line contains only whitespace
+    Dev\Discovery.lua:394:1: (W611) line contains only whitespace
+    Dev\Discovery.lua:397:1: (W611) line contains only whitespace
+    Dev\Discovery.lua:405:1: (W611) line contains only whitespace
+    Dev\Discovery.lua:429:1: (W611) line contains only whitespace
+    Dev\Discovery.lua:434:1: (W611) line contains only whitespace
+    Dev\Discovery.lua:444:1: (W611) line contains only whitespace
+    Dev\Discovery.lua:448:1: (W611) line contains only whitespace
+    Dev\Discovery.lua:458:1: (W611) line contains only whitespace
+    Dev\Discovery.lua:462:1: (W611) line contains only whitespace
+    Dev\Discovery.lua:472:1: (W611) line contains only whitespace
+    Dev\Discovery.lua:476:1: (W611) line contains only whitespace
+    Dev\Discovery.lua:479:1: (W611) line contains only whitespace
+    Dev\Discovery.lua:484:1: (W611) line contains only whitespace
+    Dev\Discovery.lua:489:1: (W611) line contains only whitespace
+    Dev\Discovery.lua:496:1: (W611) line contains only whitespace
+    Dev\Discovery.lua:500:1: (W611) line contains only whitespace
+    Dev\Discovery.lua:508:1: (W611) line contains only whitespace
+    Dev\Discovery.lua:518:1: (W611) line contains only whitespace
+    Dev\Discovery.lua:523:1: (W611) line contains only whitespace
+    Dev\Discovery.lua:528:1: (W611) line contains only whitespace
+    Dev\Discovery.lua:531:1: (W611) line contains only whitespace
+    Dev\Discovery.lua:533:1: (W611) line contains only whitespace
+    Dev\Discovery.lua:536:1: (W611) line contains only whitespace
+    Dev\Discovery.lua:541:1: (W611) line contains only whitespace
+    Dev\Discovery.lua:546:1: (W611) line contains only whitespace
+    Dev\Discovery.lua:553:1: (W611) line contains only whitespace
+    Dev\Discovery.lua:557:1: (W611) line contains only whitespace
+    Dev\Discovery.lua:561:1: (W611) line contains only whitespace
+    Dev\Discovery.lua:569:1: (W611) line contains only whitespace
+    Dev\Discovery.lua:574:1: (W611) line contains only whitespace
+    Dev\Discovery.lua:580:1: (W611) line contains only whitespace
+    Dev\Discovery.lua:586:1: (W611) line contains only whitespace
+    Dev\Discovery.lua:593:1: (W611) line contains only whitespace
+    Dev\Discovery.lua:600:1: (W611) line contains only whitespace
+    Dev\Discovery.lua:606:1: (W611) line contains only whitespace
+    Dev\Discovery.lua:613:1: (W611) line contains only whitespace
+    Dev\Discovery.lua:624:1: (W611) line contains only whitespace
+    Dev\Discovery.lua:644:1: (W611) line contains only whitespace
+    Dev\Discovery.lua:647:1: (W611) line contains only whitespace
+    Dev\Discovery.lua:650:1: (W611) line contains only whitespace
+    Dev\Discovery.lua:687:121: (W631) line is too long (138 > 120)
+    Dev\Discovery.lua:697:1: (W611) line contains only whitespace
+    Dev\Discovery.lua:703:1: (W611) line contains only whitespace
+    Dev\Discovery.lua:706:1: (W611) line contains only whitespace
+    Dev\Discovery.lua:712:1: (W611) line contains only whitespace
+    Dev\Discovery.lua:715:1: (W611) line contains only whitespace
+    Dev\Discovery.lua:718:1: (W611) line contains only whitespace
+    Dev\Discovery.lua:729:1: (W611) line contains only whitespace
+    Dev\Discovery.lua:731:1: (W611) line contains only whitespace
+    Dev\Discovery.lua:736:1: (W611) line contains only whitespace
+    Dev\Discovery.lua:748:1: (W611) line contains only whitespace
+
+Checking Dev\TrackerCore.lua                      36 warnings
+
+    Dev\TrackerCore.lua:23:1: (W611) line contains only whitespace
+    Dev\TrackerCore.lua:35:1: (W611) line contains only whitespace
+    Dev\TrackerCore.lua:38:1: (W611) line contains only whitespace
+    Dev\TrackerCore.lua:57:1: (W611) line contains only whitespace
+    Dev\TrackerCore.lua:83:1: (W611) line contains only whitespace
+    Dev\TrackerCore.lua:88:1: (W611) line contains only whitespace
+    Dev\TrackerCore.lua:93:1: (W611) line contains only whitespace
+    Dev\TrackerCore.lua:98:22: (W113) accessing undefined variable 'time'
+    Dev\TrackerCore.lua:99:31: (W113) accessing undefined variable 'date'
+    Dev\TrackerCore.lua:100:1: (W611) line contains only whitespace
+    Dev\TrackerCore.lua:103:1: (W611) line contains only whitespace
+    Dev\TrackerCore.lua:108:1: (W611) line contains only whitespace
+    Dev\TrackerCore.lua:136:1: (W611) line contains only whitespace
+    Dev\TrackerCore.lua:148:1: (W611) line contains only whitespace
+    Dev\TrackerCore.lua:153:1: (W611) line contains only whitespace
+    Dev\TrackerCore.lua:200:1: (W611) line contains only whitespace
+    Dev\TrackerCore.lua:209:1: (W611) line contains only whitespace
+    Dev\TrackerCore.lua:221:1: (W611) line contains only whitespace
+    Dev\TrackerCore.lua:234:1: (W611) line contains only whitespace
+    Dev\TrackerCore.lua:244:1: (W611) line contains only whitespace
+    Dev\TrackerCore.lua:253:1: (W611) line contains only whitespace
+    Dev\TrackerCore.lua:259:1: (W611) line contains only whitespace
+    Dev\TrackerCore.lua:263:1: (W611) line contains only whitespace
+    Dev\TrackerCore.lua:268:1: (W611) line contains only whitespace
+    Dev\TrackerCore.lua:273:1: (W611) line contains only whitespace
+    Dev\TrackerCore.lua:279:1: (W611) line contains only whitespace
+    Dev\TrackerCore.lua:282:1: (W611) line contains only whitespace
+    Dev\TrackerCore.lua:292:1: (W611) line contains only whitespace
+    Dev\TrackerCore.lua:297:1: (W611) line contains only whitespace
+    Dev\TrackerCore.lua:302:1: (W611) line contains only whitespace
+    Dev\TrackerCore.lua:309:1: (W611) line contains only whitespace
+    Dev\TrackerCore.lua:319:1: (W611) line contains only whitespace
+    Dev\TrackerCore.lua:326:1: (W611) line contains only whitespace
+    Dev\TrackerCore.lua:334:1: (W611) line contains only whitespace
+    Dev\TrackerCore.lua:339:1: (W611) line contains only whitespace
+    Dev\TrackerCore.lua:381:12: (W113) accessing undefined variable 'GetExpansionLevel'
+
+Checking Journal\Journal.lua                      122 warnings
+
+    Journal\Journal.lua:97:1: (W611) line contains only whitespace
+    Journal\Journal.lua:100:1: (W611) line contains only whitespace
+    Journal\Journal.lua:109:1: (W611) line contains only whitespace
+    Journal\Journal.lua:115:1: (W611) line contains only whitespace
+    Journal\Journal.lua:118:1: (W611) line contains only whitespace
+    Journal\Journal.lua:126:1: (W611) line contains only whitespace
+    Journal\Journal.lua:132:1: (W611) line contains only whitespace
+    Journal\Journal.lua:138:1: (W611) line contains only whitespace
+    Journal\Journal.lua:141:1: (W611) line contains only whitespace
+    Journal\Journal.lua:152:1: (W611) line contains only whitespace
+    Journal\Journal.lua:155:35: (W113) accessing undefined variable 'time'
+    Journal\Journal.lua:156:1: (W611) line contains only whitespace
+    Journal\Journal.lua:165:1: (W611) line contains only whitespace
+    Journal\Journal.lua:167:1: (W611) line contains only whitespace
+    Journal\Journal.lua:176:1: (W611) line contains only whitespace
+    Journal\Journal.lua:179:1: (W611) line contains only whitespace
+    Journal\Journal.lua:189:1: (W611) line contains only whitespace
+    Journal\Journal.lua:190:70: (W612) line contains trailing whitespace
+    Journal\Journal.lua:191:84: (W113) accessing undefined variable 'GetAchievementInfo'
+    Journal\Journal.lua:192:1: (W611) line contains only whitespace
+    Journal\Journal.lua:194:1: (W611) line contains only whitespace
+    Journal\Journal.lua:196:22: (W113) accessing undefined variable 'GetRealZoneText'
+    Journal\Journal.lua:197:1: (W611) line contains only whitespace
+    Journal\Journal.lua:205:1: (W611) line contains only whitespace
+    Journal\Journal.lua:213:1: (W611) line contains only whitespace
+    Journal\Journal.lua:214:75: (W612) line contains trailing whitespace
+    Journal\Journal.lua:215:79: (W612) line contains trailing whitespace
+    Journal\Journal.lua:217:1: (W611) line contains only whitespace
+    Journal\Journal.lua:219:1: (W611) line contains only whitespace
+    Journal\Journal.lua:221:22: (W113) accessing undefined variable 'GetRealZoneText'
+    Journal\Journal.lua:222:1: (W611) line contains only whitespace
+    Journal\Journal.lua:230:1: (W611) line contains only whitespace
+    Journal\Journal.lua:238:1: (W611) line contains only whitespace
+    Journal\Journal.lua:242:1: (W611) line contains only whitespace
+    Journal\Journal.lua:243:73: (W612) line contains trailing whitespace
+    Journal\Journal.lua:244:72: (W612) line contains trailing whitespace
+    Journal\Journal.lua:246:1: (W611) line contains only whitespace
+    Journal\Journal.lua:248:1: (W611) line contains only whitespace
+    Journal\Journal.lua:250:22: (W113) accessing undefined variable 'GetRealZoneText'
+    Journal\Journal.lua:251:1: (W611) line contains only whitespace
+    Journal\Journal.lua:260:1: (W611) line contains only whitespace
+    Journal\Journal.lua:269:1: (W611) line contains only whitespace
+    Journal\Journal.lua:270:73: (W113) accessing undefined variable 'C_ToyBox'
+    Journal\Journal.lua:271:1: (W611) line contains only whitespace
+    Journal\Journal.lua:277:1: (W611) line contains only whitespace
+    Journal\Journal.lua:279:22: (W113) accessing undefined variable 'GetRealZoneText'
+    Journal\Journal.lua:280:1: (W611) line contains only whitespace
+    Journal\Journal.lua:287:1: (W611) line contains only whitespace
+    Journal\Journal.lua:295:1: (W611) line contains only whitespace
+    Journal\Journal.lua:296:18: (W113) accessing undefined variable 'C_HousingDecor'
+    Journal\Journal.lua:297:18: (W113) accessing undefined variable 'C_HousingDecor'
+    Journal\Journal.lua:298:1: (W611) line contains only whitespace
+    Journal\Journal.lua:302:1: (W611) line contains only whitespace
+    Journal\Journal.lua:304:22: (W113) accessing undefined variable 'GetRealZoneText'
+    Journal\Journal.lua:305:1: (W611) line contains only whitespace
+    Journal\Journal.lua:312:1: (W611) line contains only whitespace
+    Journal\Journal.lua:328:1: (W611) line contains only whitespace
+    Journal\Journal.lua:332:1: (W611) line contains only whitespace
+    Journal\Journal.lua:338:78: (W612) line contains trailing whitespace
+    Journal\Journal.lua:339:77: (W612) line contains trailing whitespace
+    Journal\Journal.lua:341:1: (W611) line contains only whitespace
+    Journal\Journal.lua:346:1: (W611) line contains only whitespace
+    Journal\Journal.lua:351:1: (W611) line contains only whitespace
+    Journal\Journal.lua:359:1: (W611) line contains only whitespace
+    Journal\Journal.lua:363:1: (W611) line contains only whitespace
+    Journal\Journal.lua:367:1: (W611) line contains only whitespace
+    Journal\Journal.lua:372:1: (W611) line contains only whitespace
+    Journal\Journal.lua:376:1: (W611) line contains only whitespace
+    Journal\Journal.lua:383:1: (W611) line contains only whitespace
+    Journal\Journal.lua:392:25: (W113) accessing undefined variable 'time'
+    Journal\Journal.lua:395:1: (W611) line contains only whitespace
+    Journal\Journal.lua:397:42: (W113) accessing undefined variable 'time'
+    Journal\Journal.lua:398:1: (W611) line contains only whitespace
+    Journal\Journal.lua:406:1: (W611) line contains only whitespace
+    Journal\Journal.lua:409:1: (W611) line contains only whitespace
+    Journal\Journal.lua:420:1: (W611) line contains only whitespace
+    Journal\Journal.lua:425:1: (W611) line contains only whitespace
+    Journal\Journal.lua:428:1: (W611) line contains only whitespace
+    Journal\Journal.lua:436:1: (W611) line contains only whitespace
+    Journal\Journal.lua:439:1: (W611) line contains only whitespace
+    Journal\Journal.lua:450:1: (W611) line contains only whitespace
+    Journal\Journal.lua:459:1: (W611) line contains only whitespace
+    Journal\Journal.lua:465:1: (W611) line contains only whitespace
+    Journal\Journal.lua:476:1: (W611) line contains only whitespace
+    Journal\Journal.lua:489:1: (W611) line contains only whitespace
+    Journal\Journal.lua:502:1: (W611) line contains only whitespace
+    Journal\Journal.lua:538:1: (W611) line contains only whitespace
+    Journal\Journal.lua:556:1: (W611) line contains only whitespace
+    Journal\Journal.lua:574:12: (W113) accessing undefined variable 'OpenAchievementFrameToAchievement'
+    Journal\Journal.lua:575:13: (W113) accessing undefined variable 'OpenAchievementFrameToAchievement'
+    Journal\Journal.lua:577:1: (W611) line contains only whitespace
+    Journal\Journal.lua:580:9: (W113) accessing undefined variable 'SetCollectionsJournalShown'
+    Journal\Journal.lua:581:1: (W611) line contains only whitespace
+    Journal\Journal.lua:584:9: (W113) accessing undefined variable 'SetCollectionsJournalShown'
+    Journal\Journal.lua:591:1: (W611) line contains only whitespace
+    Journal\Journal.lua:594:9: (W113) accessing undefined variable 'SetCollectionsJournalShown'
+    Journal\Journal.lua:595:1: (W611) line contains only whitespace
+    Journal\Journal.lua:599:20: (W113) accessing undefined variable 'HousingDashboardFrame'
+    Journal\Journal.lua:599:49: (W113) accessing undefined variable 'HousingDashboardFrame'
+    Journal\Journal.lua:602:1: (W611) line contains only whitespace
+    Journal\Journal.lua:604:16: (W113) accessing undefined variable 'HousingDashboardFrame'
+    Journal\Journal.lua:605:17: (W113) accessing undefined variable 'HousingDashboardFrame'
+    Journal\Journal.lua:605:46: (W113) accessing undefined variable 'HousingDashboardFrame'
+    Journal\Journal.lua:607:1: (W611) line contains only whitespace
+    Journal\Journal.lua:611:37: (W113) accessing undefined variable 'HousingDashboardFrame'
+    Journal\Journal.lua:617:1: (W611) line contains only whitespace
+    Journal\Journal.lua:622:1: (W611) line contains only whitespace
+    Journal\Journal.lua:631:1: (W611) line contains only whitespace
+    Journal\Journal.lua:633:12: (W113) accessing undefined variable 'HousingDashboardFrame'
+    Journal\Journal.lua:633:38: (W113) accessing undefined variable 'HousingDashboardFrame'
+    Journal\Journal.lua:636:16: (W113) accessing undefined variable 'HousingFramesUtil'
+    Journal\Journal.lua:636:38: (W113) accessing undefined variable 'HousingFramesUtil'
+    Journal\Journal.lua:638:13: (W113) accessing undefined variable 'HousingFramesUtil'
+    Journal\Journal.lua:670:1: (W611) line contains only whitespace
+    Journal\Journal.lua:681:1: (W611) line contains only whitespace
+    Journal\Journal.lua:692:1: (W611) line contains only whitespace
+    Journal\Journal.lua:694:1: (W611) line contains only whitespace
+    Journal\Journal.lua:710:1: (W611) line contains only whitespace
+    Journal\Journal.lua:717:1: (W611) line contains only whitespace
+    Journal\Journal.lua:725:1: (W611) line contains only whitespace
+    Journal\Journal.lua:740:1: (W611) line contains only whitespace
+    Journal\Journal.lua:745:1: (W611) line contains only whitespace
+
+Checking Journal\JournalBroker.lua                28 warnings
+
+    Journal\JournalBroker.lua:22:1: (W611) line contains only whitespace
+    Journal\JournalBroker.lua:29:1: (W611) line contains only whitespace
+    Journal\JournalBroker.lua:41:1: (W611) line contains only whitespace
+    Journal\JournalBroker.lua:46:1: (W611) line contains only whitespace
+    Journal\JournalBroker.lua:54:1: (W611) line contains only whitespace
+    Journal\JournalBroker.lua:66:1: (W611) line contains only whitespace
+    Journal\JournalBroker.lua:71:1: (W611) line contains only whitespace
+    Journal\JournalBroker.lua:73:1: (W611) line contains only whitespace
+    Journal\JournalBroker.lua:77:1: (W611) line contains only whitespace
+    Journal\JournalBroker.lua:79:1: (W611) line contains only whitespace
+    Journal\JournalBroker.lua:90:1: (W611) line contains only whitespace
+    Journal\JournalBroker.lua:98:1: (W611) line contains only whitespace
+    Journal\JournalBroker.lua:109:5: (W113) accessing undefined variable 'MenuUtil'
+    Journal\JournalBroker.lua:111:1: (W611) line contains only whitespace
+    Journal\JournalBroker.lua:113:54: (W612) line contains trailing whitespace
+    Journal\JournalBroker.lua:115:23: (W612) line contains trailing whitespace
+    Journal\JournalBroker.lua:119:1: (W611) line contains only whitespace
+    Journal\JournalBroker.lua:120:54: (W612) line contains trailing whitespace
+    Journal\JournalBroker.lua:122:23: (W612) line contains trailing whitespace
+    Journal\JournalBroker.lua:131:55: (W612) line contains trailing whitespace
+    Journal\JournalBroker.lua:133:23: (W612) line contains trailing whitespace
+    Journal\JournalBroker.lua:137:1: (W611) line contains only whitespace
+    Journal\JournalBroker.lua:142:1: (W611) line contains only whitespace
+    Journal\JournalBroker.lua:156:1: (W611) line contains only whitespace
+    Journal\JournalBroker.lua:161:17: (W113) accessing undefined variable 'Settings'
+    Journal\JournalBroker.lua:164:17: (W113) accessing undefined variable 'Settings'
+    Journal\JournalBroker.lua:164:41: (W113) accessing undefined variable 'Settings'
+    Journal\JournalBroker.lua:167:1: (W611) line contains only whitespace
+
+Checking Journal\JournalUI.lua                    159 warnings
+
+    Journal\JournalUI.lua:11:8: (W113) accessing undefined variable 'FenUI'
+    Journal\JournalUI.lua:11:18: (W113) accessing undefined variable 'FenUI'
+    Journal\JournalUI.lua:12:23: (W113) accessing undefined variable 'FenUI'
+    Journal\JournalUI.lua:29:8: (W113) accessing undefined variable 'FenUI'
+    Journal\JournalUI.lua:29:18: (W113) accessing undefined variable 'FenUI'
+    Journal\JournalUI.lua:30:16: (W113) accessing undefined variable 'FenUI'
+    Journal\JournalUI.lua:47:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:49:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:51:8: (W113) accessing undefined variable 'FenUI'
+    Journal\JournalUI.lua:51:18: (W113) accessing undefined variable 'FenUI'
+    Journal\JournalUI.lua:52:17: (W113) accessing undefined variable 'FenUI'
+    Journal\JournalUI.lua:57:21: (W113) accessing undefined variable 'FenUI'
+    Journal\JournalUI.lua:90:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:92:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:99:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:104:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:117:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:122:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:123:8: (W113) accessing undefined variable 'FenUI'
+    Journal\JournalUI.lua:123:18: (W113) accessing undefined variable 'FenUI'
+    Journal\JournalUI.lua:126:53: (W113) accessing undefined variable 'FenUI'
+    Journal\JournalUI.lua:133:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:142:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:153:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:162:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:166:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:171:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:174:8: (W113) accessing undefined variable 'FenUI'
+    Journal\JournalUI.lua:174:18: (W113) accessing undefined variable 'FenUI'
+    Journal\JournalUI.lua:176:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:179:29: (W113) accessing undefined variable 'FenUI'
+    Journal\JournalUI.lua:185:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:197:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:200:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:207:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:214:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:220:12: (W113) accessing undefined variable 'FenUI'
+    Journal\JournalUI.lua:220:22: (W113) accessing undefined variable 'FenUI'
+    Journal\JournalUI.lua:222:30: (W113) accessing undefined variable 'FenUI'
+    Journal\JournalUI.lua:224:48: (W612) line contains trailing whitespace
+    Journal\JournalUI.lua:227:42: (W612) line contains trailing whitespace
+    Journal\JournalUI.lua:241:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:246:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:248:8: (W113) accessing undefined variable 'FenUI'
+    Journal\JournalUI.lua:248:18: (W113) accessing undefined variable 'FenUI'
+    Journal\JournalUI.lua:249:25: (W113) accessing undefined variable 'FenUI'
+    Journal\JournalUI.lua:255:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:259:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:264:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:278:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:287:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:289:8: (W113) accessing undefined variable 'FenUI'
+    Journal\JournalUI.lua:289:18: (W113) accessing undefined variable 'FenUI'
+    Journal\JournalUI.lua:290:27: (W113) accessing undefined variable 'FenUI'
+    Journal\JournalUI.lua:308:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:311:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:314:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:317:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:328:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:333:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:343:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:350:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:352:8: (W113) accessing undefined variable 'FenUI'
+    Journal\JournalUI.lua:352:18: (W113) accessing undefined variable 'FenUI'
+    Journal\JournalUI.lua:358:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:359:25: (W113) accessing undefined variable 'FenUI'
+    Journal\JournalUI.lua:367:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:383:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:392:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:397:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:404:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:419:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:425:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:432:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:438:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:440:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:445:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:457:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:467:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:478:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:480:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:485:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:492:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:513:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:538:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:541:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:544:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:560:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:562:64: (W614) trailing whitespace in a comment
+    Journal\JournalUI.lua:572:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:576:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:582:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:587:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:593:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:598:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:611:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:618:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:625:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:629:23: (W113) accessing undefined variable 'CALENDAR_FULLDATE_MONTH_NAMES'
+    Journal\JournalUI.lua:630:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:642:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:656:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:659:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:676:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:679:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:696:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:699:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:713:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:716:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:721:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:733:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:745:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:749:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:764:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:767:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:770:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:782:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:788:121: (W631) line is too long (124 > 120)
+    Journal\JournalUI.lua:793:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:794:5: (W311) value assigned to variable 'rowIndex' is unused
+    Journal\JournalUI.lua:796:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:807:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:812:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:835:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:839:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:850:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:851:17: (W113) accessing undefined variable 'time'
+    Journal\JournalUI.lua:853:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:856:16: (W113) accessing undefined variable 'date'
+    Journal\JournalUI.lua:860:16: (W113) accessing undefined variable 'date'
+    Journal\JournalUI.lua:864:16: (W113) accessing undefined variable 'date'
+    Journal\JournalUI.lua:867:12: (W113) accessing undefined variable 'date'
+    Journal\JournalUI.lua:877:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:882:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:904:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:908:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:911:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:927:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:930:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:937:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:946:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:952:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:956:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:963:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:966:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:968:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:972:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:976:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:986:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:988:5: (W112) mutating non-standard global variable 'StaticPopupDialogs'
+    Journal\JournalUI.lua:1001:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:1009:5: (W113) accessing undefined variable 'StaticPopup_Show'
+    Journal\JournalUI.lua:1013:5: (W112) mutating non-standard global variable 'StaticPopupDialogs'
+    Journal\JournalUI.lua:1026:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:1027:5: (W113) accessing undefined variable 'StaticPopup_Show'
+    Journal\JournalUI.lua:1037:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:1050:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:1066:1: (W611) line contains only whitespace
+    Journal\JournalUI.lua:1079:1: (W611) line contains only whitespace
+
+Checking TrackerCore.lua                          36 warnings
+
+    TrackerCore.lua:20:1: (W611) line contains only whitespace
+    TrackerCore.lua:32:1: (W611) line contains only whitespace
+    TrackerCore.lua:35:1: (W611) line contains only whitespace
+    TrackerCore.lua:54:1: (W611) line contains only whitespace
+    TrackerCore.lua:80:1: (W611) line contains only whitespace
+    TrackerCore.lua:85:1: (W611) line contains only whitespace
+    TrackerCore.lua:90:1: (W611) line contains only whitespace
+    TrackerCore.lua:95:22: (W113) accessing undefined variable 'time'
+    TrackerCore.lua:96:31: (W113) accessing undefined variable 'date'
+    TrackerCore.lua:97:1: (W611) line contains only whitespace
+    TrackerCore.lua:100:1: (W611) line contains only whitespace
+    TrackerCore.lua:105:1: (W611) line contains only whitespace
+    TrackerCore.lua:133:1: (W611) line contains only whitespace
+    TrackerCore.lua:145:1: (W611) line contains only whitespace
+    TrackerCore.lua:150:1: (W611) line contains only whitespace
+    TrackerCore.lua:197:1: (W611) line contains only whitespace
+    TrackerCore.lua:206:1: (W611) line contains only whitespace
+    TrackerCore.lua:218:1: (W611) line contains only whitespace
+    TrackerCore.lua:231:1: (W611) line contains only whitespace
+    TrackerCore.lua:241:1: (W611) line contains only whitespace
+    TrackerCore.lua:250:1: (W611) line contains only whitespace
+    TrackerCore.lua:256:1: (W611) line contains only whitespace
+    TrackerCore.lua:260:1: (W611) line contains only whitespace
+    TrackerCore.lua:265:1: (W611) line contains only whitespace
+    TrackerCore.lua:270:1: (W611) line contains only whitespace
+    TrackerCore.lua:276:1: (W611) line contains only whitespace
+    TrackerCore.lua:279:1: (W611) line contains only whitespace
+    TrackerCore.lua:289:1: (W611) line contains only whitespace
+    TrackerCore.lua:294:1: (W611) line contains only whitespace
+    TrackerCore.lua:299:1: (W611) line contains only whitespace
+    TrackerCore.lua:306:1: (W611) line contains only whitespace
+    TrackerCore.lua:316:1: (W611) line contains only whitespace
+    TrackerCore.lua:323:1: (W611) line contains only whitespace
+    TrackerCore.lua:331:1: (W611) line contains only whitespace
+    TrackerCore.lua:336:1: (W611) line contains only whitespace
+    TrackerCore.lua:378:12: (W113) accessing undefined variable 'GetExpansionLevel'
+
+Checking UI.lua                                   155 warnings
+
+    UI.lua:22:1: (W611) line contains only whitespace
+    UI.lua:25:1: (W611) line contains only whitespace
+    UI.lua:33:1: (W611) line contains only whitespace
+    UI.lua:38:1: (W611) line contains only whitespace
+    UI.lua:41:1: (W611) line contains only whitespace
+    UI.lua:47:1: (W611) line contains only whitespace
+    UI.lua:49:1: (W611) line contains only whitespace
+    UI.lua:53:1: (W611) line contains only whitespace
+    UI.lua:66:1: (W611) line contains only whitespace
+    UI.lua:71:1: (W611) line contains only whitespace
+    UI.lua:75:1: (W611) line contains only whitespace
+    UI.lua:77:1: (W611) line contains only whitespace
+    UI.lua:80:1: (W611) line contains only whitespace
+    UI.lua:82:1: (W611) line contains only whitespace
+    UI.lua:94:1: (W611) line contains only whitespace
+    UI.lua:107:75: (W614) trailing whitespace in a comment
+    UI.lua:109:1: (W611) line contains only whitespace
+    UI.lua:110:72: (W614) trailing whitespace in a comment
+    UI.lua:113:1: (W611) line contains only whitespace
+    UI.lua:115:1: (W611) line contains only whitespace
+    UI.lua:131:1: (W611) line contains only whitespace
+    UI.lua:133:1: (W611) line contains only whitespace
+    UI.lua:146:1: (W611) line contains only whitespace
+    UI.lua:148:1: (W611) line contains only whitespace
+    UI.lua:150:32: (W612) line contains trailing whitespace
+    UI.lua:153:1: (W611) line contains only whitespace
+    UI.lua:162:36: (W612) line contains trailing whitespace
+    UI.lua:163:1: (W611) line contains only whitespace
+    UI.lua:170:1: (W611) line contains only whitespace
+    UI.lua:173:1: (W611) line contains only whitespace
+    UI.lua:177:1: (W611) line contains only whitespace
+    UI.lua:182:1: (W611) line contains only whitespace
+    UI.lua:193:1: (W611) line contains only whitespace
+    UI.lua:198:1: (W611) line contains only whitespace
+    UI.lua:203:1: (W611) line contains only whitespace
+    UI.lua:206:1: (W611) line contains only whitespace
+    UI.lua:207:1: (W611) line contains only whitespace
+    UI.lua:208:12: (W113) accessing undefined variable 'FormatLargeNumber'
+    UI.lua:228:11: (W311) value assigned to variable 'resolvedId' is unused
+    UI.lua:229:1: (W611) line contains only whitespace
+    UI.lua:239:24: (W612) line contains trailing whitespace
+    UI.lua:251:62: (W612) line contains trailing whitespace
+    UI.lua:252:1: (W611) line contains only whitespace
+    UI.lua:255:1: (W611) line contains only whitespace
+    UI.lua:259:1: (W611) line contains only whitespace
+    UI.lua:279:1: (W611) line contains only whitespace
+    UI.lua:293:1: (W611) line contains only whitespace
+    UI.lua:304:1: (W611) line contains only whitespace
+    UI.lua:309:24: (W113) accessing undefined variable 'C_WeeklyRewards'
+    UI.lua:321:24: (W113) accessing undefined variable 'C_WeeklyRewards'
+    UI.lua:323:1: (W611) line contains only whitespace
+    UI.lua:325:1: (W611) line contains only whitespace
+    UI.lua:336:23: (W113) accessing undefined variable 'C_MythicPlus'
+    UI.lua:336:63: (W612) line contains trailing whitespace
+    UI.lua:341:49: (W612) line contains trailing whitespace
+    UI.lua:342:37: (W612) line contains trailing whitespace
+    UI.lua:343:40: (W612) line contains trailing whitespace
+    UI.lua:344:47: (W612) line contains trailing whitespace
+    UI.lua:348:1: (W611) line contains only whitespace
+    UI.lua:352:27: (W113) accessing undefined variable 'GetNumSavedInstances'
+    UI.lua:354:86: (W113) accessing undefined variable 'GetSavedInstanceInfo'
+    UI.lua:357:52: (W113) accessing undefined variable 'GetSavedInstanceEncounterInfo'
+    UI.lua:369:1: (W611) line contains only whitespace
+    UI.lua:375:1: (W611) line contains only whitespace
+    UI.lua:389:1: (W611) line contains only whitespace
+    UI.lua:396:1: (W611) line contains only whitespace
+    UI.lua:402:1: (W611) line contains only whitespace
+    UI.lua:407:1: (W611) line contains only whitespace
+    UI.lua:411:1: (W611) line contains only whitespace
+    UI.lua:429:1: (W611) line contains only whitespace
+    UI.lua:435:1: (W611) line contains only whitespace
+    UI.lua:439:1: (W611) line contains only whitespace
+    UI.lua:441:1: (W611) line contains only whitespace
+    UI.lua:450:1: (W611) line contains only whitespace
+    UI.lua:455:1: (W611) line contains only whitespace
+    UI.lua:457:24: (W542) empty if branch
+    UI.lua:462:1: (W611) line contains only whitespace
+    UI.lua:466:1: (W611) line contains only whitespace
+    UI.lua:468:1: (W611) line contains only whitespace
+    UI.lua:473:1: (W611) line contains only whitespace
+    UI.lua:476:1: (W611) line contains only whitespace
+    UI.lua:480:1: (W611) line contains only whitespace
+    UI.lua:483:1: (W611) line contains only whitespace
+    UI.lua:487:1: (W611) line contains only whitespace
+    UI.lua:495:1: (W611) line contains only whitespace
+    UI.lua:505:1: (W611) line contains only whitespace
+    UI.lua:510:1: (W611) line contains only whitespace
+    UI.lua:516:1: (W611) line contains only whitespace
+    UI.lua:519:1: (W611) line contains only whitespace
+    UI.lua:524:1: (W611) line contains only whitespace
+    UI.lua:530:1: (W611) line contains only whitespace
+    UI.lua:533:1: (W611) line contains only whitespace
+    UI.lua:535:1: (W611) line contains only whitespace
+    UI.lua:538:1: (W611) line contains only whitespace
+    UI.lua:546:1: (W611) line contains only whitespace
+    UI.lua:549:69: (W612) line contains trailing whitespace
+    UI.lua:550:1: (W611) line contains only whitespace
+    UI.lua:553:1: (W611) line contains only whitespace
+    UI.lua:563:1: (W611) line contains only whitespace
+    UI.lua:568:1: (W611) line contains only whitespace
+    UI.lua:573:45: (W612) line contains trailing whitespace
+    UI.lua:574:1: (W611) line contains only whitespace
+    UI.lua:580:1: (W611) line contains only whitespace
+    UI.lua:586:1: (W611) line contains only whitespace
+    UI.lua:596:1: (W611) line contains only whitespace
+    UI.lua:609:1: (W611) line contains only whitespace
+    UI.lua:627:1: (W611) line contains only whitespace
+    UI.lua:633:20: (W113) accessing undefined variable 'QuestMapFrame_OpenToQuestDetails'
+    UI.lua:634:21: (W113) accessing undefined variable 'QuestMapFrame_OpenToQuestDetails'
+    UI.lua:637:21: (W113) accessing undefined variable 'ToggleQuestLog'
+    UI.lua:641:31: (W113) accessing undefined variable 'UiMapPoint'
+    UI.lua:643:17: (W113) accessing undefined variable 'C_SuperTrack'
+    UI.lua:649:1: (W611) line contains only whitespace
+    UI.lua:664:1: (W611) line contains only whitespace
+    UI.lua:669:1: (W611) line contains only whitespace
+    UI.lua:672:1: (W611) line contains only whitespace
+    UI.lua:682:1: (W611) line contains only whitespace
+    UI.lua:688:1: (W611) line contains only whitespace
+    UI.lua:698:1: (W611) line contains only whitespace
+    UI.lua:704:54: (W612) line contains trailing whitespace
+    UI.lua:705:1: (W611) line contains only whitespace
+    UI.lua:707:1: (W611) line contains only whitespace
+    UI.lua:716:1: (W611) line contains only whitespace
+    UI.lua:720:1: (W611) line contains only whitespace
+    UI.lua:724:1: (W611) line contains only whitespace
+    UI.lua:727:1: (W611) line contains only whitespace
+    UI.lua:732:1: (W611) line contains only whitespace
+    UI.lua:746:1: (W611) line contains only whitespace
+    UI.lua:750:32: (W614) trailing whitespace in a comment
+    UI.lua:760:1: (W611) line contains only whitespace
+    UI.lua:766:1: (W611) line contains only whitespace
+    UI.lua:772:1: (W611) line contains only whitespace
+    UI.lua:774:1: (W611) line contains only whitespace
+    UI.lua:777:33: (W612) line contains trailing whitespace
+    UI.lua:779:1: (W611) line contains only whitespace
+    UI.lua:782:1: (W611) line contains only whitespace
+    UI.lua:786:1: (W611) line contains only whitespace
+    UI.lua:790:1: (W611) line contains only whitespace
+    UI.lua:792:57: (W614) trailing whitespace in a comment
+    UI.lua:795:1: (W611) line contains only whitespace
+    UI.lua:799:1: (W611) line contains only whitespace
+    UI.lua:803:1: (W611) line contains only whitespace
+    UI.lua:808:1: (W611) line contains only whitespace
+    UI.lua:815:1: (W611) line contains only whitespace
+    UI.lua:827:1: (W611) line contains only whitespace
+    UI.lua:836:1: (W611) line contains only whitespace
+    UI.lua:838:1: (W611) line contains only whitespace
+    UI.lua:842:1: (W611) line contains only whitespace
+    UI.lua:844:1: (W611) line contains only whitespace
+    UI.lua:847:1: (W611) line contains only whitespace
+    UI.lua:853:1: (W611) line contains only whitespace
+    UI.lua:860:1: (W611) line contains only whitespace
+    UI.lua:863:1: (W611) line contains only whitespace
+    UI.lua:865:1: (W611) line contains only whitespace
+    UI.lua:868:1: (W611) line contains only whitespace
+
+Total: 735 warnings / 0 errors in 15 files

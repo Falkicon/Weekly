@@ -32,3 +32,4 @@ Weekly is a lightweight weekly objective tracker. Does this feature fit that sco
 ## Additional Context
 
 Mockups, examples from other addons, or any other relevant information.
+

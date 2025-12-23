@@ -1,12 +1,13 @@
 ## Interface: 120001, 120000
 ## Title: Weekly
 ## Author: Jason Falk
-## Version: 0.3.0
+## Version: 0.4.0
 ## Notes: Track weekly to-dos, currencies, and stats
 ## X-License: GPL-3.0
 ## SavedVariables: WeeklyDB
 
 embeds.xml
+Locales\enUS.lua
 Core.lua
 
 # Data Layer
@@ -28,6 +29,8 @@ Journal\JournalUI.lua
 Journal\JournalBroker.lua
 
 # Dev Tools (excluded from CurseForge via .pkgmeta)
+#@debug@
 DevMarker.lua
 Dev\TrackerCore.lua
 Dev\Discovery.lua
+#@end-debug@

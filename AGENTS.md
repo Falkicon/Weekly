@@ -2,7 +2,7 @@
 
 Technical reference for AI agents modifying this addon.
 
-For shared patterns, documentation requirements, and library management, see **[ADDON_DEV/AGENTS.md](../../ADDON_DEV/AGENTS.md)**.
+For shared patterns, library references, and development guides, see **[ADDON_DEV/AGENTS.md](../ADDON_DEV/AGENTS.md)**.
 
 ---
 
@@ -151,3 +151,25 @@ WeeklyDB.profile.journal = {
 
 For detailed implementation docs, see the `Docs/` folder:
 - [Data Management](Data/AGENTS.md) – Currency/quest IDs, seasonal updates
+
+---
+
+## Development & Tooling
+
+### Tooling Commands
+This addon is integrated with the `ADDON_DEV` workspace tools:
+- **Linting**: `lint_addon("Weekly")`
+- **Formatting**: `format_addon("Weekly")`
+- **Testing**: `run_tests("Weekly")`
+- **Localization**: `extract_locale_strings("Weekly")`
+
+### Localization
+Uses **AceLocale-3.0**.
+- Base locale: `Locales/enUS.lua`
+- All user-facing UI strings must be wrapped in `L["KEY"]`.
+- Data files in `Data/` (quest/currency names) are NOT localized as they come from the WoW API.
+
+### Unit Tests
+Tests are located in the `Tests/` directory and use the **Busted** framework with `wow_api` mocks.
+- `Tests/test_data_loader.lua`: Tests the seasonal data registration and recommended season detection.
+- `Tests/test_journal.lua`: Tests the weekly journal logic, including reset detection and category counts.
