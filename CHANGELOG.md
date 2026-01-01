@@ -1,4 +1,9 @@
 # Changelog
+## [1.2.3] - 2025-12-31
+
+### Changed
+- Added new feature
+
 
 All notable changes to Weekly will be documented in this file.
 

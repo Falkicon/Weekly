@@ -173,3 +173,4 @@ Uses **AceLocale-3.0**.
 Tests are located in the `Tests/` directory and use the **Busted** framework with `wow_api` mocks.
 - `Tests/test_data_loader.lua`: Tests the seasonal data registration and recommended season detection.
 - `Tests/test_journal.lua`: Tests the weekly journal logic, including reset detection and category counts.
+

@@ -6,7 +6,9 @@ Technical reference for AI agents modifying this UI library.
 
 ### Development Documentation
 
-- **[ADDON_DEV/AGENTS.md](../../AGENTS.md)** – Library index, automation scripts, dependency chains
+- **[ADDON_DEV/AGENTS.md](../../AGENTS.md)** – Build versions, standard patterns, index
+- **[Library Reference](../../AGENTS_reference/libraries.md)** – Library index, automation scripts, dependency chains
+- **[Blizzard UI Reference](../../AGENTS_reference/blizzard-ui.md)** – Source paths and usage guides
 - **[Addon Development Guide](../../Addon_Dev_Guide/)** – Full documentation covering:
   - Core principles, project structure, TOC best practices
   - UI engineering, configuration UI, combat lockdown
@@ -40,6 +42,15 @@ A Blizzard-first UI widget library for World of Warcraft addon development.
 - **Graceful degradation** – addons work without FenUI installed
 
 ## Constraints
+---
+
+## Source of Truth
+
+This directory is the **primary source of truth** for FenUI.
+
+- **Development**: All new features, bug fixes, and widget enhancements must be made here.
+- **Distribution**: Changes are propagated to consuming addons (!Mechanic, Weekly, etc.) via the lib_sync.ps1 toolchain.
+- **Enforcement**: Consuming addons have Libs/ ignored by agents to prevent accidental direct edits.
 
 - Must work on Retail 11.0+
 - **Interface Version**: Currently targeting **120001** (Midnight expansion, due January 20th, 2026)
@@ -52,14 +63,18 @@ A Blizzard-first UI widget library for World of Warcraft addon development.
 FenUI/
 ├── Core/                    # Foundation layer
 │   ├── FenUI.lua           # Global namespace, version, debug, slash commands
-│   ├── Tokens.lua          # Three-tier design token system
-│   ├── BlizzardBridge.lua  # NineSlice layouts, Atlas helpers
+│   ├── Animation.lua       # Declarative animation system (v2.8.0+)
+│   ├── Tokens.lua          # Three-tier design token system & BorderPack Registry
+│   ├── BlizzardBridge.lua  # Custom NineSlice renderer (8-texture), Atlas helpers
 │   └── ThemeManager.lua    # Theme registration and application
 │
 ├── Widgets/                 # UI components
 │   ├── Layout.lua          # FOUNDATIONAL container primitive (background, border, shadow, cells)
-│   ├── Panel.lua           # Main window container (uses Layout internally)
-│   ├── Containers.lua      # Insets, scroll panels (uses Layout internally)
+│   ├── Stack.lua           # FLEXBOX-inspired stacking layout (vertical/horizontal, wrap, grow)
+│   ├── Panel.lua           # Main window container (supports movable/resizable)
+│   ├── Containers.lua      # Insets, managed scroll panels
+│   ├── ScrollBar.lua       # Custom dark scrollbar widget (v2.5.0+)
+│   ├── SplitLayout.lua     # Horizontal/Vertical split layouts
 │   ├── Tabs.lua            # Tab groups with states and badges
 │   ├── Buttons.lua         # Standard, icon, and close buttons
 │   ├── Grid.lua            # CSS Grid-inspired layout for content
@@ -119,6 +134,9 @@ FenUI:GetColorTableRGB(semanticToken)-- Returns {r, g, b}
 FenUI:GetSpacing(semanticToken)      -- Returns pixels
 FenUI:GetLayout(layoutName)          -- Returns layout constant
 FenUI:GetFont(semanticToken)         -- Returns font object name
+
+-- Sizing & Constraints
+FenUI.Utils:ApplySize(frame, w, h, constraints) -- Low-level sizing engine
 ```
 
 ### Widget Creation Pattern
@@ -228,6 +246,14 @@ local gridBox = FenUI:CreateLayout(parent, {
     },
     gap = "spacingElement",
 })
+
+-- Sizing with constraints
+local constrained = FenUI:CreateLayout(parent, {
+    width = "100%",
+    maxWidth = 400,
+    minHeight = 200,
+    aspectRatio = "16:9",
+})
 ```
 
 **Shadow Types:**
@@ -313,12 +339,14 @@ local BORDER_INSETS = {
 ### Architecture Reference
 
 ```
-Layout Frame (NineSlice border)
-  └── bgFrame (frameLevel 0)
+Layout Frame (NineSlice border via custom renderer)
+  └── bgFrame (frameLevel -1, MouseEnabled but ClickDisabled for Inspect)
         └── bgTexture (color/gradient/image)
 ```
 
 The `bgFrame` child exists because WoW 9.1.5+ has conflicts between NineSlice and textures created directly on the same frame. This follows Blizzard's pattern in `FlatPanelBackgroundTemplate`.
+
+**Inspectability**: Since v2.5.0, structural frames (cells, backgrounds, scroll content) use `SetMouseClickEnabled(false)` to ensure they are visible to `GetMouseFoci()` (and thus !Mechanic) without intercepting user clicks.
 
 ## Consuming Addons
 
@@ -410,7 +438,7 @@ table.insert(self.rowPool, row)  -- return to pool
 
 ## Library Management
 
-FenUI is developed in `ADDON_DEV/FenUI/` and deployed to consuming addons via `update_libs.ps1`.
+FenUI is developed in `ADDON_DEV/Libs/FenUI/` and deployed to consuming addons via `lib_sync.ps1`.
 
 **Source of Truth:** `Libs/FenUI/`
 
@@ -420,7 +448,7 @@ FenUI is developed in `ADDON_DEV/FenUI/` and deployed to consuming addons via `u
 
 **To deploy changes:**
 ```powershell
-powershell -File "c:\Program Files (x86)\World of Warcraft\_dev_\ADDON_DEV\Libs\update_libs.ps1"
+powershell -File "c:\Program Files (x86)\World of Warcraft\_dev_\ADDON_DEV\Tools\LibrarySync\lib_sync.ps1"
 ```
 
 **Load Order:** Consuming addons include FenUI via `embeds.xml`:
@@ -429,3 +457,4 @@ powershell -File "c:\Program Files (x86)\World of Warcraft\_dev_\ADDON_DEV\Libs\
 ```
 
 **Note:** The `.toc` file is kept for reference but is not used when FenUI is embedded.
+
