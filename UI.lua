@@ -442,100 +442,100 @@ function UI:RenderRows()
 			-- Create a copy for sorting so we don't mutate the data source
 			local items = {}
 			for _, item in ipairs(section.items) do
-			-- Robust ID check: if table, use first ID as key
-			local checkID = item.id
-			if type(checkID) == "table" then
-				checkID = checkID[1]
-			end
-
-			if not (item.id and cfg.hiddenItems[checkID]) then
-				table.insert(items, item)
-			end
-		end
-
-		-- Skip section entirely if all items are hidden
-		if #items == 0 then
-			-- Empty section - skip entirely
-		else
-			-- Check if this section is collapsed
-			local isCollapsed = cfg.collapsedSections and cfg.collapsedSections[section.title]
-
-			-- B. Header (only if there are visible items)
-			table.insert(visibleRows, { type = "header", text = section.title, isCollapsed = isCollapsed })
-
-			-- Measure Header (add space for collapse indicator)
-			self.measureFS:SetFont(fontPath, cfg.headerFontSize, "OUTLINE")
-			self.measureFS:SetText("[-] " .. section.title)
-
-			-- Include header width in maxLabelWidth so collapsed sections set proper frame width
-			local headerWidth = self.measureFS:GetStringWidth()
-			if headerWidth > maxLabelWidth then
-				maxLabelWidth = headerWidth
-			end
-
-			totalHeight = totalHeight + (cfg.headerFontSize + 6) + cfg.itemSpacing
-
-			-- Only process/show items if section is NOT collapsed
-			if not isCollapsed then
-				-- Sort
-				if not section.noSort then
-					ns.Utils.SortItems(items)
+				-- Robust ID check: if table, use first ID as key
+				local checkID = item.id
+				if type(checkID) == "table" then
+					checkID = checkID[1]
 				end
 
-				-- Measure Items
-				self.measureFS:SetFont(fontPath, cfg.itemFontSize)
+				if not (item.id and cfg.hiddenItems[checkID]) then
+					table.insert(items, item)
+				end
+			end
 
-				for _, item in ipairs(items) do
-					local renderItem = setmetatable({ section = section.title }, { __index = item })
-					table.insert(visibleRows, renderItem)
+			-- Skip section entirely if all items are hidden
+			if #items == 0 then
+			-- Empty section - skip entirely
+			else
+				-- Check if this section is collapsed
+				local isCollapsed = cfg.collapsedSections and cfg.collapsedSections[section.title]
 
-					local textWidth = 0
-					local valueWidth = 0
+				-- B. Header (only if there are visible items)
+				table.insert(visibleRows, { type = "header", text = section.title, isCollapsed = isCollapsed })
 
-					if item.type == "vault_row" then
-						self.measureFS:SetText(item.label)
-						textWidth = self.measureFS:GetStringWidth()
+				-- Measure Header (add space for collapse indicator)
+				self.measureFS:SetFont(fontPath, cfg.headerFontSize, "OUTLINE")
+				self.measureFS:SetText("[-] " .. section.title)
 
-						local done, max = ns.Utils.GetVault(item.id)
-						self.measureFS:SetText(done .. " / " .. max)
-						valueWidth = self.measureFS:GetStringWidth()
-					elseif item.type == "quest" then
-						self.measureFS:SetText(item.label)
-						textWidth = self.measureFS:GetStringWidth()
+				-- Include header width in maxLabelWidth so collapsed sections set proper frame width
+				local headerWidth = self.measureFS:GetStringWidth()
+				if headerWidth > maxLabelWidth then
+					maxLabelWidth = headerWidth
+				end
 
-						local _, prog, max, _, isPercent = ns.Utils.GetQuest(item.id)
-						if max >= 1 then
-							if isPercent then
-								self.measureFS:SetText(prog .. "%")
-							else
-								self.measureFS:SetText(prog .. " / " .. max)
+				totalHeight = totalHeight + (cfg.headerFontSize + 6) + cfg.itemSpacing
+
+				-- Only process/show items if section is NOT collapsed
+				if not isCollapsed then
+					-- Sort
+					if not section.noSort then
+						ns.Utils.SortItems(items)
+					end
+
+					-- Measure Items
+					self.measureFS:SetFont(fontPath, cfg.itemFontSize)
+
+					for _, item in ipairs(items) do
+						local renderItem = setmetatable({ section = section.title }, { __index = item })
+						table.insert(visibleRows, renderItem)
+
+						local textWidth = 0
+						local valueWidth = 0
+
+						if item.type == "vault_row" then
+							self.measureFS:SetText(item.label)
+							textWidth = self.measureFS:GetStringWidth()
+
+							local done, max = ns.Utils.GetVault(item.id)
+							self.measureFS:SetText(done .. " / " .. max)
+							valueWidth = self.measureFS:GetStringWidth()
+						elseif item.type == "quest" then
+							self.measureFS:SetText(item.label)
+							textWidth = self.measureFS:GetStringWidth()
+
+							local _, prog, max, _, isPercent = ns.Utils.GetQuest(item.id)
+							if max >= 1 then
+								if isPercent then
+									self.measureFS:SetText(prog .. "%")
+								else
+									self.measureFS:SetText(prog .. " / " .. max)
+								end
+								valueWidth = self.measureFS:GetStringWidth()
 							end
+						elseif item.type == "currency" or item.type == "currency_cap" then
+							local _, amt, max, name = ns.Utils.GetCurrency(item.id)
+							self.measureFS:SetText(item.label or name)
+							textWidth = self.measureFS:GetStringWidth()
+
+							local valText = amt
+							if max > 0 then
+								valText = amt .. " / " .. max
+							end
+							self.measureFS:SetText(valText)
 							valueWidth = self.measureFS:GetStringWidth()
 						end
-					elseif item.type == "currency" or item.type == "currency_cap" then
-						local _, amt, max, name = ns.Utils.GetCurrency(item.id)
-						self.measureFS:SetText(item.label or name)
-						textWidth = self.measureFS:GetStringWidth()
 
-						local valText = amt
-						if max > 0 then
-							valText = amt .. " / " .. max
+						if textWidth > maxLabelWidth then
+							maxLabelWidth = textWidth
 						end
-						self.measureFS:SetText(valText)
-						valueWidth = self.measureFS:GetStringWidth()
-					end
+						if valueWidth > maxValueWidth then
+							maxValueWidth = valueWidth
+						end
 
-					if textWidth > maxLabelWidth then
-						maxLabelWidth = textWidth
+						totalHeight = totalHeight + (cfg.itemFontSize + 6) + cfg.itemSpacing
 					end
-					if valueWidth > maxValueWidth then
-						maxValueWidth = valueWidth
-					end
-
-					totalHeight = totalHeight + (cfg.itemFontSize + 6) + cfg.itemSpacing
 				end
 			end
-		end
 		end -- Close time-gate else block
 	end
 

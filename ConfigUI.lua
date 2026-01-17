@@ -316,6 +316,7 @@ function ConfigUI:Initialize()
 						or row.type == "currency_cap"
 						or row.type == "quest"
 						or row.type == "vault_visual"
+						or row.type == "item"
 					)
 				then
 					table.insert(sortedItems, row)
