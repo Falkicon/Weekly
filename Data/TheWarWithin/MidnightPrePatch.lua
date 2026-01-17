@@ -47,9 +47,11 @@ local data = {
 	{
 		title = "Twilight Ascension",
 		items = {
-			-- Weekly wrapper quests (IDs TBD - update Jan 27)
+			-- Weekly wrapper quests
 			Quest(0, "Twilight's Call", "Interface\\Icons\\spell_shadow_twilight"),
-			Quest(0, "Disrupt the Call", "Interface\\Icons\\spell_shadow_twilight"),
+			Quest(91795, "Disrupt the Call", "Interface\\Icons\\spell_shadow_twilight"),
+			-- Pre-patch event currency
+			Currency(3319, "Twilight's Blade Insignia"),
 			-- World Quests reward ~10 Insignias each (4-5 active at a time in Twilight Highlands)
 		},
 	},
@@ -127,6 +129,8 @@ local data = {
 		items = {
 			-- Weekly wrapper (ID TBD - update Jan 20)
 			Quest(0, "Neighborhood Endeavors", "Interface\\Icons\\inv_misc_key_14"),
+			-- Housing currency
+			Currency(3363, "Community Coupons"),
 			-- Lumber types (up to 1000 stacks each)
 			Item(251764, "Ashwood Lumber"),
 			Item(242691, "Olemba Lumber"),
@@ -155,11 +159,6 @@ local data = {
 	{
 		title = "Currencies",
 		items = {
-			-- Pre-Patch Event Currency (ID TBD - update Jan 27)
-			Currency(0, "Twilight's Blade Insignia"),
-			-- Housing Currencies (IDs TBD - update Jan 20)
-			Currency(0, "Neighborhood Favor"),
-			Currency(0, "Lumber"),
 			-- TWW Currencies (still active during pre-patch)
 			Currency(3056, "Kej"),
 			Currency(2815, "Resonance Crystals"),
