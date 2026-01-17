@@ -7,7 +7,7 @@ A lightweight, modular World of Warcraft addon designed to track your weekly pro
 [![GitHub](https://img.shields.io/badge/GitHub-Falkicon%2FWeekly-181717?logo=github)](https://github.com/Falkicon/Weekly)
 [![Sponsor](https://img.shields.io/badge/Sponsor-pink?logo=githubsponsors)](https://github.com/sponsors/Falkicon)
 
-> **The War Within Ready**: Pre-loaded with Season 3 and TWW expansion data. Data-driven design allows easy updates for new seasons.
+> **Midnight Ready**: Pre-loaded with TWW Season 3 and Midnight pre-patch data. Time-gated sections auto-appear when content launches.
 
 ## Features
 
@@ -15,7 +15,8 @@ A lightweight, modular World of Warcraft addon designed to track your weekly pro
 - **📅 Weekly Events** – Track Theater Troupe, Awakening Machine, Spreading Light, and more
 - **💰 Currency Tracking** – Monitor Valorstones, Crests, Resonance Crystals, and seasonal currencies
 - **📔 Weekly Journal** – Track collectibles earned this week: Achievements, Mounts, Pets, Toys, Decor, and gathered materials. Auto-resets on weekly reset
-- **⛏️ Gathering Tracker** – Automatically tracks looted herbs, ore, leather, cloth, and more. Grouped by expansion for easy old-world mat farming
+- **📁 Collapsible Sections** – Click section headers to expand/collapse, with state persisted across reloads
+- **⏰ Time-Gated Content** – Sections appear/disappear based on content release dates
 - **🔄 Smart Sorting** – Automatically moves completed items and capped currencies to the bottom (configurable)
 - **📐 Auto-Sizing UI** – Window dynamically adjusts height and width based on visible items
 - **🗂️ Modular Data System** – Easily switch between Expansions and Seasons via settings
@@ -57,9 +58,9 @@ Right-click the Minimap icon or use `/weekly config` to access options.
 
 ### Settings Sections
 
-- **General** – Unlock window, adjust opacity
+- **General** – Lock window, sort completed items, debug toggle for time-gated content
 - **Data Source** – Switch the active Expansion and Season
-- **Appearance** – Customize fonts, sizes, spacing, and indents
+- **Appearance** – Customize fonts, sizes, spacing, indents, and background opacity
 - **Tracked Items** – Individually toggle specific items on or off
 - **Journal** – Enable/disable journal, notification settings, minimap icon
 - **Profiles** – Standard AceDB profile management
