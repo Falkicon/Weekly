@@ -45,14 +45,13 @@ local data = {
 	-- TEMPORARY: Remove this section when Midnight S1 launches
 	--------------------------------------------------------------------------------
 	{
-		title = "Twilight Ascension",
+		title = "Twilight Ascension (Pre-patch Event)",
 		items = {
 			-- Weekly wrapper quests
 			Quest(0, "Twilight's Call", "Interface\\Icons\\spell_shadow_twilight"),
 			Quest(91795, "Disrupt the Call", "Interface\\Icons\\spell_shadow_twilight"),
-			-- Pre-patch event currency
+			-- Event currency
 			Currency(3319, "Twilight's Blade Insignia"),
-			-- World Quests reward ~10 Insignias each (4-5 active at a time in Twilight Highlands)
 		},
 	},
 	--------------------------------------------------------------------------------
