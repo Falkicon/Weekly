@@ -143,52 +143,6 @@ function ConfigUI:Initialize()
 							ns.UI:ApplyFrameStyle()
 						end,
 					},
-					autoShow = {
-						type = "toggle",
-						name = L["Show on Login"],
-						desc = L["Automatically show the Weekly window when you log in or reload the UI."],
-						order = 1,
-						get = function()
-							return ns.Config.autoShow
-						end,
-						set = function(_, val)
-							ns.Config.autoShow = val
-						end,
-					},
-					anchor = {
-						type = "select",
-						name = L["Anchor Point"],
-						desc = L["Determines which side the window grows from when resizing."],
-						order = 2,
-						values = {
-							["TOP"] = L["Top (Grows Down)"],
-							["BOTTOM"] = L["Bottom (Grows Up)"],
-						},
-						get = function()
-							return ns.Config.anchor
-						end,
-						set = function(_, val)
-							ns.Config.anchor = val
-							ns.UI:ApplyFrameStyle() -- Updates the anchor immediately
-						end,
-					},
-					-- Minimized option removed (Broker handles standard visibility)
-					-- panelWidth/Height removed (Auto-Sizing)
-					backgroundAlpha = {
-						type = "range",
-						name = L["Background Opacity"],
-						min = 0,
-						max = 100,
-						step = 5,
-						order = 4,
-						get = function()
-							return ns.Config.backgroundAlpha
-						end,
-						set = function(_, val)
-							ns.Config.backgroundAlpha = val
-							ns.UI:ApplyFrameStyle()
-						end,
-					},
 				},
 			},
 		},
@@ -272,6 +226,21 @@ function ConfigUI:Initialize()
 				set = function(_, val)
 					ns.Config.itemIndent = val
 					ns.UI:RefreshRows()
+				end,
+			},
+			backgroundAlpha = {
+				type = "range",
+				name = L["Background Opacity"],
+				min = 0,
+				max = 100,
+				step = 5,
+				order = 7,
+				get = function()
+					return ns.Config.backgroundAlpha
+				end,
+				set = function(_, val)
+					ns.Config.backgroundAlpha = val
+					ns.UI:ApplyFrameStyle()
 				end,
 			},
 		},
