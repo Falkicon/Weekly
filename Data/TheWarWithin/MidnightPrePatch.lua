@@ -46,6 +46,7 @@ local data = {
 	--------------------------------------------------------------------------------
 	{
 		title = "Twilight Ascension (Pre-patch Event)",
+		noSort = true,
 		items = {
 			-- Weekly wrapper quests
 			Quest(0, "Twilight's Call", "Interface\\Icons\\spell_shadow_twilight"),
@@ -60,6 +61,7 @@ local data = {
 	--------------------------------------------------------------------------------
 	{
 		title = "Midnight Campaign",
+		noSort = true,
 		items = {
 			Quest(91281, "Midnight", "Interface\\GossipFrame\\AvailableQuestIcon"),
 			Quest(88719, "A Voice from the Light", "Interface\\GossipFrame\\AvailableQuestIcon"),
@@ -125,17 +127,18 @@ local data = {
 	--------------------------------------------------------------------------------
 	{
 		title = "Housing",
+		noSort = true,
 		items = {
 			-- Weekly wrapper (ID TBD - update Jan 20)
 			Quest(0, "Neighborhood Endeavors", "Interface\\Icons\\inv_misc_key_14"),
-			-- Housing currency
-			Currency(3363, "Community Coupons"),
 			-- Lumber types (up to 1000 stacks each)
 			Item(251764, "Ashwood Lumber"),
 			Item(242691, "Olemba Lumber"),
 			Item(245586, "Ironwood Lumber"),
 			Item(248012, "Dornic Fir Lumber"),
 			Item(251766, "Shadowmoon Lumber"),
+			-- Housing currency
+			Currency(3363, "Community Coupons"),
 		},
 	},
 	--------------------------------------------------------------------------------
