@@ -41,7 +41,7 @@ L["Top (Grows Down)"] = true
 L["Bottom (Grows Up)"] = true
 L["Background Opacity"] = true
 L["Show All Gated Content"] = true
-L["Show all time-gated sections regardless of current date. Useful for testing."] = true
+L["Show all time-gated sections regardless of current date. Reload UI to update Tracked Items list."] = true
 
 -- ConfigUI - Appearance
 L["Appearance"] = true

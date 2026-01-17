@@ -146,7 +146,7 @@ function ConfigUI:Initialize()
 					ignoreTimeGates = {
 						type = "toggle",
 						name = L["Show All Gated Content"],
-						desc = L["Show all time-gated sections regardless of current date. Useful for testing."],
+						desc = L["Show all time-gated sections regardless of current date. Reload UI to update Tracked Items list."],
 						order = 5,
 						get = function()
 							return ns.Config.debug and ns.Config.debug.ignoreTimeGates
