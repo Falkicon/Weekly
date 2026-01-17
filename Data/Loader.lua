@@ -24,9 +24,9 @@ function ns.Data:GetRecommendedSeason()
 		return 12, 1
 	end
 
-	-- Expansion 12.0.0 (Midnight Pre-Patch) - Still TWW content with additions
+	-- Expansion 12.0.0 (Midnight Pre-Patch) - Still TWW Season 3 with time-gated additions
 	if tocversion >= 120000 then
-		return 11, 3.5
+		return 11, 3
 	end
 
 	-- Expansion 11 (TWW) - Season 3

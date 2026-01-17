@@ -39,6 +39,11 @@ ns.ConfigDefaults = {
 			windowPosition = nil, -- Saved window position
 			selectedTab = "dashboard", -- Last selected tab
 		},
+
+		-- Debug Options
+		debug = {
+			ignoreTimeGates = false, -- Show all gated content regardless of date
+		},
 	},
 }
 

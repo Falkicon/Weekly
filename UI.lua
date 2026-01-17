@@ -10,6 +10,45 @@ local C_HEADER = { 1, 0.8, 0 } -- Gold
 local _C_BAR_VALOR = { 0.8, 0.6, 0.2 } -- Earthy Gold
 local _C_BAR_CREST = { 0.7, 0.4, 0.9 } -- Purple
 
+--------------------------------------------------------------------------------
+-- Time-Gating Utilities
+--------------------------------------------------------------------------------
+
+-- Parse "YYYY-MM-DD" date string to timestamp
+local function ParseDate(dateStr)
+	local y, m, d = dateStr:match("(%d+)-(%d+)-(%d+)")
+	if y and m and d then
+		return time({ year = tonumber(y), month = tonumber(m), day = tonumber(d), hour = 0 })
+	end
+	return nil
+end
+
+-- Check if section should be visible based on showAfter/hideAfter dates
+local function IsSectionVisible(section, cfg)
+	-- Debug override: show all gated content
+	if cfg.debug and cfg.debug.ignoreTimeGates then
+		return true
+	end
+
+	local now = time()
+
+	if section.showAfter then
+		local showTime = ParseDate(section.showAfter)
+		if showTime and now < showTime then
+			return false -- Not yet visible
+		end
+	end
+
+	if section.hideAfter then
+		local hideTime = ParseDate(section.hideAfter)
+		if hideTime and now >= hideTime then
+			return false -- Already hidden
+		end
+	end
+
+	return true
+end
+
 function UI:Initialize()
 	local _cfg = ns.Config
 
@@ -395,10 +434,14 @@ function UI:RenderRows()
 	local fontPath = LibStub("LibSharedMedia-3.0"):Fetch("font", cfg.font or "Friz Quadrata TT")
 
 	for _, section in ipairs(sections) do
-		-- A. Process Items first to check if any are visible
-		-- Create a copy for sorting so we don't mutate the data source
-		local items = {}
-		for _, item in ipairs(section.items) do
+		-- Skip time-gated sections that shouldn't be visible yet
+		if not IsSectionVisible(section, cfg) then
+			-- Section is time-gated out - skip entirely
+		else
+			-- A. Process Items first to check if any are visible
+			-- Create a copy for sorting so we don't mutate the data source
+			local items = {}
+			for _, item in ipairs(section.items) do
 			-- Robust ID check: if table, use first ID as key
 			local checkID = item.id
 			if type(checkID) == "table" then
@@ -493,6 +536,7 @@ function UI:RenderRows()
 				end
 			end
 		end
+		end -- Close time-gate else block
 	end
 
 	-- 2. Calculate Size

@@ -37,6 +37,9 @@ end
 local function Cap(id, label)
 	return { type = "currency_cap", id = id, label = label }
 end
+local function Item(id, label)
+	return { type = "item", id = id, label = label }
+end
 
 local data = {
 	{
@@ -45,6 +48,38 @@ local data = {
 			Vault(3, "Raid"),
 			Vault(1, "Dungeons"),
 			Vault(6, "World"),
+		},
+	},
+	--------------------------------------------------------------------------------
+	-- TWILIGHT ASCENSION (Pre-patch Event - Jan 27 to Mar 2)
+	-- TEMPORARY: Auto-hides when Midnight launches
+	--------------------------------------------------------------------------------
+	{
+		title = "Twilight Ascension (Pre-patch Event)",
+		showAfter = "2026-01-27",
+		hideAfter = "2026-03-02",
+		noSort = true,
+		items = {
+			Quest(0, "Twilight's Call", "Interface\\Icons\\spell_shadow_twilight"),
+			Quest(91795, "Disrupt the Call", "Interface\\Icons\\spell_shadow_twilight"),
+			Currency(3319, "Twilight's Blade Insignia"),
+		},
+	},
+	--------------------------------------------------------------------------------
+	-- HOUSING (Permanent - Starts Jan 20 with Early Access)
+	--------------------------------------------------------------------------------
+	{
+		title = "Housing",
+		showAfter = "2026-01-20",
+		noSort = true,
+		items = {
+			Quest(0, "Neighborhood Endeavors", "Interface\\Icons\\inv_misc_key_14"),
+			Item(251764, "Ashwood Lumber"),
+			Item(242691, "Olemba Lumber"),
+			Item(245586, "Ironwood Lumber"),
+			Item(248012, "Dornic Fir Lumber"),
+			Item(251766, "Shadowmoon Lumber"),
+			Currency(3363, "Community Coupons"),
 		},
 	},
 	{
