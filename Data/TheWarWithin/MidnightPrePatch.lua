@@ -1,28 +1,15 @@
 local _, ns = ...
 
 --------------------------------------------------------------------------------
--- Helper Functions for Data Entries
+-- Midnight Pre-Patch (Season 3.5) - TWW content with pre-expansion additions
 --------------------------------------------------------------------------------
--- Vault(id, label)
---   id: Blizzard's weekly vault category ID (1=Dungeons, 3=Raid, 6=World)
+-- TOC 120000 (12.0.0) triggers this season
+-- Contains TWW Season 3 content PLUS:
+--   - Twilight Ascension event (Jan 27)
+--   - Housing (Jan 20 for Early Access)
+--   - Pre-patch currencies
 --
--- Quest(id, label, icon, coords)
---   id: Can be a single quest ID (number) OR a table of quest IDs for rotating/variant quests
---       Single ID:   Quest(91175, "Weekly Cache")
---       Multi-ID:    Quest({83363, 83365, 83359}, "Timewalking Event")
---   label: Display name shown in the UI
---   icon: Optional texture path (defaults to book icon if omitted)
---   coords: Optional table { mapID = 123, x = 0.5, y = 0.5 } for map marker navigation
---
---   MULTI-ID QUESTS: Use a table of IDs when the same weekly objective has different
---   quest IDs depending on the week/rotation (e.g., Timewalking, Sparks of War).
---   The addon will automatically detect which variant the player has and enable
---   click-to-open-quest-log for the correct one.
---
--- Currency(id, label) / Cap(id, label)
---   id: Currency ID from C_CurrencyInfo
---   Use Cap() for currencies with weekly maximums (shows X/Y format)
---   Use Currency() for uncapped currencies (shows current amount)
+-- TODO: Update placeholder IDs (0) when patch launches
 --------------------------------------------------------------------------------
 
 local function Vault(id, label)
@@ -39,6 +26,9 @@ local function Cap(id, label)
 end
 
 local data = {
+	--------------------------------------------------------------------------------
+	-- VAULT (Always first)
+	--------------------------------------------------------------------------------
 	{
 		title = "Vault",
 		items = {
@@ -47,69 +37,47 @@ local data = {
 			Vault(6, "World"),
 		},
 	},
-	--[[
-	============================================================================
-	TWILIGHT ASCENSION EVENT (Starts Jan 27)
-	============================================================================
-	Pre-patch event with rare rotation, weekly quests, and event currency.
-	TODO: Get quest IDs from C_QuestLog dump on Jan 27
-	--]]
+	--------------------------------------------------------------------------------
+	-- TWILIGHT ASCENSION (Pre-patch event - Starts Jan 27)
+	-- TEMPORARY: Remove this section when Midnight S1 launches
+	--------------------------------------------------------------------------------
 	{
 		title = "Twilight Ascension",
 		items = {
 			-- Weekly wrapper quests (IDs TBD - update Jan 27)
 			Quest(0, "Twilight's Call", "Interface\\Icons\\spell_shadow_twilight"),
 			Quest(0, "Disrupt the Call", "Interface\\Icons\\spell_shadow_twilight"),
-			-- World Quests reward ~10 Insignias each (4-5 active at a time)
+			-- World Quests reward ~10 Insignias each (4-5 active at a time in Twilight Highlands)
 		},
 	},
-	--[[
-	============================================================================
-	PLAYER HOUSING (Starts Jan 20 for Early Access)
-	============================================================================
-	Weekly neighborhood tasks and daily favor quests.
-	TODO: Get quest IDs from C_QuestLog dump on Jan 20
-	--]]
-	{
-		title = "Housing",
-		items = {
-			-- Weekly wrapper (ID TBD)
-			Quest(0, "Neighborhood Endeavors", "Interface\\Icons\\inv_misc_key_14"),
-			-- Dailies are small "Favor" quests from neighbors
-		},
-	},
+	--------------------------------------------------------------------------------
+	-- ONGOING EVENTS (TWW world events - still active during pre-patch)
+	--------------------------------------------------------------------------------
 	{
 		title = "Ongoing Events",
 		items = {
-			Quest(82483, "Worldsoul Weekly", "Interface\\Icons\\inv_misc_bag_34"), -- Worldsoul Satchel
-			Quest(83240, "The Theater Troupe", "Interface\\Icons\\INV_Mask_02"), -- Drama Mask
-			Quest(
-				83333,
-				"Awakening the Machine",
-				"Interface\\Icons\\inv_10_blacksmithing_consumable_repairhammer_color2"
-			),
+			Quest(82483, "Worldsoul Weekly", "Interface\\Icons\\inv_misc_bag_34"),
+			Quest(83240, "The Theater Troupe", "Interface\\Icons\\INV_Mask_02"),
+			Quest(83333, "Awakening the Machine", "Interface\\Icons\\inv_10_blacksmithing_consumable_repairhammer_color2"),
 			Quest(76586, "Spreading the Light", "Interface\\Icons\\spell_holy_holybolt"),
 			Quest(85460, "Ecological Succession", "Interface\\Icons\\inv_misc_web_01"),
 		},
 	},
+	--------------------------------------------------------------------------------
+	-- WEEKLY QUESTS (Standard TWW weeklies)
+	--------------------------------------------------------------------------------
 	{
 		title = "Weekly Quests",
 		items = {
-			Quest(91175, "Weekly Cache", "Interface\\Icons\\INV_Box_02"), -- Standard Chest
+			Quest(91175, "Weekly Cache", "Interface\\Icons\\INV_Box_02"),
 			Quest(82706, "Delves: Worldwide Research", "Interface\\Icons\\inv_helmet_148"),
-			-- Multi-ID: Different quest ID each week based on which Timewalking event is active
-			Quest(
-				{ 83363, 83365, 83359, 83362, 83364, 83360, 86731, 88805 },
-				"Timewalking Event",
-				"Interface\\Icons\\spell_holy_borrowedtime"
-			),
+			Quest({ 83363, 83365, 83359, 83362, 83364, 83360, 86731, 88805 }, "Timewalking Event", "Interface\\Icons\\spell_holy_borrowedtime"),
 			Quest(82679, "Archives: Seeking History", "Interface\\Icons\\inv_misc_book_09"),
 			-- PvP
 			Quest(80185, "Preserving Solo", "Interface\\Icons\\achievement_bg_killflagcarriers_grabflag_capit"),
 			Quest(80186, "Preserving in War", "Interface\\Icons\\achievement_bg_winwsg"),
-			-- Multi-ID: Different quest ID based on which PvP brawl is active
 			Quest({ 81793, 81794, 81795, 81796, 86853 }, "Sparks of War", "Interface\\Icons\\spell_fire_felfire"),
-			-- World/Zone Weekly Quests (discovered via Discovery Tool)
+			-- World/Zone Weekly Quests
 			Quest(85459, "Anima Reclamation Program"),
 			Quest(85462, "A Challenge for Dominance"),
 			Quest(85470, "Root Redux"),
@@ -121,6 +89,21 @@ local data = {
 			Quest(91093, "More Than Just a Phase"),
 		},
 	},
+	--------------------------------------------------------------------------------
+	-- HOUSING (New permanent section - Starts Jan 20 for Early Access)
+	-- PERMANENT: Keep this section in Midnight S1 and beyond
+	--------------------------------------------------------------------------------
+	{
+		title = "Housing",
+		items = {
+			-- Weekly wrapper (ID TBD - update Jan 20)
+			Quest(0, "Neighborhood Endeavors", "Interface\\Icons\\inv_misc_key_14"),
+			-- Dailies are small "Favor" quests from neighbors (not tracked individually)
+		},
+	},
+	--------------------------------------------------------------------------------
+	-- UPGRADE CURRENCIES
+	--------------------------------------------------------------------------------
 	{
 		title = "Upgrade Currencies",
 		noSort = true,
@@ -132,6 +115,9 @@ local data = {
 			Cap(3290, "Gilded Ethereal Crest"),
 		},
 	},
+	--------------------------------------------------------------------------------
+	-- CURRENCIES
+	--------------------------------------------------------------------------------
 	{
 		title = "Currencies",
 		items = {
@@ -161,5 +147,5 @@ local data = {
 }
 
 -- Register as Expansion 11, Season 3.5 (Midnight Pre-Patch)
--- This is triggered by TOC 120000 (12.0.0) but content is still TWW-based
+-- Triggered by TOC 120000 (12.0.0) but content is still TWW-based
 ns.Data:Register(11, 3.5, data)
