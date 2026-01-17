@@ -11,17 +11,17 @@ A lightweight, modular World of Warcraft addon designed to track your weekly pro
 
 ## Features
 
-- **📊 Visual Vault Tracking** – Distinct visual rows for Raid, Dungeon, and World Vault slots. Instantly see your progress (Green = Unlocked) and hover for detailed level info
-- **📅 Weekly Events** – Track Theater Troupe, Awakening Machine, Spreading Light, and more
-- **💰 Currency Tracking** – Monitor Valorstones, Crests, Resonance Crystals, and seasonal currencies
-- **📔 Weekly Journal** – Track collectibles earned this week: Achievements, Mounts, Pets, Toys, Decor, and gathered materials. Auto-resets on weekly reset
-- **📁 Collapsible Sections** – Click section headers to expand/collapse, with state persisted across reloads
-- **⏰ Time-Gated Content** – Sections appear/disappear based on content release dates
-- **🔄 Smart Sorting** – Automatically moves completed items and capped currencies to the bottom (configurable)
-- **📐 Auto-Sizing UI** – Window dynamically adjusts height and width based on visible items
-- **🗂️ Modular Data System** – Easily switch between Expansions and Seasons via settings
-- **📍 Data Broker Support** – Includes Minimap icons and LDB support for TitanPanel/Bazooka
-- **👤 Profile Support** – Share settings across characters or set up specific profiles for alts
+- **Visual Vault Tracking** – Distinct visual rows for Raid, Dungeon, and World Vault slots. Instantly see your progress (Green = Unlocked) and hover for detailed level info
+- **Weekly Events** – Track Theater Troupe, Awakening Machine, Spreading Light, and more
+- **Currency Tracking** – Monitor Valorstones, Crests, Resonance Crystals, and seasonal currencies
+- **Weekly Journal** – Track collectibles earned this week: Achievements, Mounts, Pets, Toys, Decor, and gathered materials. Auto-resets on weekly reset
+- **Collapsible Sections** – Click section headers to expand/collapse, with state persisted across reloads
+- **Time-Gated Content** – Sections appear/disappear based on content release dates
+- **Smart Sorting** – Automatically moves completed items and capped currencies to the bottom (configurable)
+- **Auto-Sizing UI** – Window dynamically adjusts height and width based on visible items
+- **Modular Data System** – Easily switch between Expansions and Seasons via settings
+- **Data Broker Support** – Includes Minimap icons and LDB support for TitanPanel/Bazooka
+- **Profile Support** – Share settings across characters or set up specific profiles for alts
 
 ## Installation
 
