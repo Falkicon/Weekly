@@ -154,14 +154,48 @@ For detailed implementation docs, see the `Docs/` folder:
 
 ---
 
+## Libraries
+
+### FenCore Integration
+
+Weekly uses FenCore for pure logic domains with graceful fallbacks:
+
+- **ActionResult**: Structured success/error returns in `Core/Actions/`
+- All FenCore usage is wrapped via `Core/FenCoreCompat.lua` for optional dependency
+
+The FenCoreCompat module provides fallback implementations when FenCore is not available, ensuring Weekly works standalone or with FenCore.
+
+**Verify FenCore integration:**
+```bash
+# Sync FenCore library (if needed)
+mech call libs.sync -i '{"addon": "Weekly"}'
+
+# Run sandbox tests
+mech call sandbox.test -i '{"addon": "Weekly"}'
+```
+
+### FenUI Integration
+
+JournalUI uses FenUI widgets with graceful fallbacks:
+- `FenUI:CreatePanel` – Window frame
+- `FenUI:CreateTabGroup` – Tab navigation
+- `FenUI:CreateGrid` – Item lists
+- `FenUI:CreateScrollInset` – Scrollable content
+- `FenUI:CreateEmptyState` – Empty state display
+- `FenUI:CreateLayout` – Footer layout
+
+All FenUI usage includes fallback to plain WoW API when FenUI is unavailable.
+
+---
+
 ## Development & Tooling
 
 ### Tooling Commands
-This addon is integrated with the `ADDON_DEV` workspace tools:
-- **Linting**: `lint_addon("Weekly")`
-- **Formatting**: `format_addon("Weekly")`
-- **Testing**: `run_tests("Weekly")`
-- **Localization**: `extract_locale_strings("Weekly")`
+This addon is integrated with Mechanic MCP tools:
+- **Linting**: `mech call addon.lint -i '{"addon": "Weekly"}'`
+- **Formatting**: `mech call addon.format -i '{"addon": "Weekly"}'`
+- **Testing**: `mech call sandbox.test -i '{"addon": "Weekly"}'`
+- **Localization**: `mech call locale.validate -i '{"addon": "Weekly"}'`
 
 ### Localization
 Uses **AceLocale-3.0**.

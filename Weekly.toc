@@ -1,13 +1,27 @@
 ## Interface: 120001, 120000
 ## Title: Weekly
 ## Author: Jason Falk
-## Version: 1.2.3
+## Version: 1.2.4
 ## Notes: Track weekly to-dos, currencies, and stats
 ## X-License: GPL-3.0
 ## SavedVariables: WeeklyDB
+## OptionalDeps: !Mechanic, FenCore
 
 embeds.xml
 Locales\enUS.lua
+
+# Core Layer (Pure Lua - Sandbox Testable)
+Core\FenCoreCompat.lua
+Core\Actions\init.lua
+Core\Actions\tracker.lua
+Core\Actions\journal.lua
+Core\Schemas\types.lua
+
+# Bridge Layer (WoW API Adapter)
+Bridge\Context.lua
+Bridge\Executor.lua
+
+# Main Addon
 Core.lua
 
 # Data Layer
@@ -16,8 +30,11 @@ Data\TheWarWithin\Season3.lua
 Data\TheWarWithin\MidnightPrePatch.lua
 Data\Midnight\Season1.lua
 
+# Configuration
 Config.lua
 ConfigUI.lua
+
+# View Layer (UI)
 UI.lua
 
 # Shared Infrastructure
@@ -28,9 +45,11 @@ Journal\Journal.lua
 Journal\JournalUI.lua
 Journal\JournalBroker.lua
 
-# Dev Tools (excluded from CurseForge via .pkgmeta)
+# Mechanic Integration (optional)
+MechanicIntegration.lua
+
+# Discovery Tool (dev use - excluded from CurseForge via .pkgmeta)
 #@debug@
-DevMarker.lua
 Dev\TrackerCore.lua
 Dev\Discovery.lua
 #@end-debug@
