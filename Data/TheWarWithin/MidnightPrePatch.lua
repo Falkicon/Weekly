@@ -51,6 +51,32 @@ local data = {
 		},
 	},
 	--------------------------------------------------------------------------------
+	-- MIDNIGHT CAMPAIGN (One-time story - "The Light's Summons")
+	-- Players can track progress through the pre-patch campaign
+	--------------------------------------------------------------------------------
+	{
+		title = "Midnight Campaign",
+		items = {
+			Quest(91281, "Midnight", "Interface\\Icons\\spell_holy_surgeoflight"),
+			Quest(88719, "A Voice from the Light", "Interface\\Icons\\spell_holy_surgeoflight"),
+			Quest(86769, "Last Bastion of the Light", "Interface\\Icons\\spell_holy_surgeoflight"),
+			Quest(86770, "Champions of Quel'Danas", "Interface\\Icons\\spell_holy_surgeoflight"),
+			Quest(89271, "My Son", "Interface\\Icons\\spell_holy_surgeoflight"),
+			Quest(86780, "Where Heroes Hold", "Interface\\Icons\\spell_holy_surgeoflight"),
+			Quest(86805, "The Hour of Need", "Interface\\Icons\\spell_holy_surgeoflight"),
+			Quest(89012, "A Safe Path", "Interface\\Icons\\spell_holy_surgeoflight"),
+			Quest(86806, "Luminous Wings", "Interface\\Icons\\spell_holy_surgeoflight"),
+			Quest(86807, "The Gate", "Interface\\Icons\\spell_holy_surgeoflight"),
+			Quest(91274, "Severing the Void", "Interface\\Icons\\spell_holy_surgeoflight"),
+			Quest(86834, "Voidborn Banishing", "Interface\\Icons\\spell_holy_surgeoflight"),
+			Quest(86811, "Ethereal Eradication", "Interface\\Icons\\spell_holy_surgeoflight"),
+			Quest(86848, "Light's Arsenal", "Interface\\Icons\\spell_holy_surgeoflight"),
+			Quest(86849, "Wrath Unleashed", "Interface\\Icons\\spell_holy_surgeoflight"),
+			Quest(86850, "Broken Sun", "Interface\\Icons\\spell_holy_surgeoflight"),
+			Quest(86852, "Light's Last Stand", "Interface\\Icons\\spell_holy_surgeoflight"),
+		},
+	},
+	--------------------------------------------------------------------------------
 	-- ONGOING EVENTS (TWW world events - still active during pre-patch)
 	--------------------------------------------------------------------------------
 	{
