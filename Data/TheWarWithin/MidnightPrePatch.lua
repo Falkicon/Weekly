@@ -56,33 +56,6 @@ local data = {
 		},
 	},
 	--------------------------------------------------------------------------------
-	-- MIDNIGHT CAMPAIGN (One-time story - "The Light's Summons")
-	-- Players can track progress through the pre-patch campaign
-	--------------------------------------------------------------------------------
-	{
-		title = "Midnight Campaign",
-		noSort = true,
-		items = {
-			Quest(91281, "Midnight", "Interface\\GossipFrame\\AvailableQuestIcon"),
-			Quest(88719, "A Voice from the Light", "Interface\\GossipFrame\\AvailableQuestIcon"),
-			Quest(86769, "Last Bastion of the Light", "Interface\\GossipFrame\\AvailableQuestIcon"),
-			Quest(86770, "Champions of Quel'Danas", "Interface\\GossipFrame\\AvailableQuestIcon"),
-			Quest(89271, "My Son", "Interface\\GossipFrame\\AvailableQuestIcon"),
-			Quest(86780, "Where Heroes Hold", "Interface\\GossipFrame\\AvailableQuestIcon"),
-			Quest(86805, "The Hour of Need", "Interface\\GossipFrame\\AvailableQuestIcon"),
-			Quest(89012, "A Safe Path", "Interface\\GossipFrame\\AvailableQuestIcon"),
-			Quest(86806, "Luminous Wings", "Interface\\GossipFrame\\AvailableQuestIcon"),
-			Quest(86807, "The Gate", "Interface\\GossipFrame\\AvailableQuestIcon"),
-			Quest(91274, "Severing the Void", "Interface\\GossipFrame\\AvailableQuestIcon"),
-			Quest(86834, "Voidborn Banishing", "Interface\\GossipFrame\\AvailableQuestIcon"),
-			Quest(86811, "Ethereal Eradication", "Interface\\GossipFrame\\AvailableQuestIcon"),
-			Quest(86848, "Light's Arsenal", "Interface\\GossipFrame\\AvailableQuestIcon"),
-			Quest(86849, "Wrath Unleashed", "Interface\\GossipFrame\\AvailableQuestIcon"),
-			Quest(86850, "Broken Sun", "Interface\\GossipFrame\\AvailableQuestIcon"),
-			Quest(86852, "Light's Last Stand", "Interface\\GossipFrame\\AvailableQuestIcon"),
-		},
-	},
-	--------------------------------------------------------------------------------
 	-- ONGOING EVENTS (TWW world events - still active during pre-patch)
 	--------------------------------------------------------------------------------
 	{
