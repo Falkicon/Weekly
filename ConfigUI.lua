@@ -122,6 +122,7 @@ function ConfigUI:Initialize()
 						name = L["Sort Completed to Bottom"],
 						desc = L["Move completed quests and capped currencies to the bottom of their list."],
 						order = 3,
+						width = "full",
 						get = function()
 							return ns.Config.sortCompletedBottom
 						end,
