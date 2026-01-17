@@ -21,8 +21,8 @@ ns.ConfigDefaults = {
 		position = nil,
 
 		-- Visibility
-		autoShow = true, -- Show on login/reload
-		visible = true, -- Remember last visibility state
+		autoShow = false, -- Always show on login (overrides saved visibility)
+		visible = true, -- Remember last visibility state (default: shown on first load)
 
 		-- Weekly Journal
 		journal = {
@@ -47,6 +47,13 @@ function ns:LoadConfig()
 
 	-- Set easy alias. Updates to ns.Config will now update the DB profile directly.
 	self.Config = self.db.profile
+
+	-- One-time migration: Fix old autoShow default (was true, now false)
+	-- If autoShow was never explicitly set by user, update to new default
+	if self.Config.autoShow == true and self.Config._autoShowMigrated == nil then
+		self.Config.autoShow = false
+		self.Config._autoShowMigrated = true
+	end
 
 	-- Callbacks
 	self.db.RegisterCallback(self, "OnProfileChanged", "RefreshConfig")

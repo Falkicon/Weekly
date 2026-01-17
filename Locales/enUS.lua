@@ -11,7 +11,7 @@ L["  /weekly journal - Toggle journal window"] = true
 L["  /weekly settings - Open settings"] = true
 L["  /weekly help - Show this help"] = true
 L["Journal is not available. Check settings to enable it."] = true
-L["Discovery tool is only available in dev mode"] = true
+L["Discovery tool requires Mechanic addon"] = true
 L["Debug Mode: %s"] = true
 L["Toggling UI..."] = true
 L["Quest Completed: ID %s"] = true
@@ -72,23 +72,8 @@ L["Journal not active"] = true
 L["Total items:"] = true
 L["Achievement points:"] = true
 
--- ConfigUI - Dev Tools
-L["Dev Tools"] = true
-L["Dev Mode: ACTIVE"] = true
-L["Dev Mode: INACTIVE"] = true
-L["The Discovery Tool is automatically tracking currencies and quests in the background."] = true
-L["Dev tools are only available when running from a git clone (DevMarker.lua present)."] = true
+-- Discovery Tool (accessed via Mechanic Dashboard)
 L["Discovery Tool"] = true
-L["Discovers new currencies and quests to add to Weekly's database. Items are tracked automatically - the window just displays what's been found."] =
-	true
-L["Total logged: %d items (%d currencies, %d quests)%s"] = true
-L["Storage cap: 500 items (oldest auto-pruned)"] = true
-L["Last saved: %s"] = true
-L["Open Discovery Window"] = true
-L["Open the Discovery Tool window to view and export logged items."] = true
-L["Clear Logged Items"] = true
-L["Clear all items logged this session."] = true
-L["Clear all items logged this session?"] = true
 
 -- Journal Categories
 L["Achievements"] = true
@@ -141,6 +126,7 @@ L["%m/%d %H:%M"] = true
 -- Tooltips
 L["Left-click: Toggle tracker"] = true
 L["Right-click: Open Journal"] = true
+L["Right-click: Open settings"] = true
 L["Click to view in Collections"] = true
 L["Found in: %s"] = true
 L["Click to view %s"] = true

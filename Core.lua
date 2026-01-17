@@ -24,13 +24,25 @@ function Weekly:OnInitialize()
 			icon = "Interface\\Icons\\INV_Misc_Book_09",
 			notCheckable = true,
 			func = function()
-				ns.UI:Toggle()
+				-- Check which button was clicked using WoW API
+				local button = GetMouseButtonClicked and GetMouseButtonClicked() or "LeftButton"
+				if button == "RightButton" then
+					-- Right-click: Open settings
+					if ns.ConfigUI and ns.ConfigUI.categoryID then
+						Settings.OpenToCategory(ns.ConfigUI.categoryID)
+					else
+						Settings.OpenToCategory(Settings.GetCategory("Weekly"))
+					end
+				else
+					-- Left-click: Toggle tracker
+					ns.UI:Toggle()
+				end
 			end,
 			funcOnEnter = function(menuButtonFrame)
 				GameTooltip:SetOwner(menuButtonFrame, "ANCHOR_RIGHT")
 				GameTooltip:AddLine("Weekly", 1, 0.82, 0)
 				GameTooltip:AddLine(L["Left-click: Toggle tracker"], 0.7, 0.7, 0.7)
-				GameTooltip:AddLine(L["Right-click: Open Journal"], 0.7, 0.7, 0.7)
+				GameTooltip:AddLine(L["Right-click: Open settings"], 0.7, 0.7, 0.7)
 				GameTooltip:Show()
 			end,
 			funcOnLeave = function()
@@ -74,12 +86,12 @@ function Weekly:SlashHandler(msg)
 		return
 	end
 
-	-- Discovery Tool (dev-only)
+	-- Discovery Tool (available when Mechanic is loaded)
 	if cmd == "discovery" or cmd == "disc" then
-		if ns.IS_DEV_MODE and ns.Discovery then
+		if ns.Discovery then
 			ns.Discovery:Toggle()
 		else
-			self:Printf(L["Discovery tool is only available in dev mode"])
+			self:Printf(L["Discovery tool requires Mechanic addon"])
 		end
 		return
 	end
@@ -150,7 +162,7 @@ function Weekly:SlashHandler(msg)
 		local num = GetNumSavedInstances()
 		self:Printf("Saved Instances: " .. num)
 		for i = 1, num do
-			local name, id, reset, diff, locked, extended, instanceIDMostSig, isRaid, maxPlayers, diffName, numEncounters, encounterProgress =
+			local name, _id, _reset, _diff, locked, _extended, _instanceIDMostSig, isRaid, _maxPlayers, diffName, numEncounters, _encounterProgress =
 				GetSavedInstanceInfo(i)
 			if isRaid then
 				self:Printf(format("Raid %d: %s (%s) - Locked: %s", i, name, diffName, tostring(locked)))
@@ -171,13 +183,13 @@ function Weekly:SlashHandler(msg)
 	end
 end
 
-function Weekly:QUEST_TURNED_IN(event, questID, xp, money)
+function Weekly:QUEST_TURNED_IN(_event, questID, _xp, _money)
 	if ns.Config.debug then
 		self:Printf(L["Quest Completed: ID %s"]:format(questID))
 	end
 end
 
-function Weekly:QUEST_ACCEPTED(event, questID)
+function Weekly:QUEST_ACCEPTED(_event, questID)
 	if ns.Config.debug then
 		self:Printf(L["Quest Accepted: ID %s"]:format(questID))
 	end
@@ -185,7 +197,11 @@ end
 
 -- Auto-Show on Login (respects config)
 function Weekly:OnEnable()
-	if ns.Config.autoShow or ns.Config.visible then
-		ns.UI:Toggle()
+	-- If autoShow is enabled, always show on login
+	-- Otherwise, restore the last saved visibility state
+	local shouldShow = ns.Config.autoShow or ns.Config.visible
+	if shouldShow then
+		ns.UI.frame:Show()
+		ns.Config.visible = true
 	end
 end
