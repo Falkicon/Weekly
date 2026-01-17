@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.3.0] - 2026-01-17
 
 ### Added
+- **Time-Gated Sections**: Content can now appear/disappear based on date ranges (`showAfter`/`hideAfter`)
+- **Debug Toggle**: "Show All Gated Content" setting to reveal time-gated sections for testing
+- **Item Tracking**: New `item` type for tracking bag items (used for Housing lumber)
+- **Pre-Patch Content**: Twilight Ascension event and Housing sections with proper time gates
 - **Right-click Settings**: Right-clicking "Weekly" in the addon compartment now opens settings
 - **Visibility Persistence**: Weekly tracker remembers its visibility state across reload/restart
 - **Collapsible Sections**: Click section headers `[-]/[+]` to expand/collapse sections
@@ -16,19 +20,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Title Header**: Added `[-] WEEKLY` title row at top-left for consistent anchoring
 - **Bridge/Core Architecture**: New layered architecture with Bridge (context) and Core (actions) layers
 - **Mechanic Integration**: Full dashboard integration with the Mechanic development addon
-- **FenCoreCompat**: Graceful fallback layer for FenCore optional dependency
 
 ### Changed
+- **Settings Cleanup**: Removed obsolete "Show on Login" and "Anchor Point" settings
+- **Background Opacity**: Moved from General to Appearance settings section
+- **Section Order**: Reordered to Twilight → Ongoing → Housing → Weekly → Currencies
+- **Loader Simplification**: TOC 12.0.0 now routes to Season 3 (time-gating handles phased content)
 - **Default Behavior**: Weekly now respects last visibility state instead of always showing
-- **Tooltip Hints**: Updated addon compartment tooltip to show "Right-click: Open settings"
-- **autoShow Default**: Changed from `true` to `false` with migration for existing users
 - **Frame Anchoring**: Frame anchored from top-left for stable positioning when resizing
 
 ### Fixed
+- **ID=0 Collision**: Fixed settings showing only one ID=0 quest (label-based keys now used)
+- **Lua 5.1 Compatibility**: Removed `goto` statements not supported by WoW's Lua
 - **Luacheck Cleanup**: Reduced warnings from 1724 to 0 by prefixing unused variables
-- **Library Sync**: Updated FenUI and LibStub from central Libs (removed unused coverage/test files)
 - **Pool Row Cleanup**: Fixed rows not hiding when sections collapse
 - **Label Color Bleeding**: Fixed header gold color bleeding into item rows after toggle
+
+### Removed
+- **MidnightPrePatch.lua**: Consolidated into Season3.lua with time gates
 
 
 ## [0.4.0] - 2025-12-23
