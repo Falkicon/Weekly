@@ -1,14 +1,27 @@
 # Changelog
-## [1.2.3] - 2025-12-31
-
-### Changed
-- Added new feature
-
 
 All notable changes to Weekly will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [1.3.0] - 2026-01-17
+
+### Added
+- **Right-click Settings**: Right-clicking "Weekly" in the addon compartment now opens settings
+- **Visibility Persistence**: Weekly tracker remembers its visibility state across reload/restart
+- **Bridge/Core Architecture**: New layered architecture with Bridge (context) and Core (actions) layers
+- **Mechanic Integration**: Full dashboard integration with the Mechanic development addon
+- **FenCoreCompat**: Graceful fallback layer for FenCore optional dependency
+
+### Changed
+- **Default Behavior**: Weekly now respects last visibility state instead of always showing
+- **Tooltip Hints**: Updated addon compartment tooltip to show "Right-click: Open settings"
+- **autoShow Default**: Changed from `true` to `false` with migration for existing users
+
+### Fixed
+- **Luacheck Cleanup**: Reduced warnings from 1724 to 0 by prefixing unused variables
+- **Library Sync**: Updated FenUI and LibStub from central Libs (removed unused coverage/test files)
 
 
 ## [0.4.0] - 2025-12-23
