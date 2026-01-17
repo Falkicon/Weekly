@@ -10,6 +10,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - **Right-click Settings**: Right-clicking "Weekly" in the addon compartment now opens settings
 - **Visibility Persistence**: Weekly tracker remembers its visibility state across reload/restart
+- **Collapsible Sections**: Click section headers `[-]/[+]` to expand/collapse sections
+- **Section Memory**: Collapsed state persists per-section across reloads
+- **Expand/Collapse All**: Button at top-left to toggle all sections at once
+- **Title Header**: Added `[-] WEEKLY` title row at top-left for consistent anchoring
 - **Bridge/Core Architecture**: New layered architecture with Bridge (context) and Core (actions) layers
 - **Mechanic Integration**: Full dashboard integration with the Mechanic development addon
 - **FenCoreCompat**: Graceful fallback layer for FenCore optional dependency
@@ -18,10 +22,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Default Behavior**: Weekly now respects last visibility state instead of always showing
 - **Tooltip Hints**: Updated addon compartment tooltip to show "Right-click: Open settings"
 - **autoShow Default**: Changed from `true` to `false` with migration for existing users
+- **Frame Anchoring**: Frame anchored from top-left for stable positioning when resizing
 
 ### Fixed
 - **Luacheck Cleanup**: Reduced warnings from 1724 to 0 by prefixing unused variables
 - **Library Sync**: Updated FenUI and LibStub from central Libs (removed unused coverage/test files)
+- **Pool Row Cleanup**: Fixed rows not hiding when sections collapse
+- **Label Color Bleeding**: Fixed header gold color bleeding into item rows after toggle
 
 
 ## [0.4.0] - 2025-12-23
