@@ -19,13 +19,13 @@ end
 function ns.Data:GetRecommendedSeason()
 	local _, _, _, tocversion = GetBuildInfo()
 
-	-- Expansion 12+ (Midnight)
-	if tocversion >= 120000 then
+	-- Expansion 12.0.1+ (Midnight Launch)
+	if tocversion >= 120001 then
 		return 12, 1
 	end
 
-	-- Expansion 11 (TWW) - Midnight Pre-patch (11.2.8+)
-	if tocversion >= 110208 then
+	-- Expansion 12.0.0 (Midnight Pre-Patch) - Still TWW content with additions
+	if tocversion >= 120000 then
 		return 11, 3.5
 	end
 

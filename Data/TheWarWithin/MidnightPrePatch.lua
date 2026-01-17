@@ -47,6 +47,37 @@ local data = {
 			Vault(6, "World"),
 		},
 	},
+	--[[
+	============================================================================
+	TWILIGHT ASCENSION EVENT (Starts Jan 27)
+	============================================================================
+	Pre-patch event with rare rotation, weekly quests, and event currency.
+	TODO: Get quest IDs from C_QuestLog dump on Jan 27
+	--]]
+	{
+		title = "Twilight Ascension",
+		items = {
+			-- Weekly wrapper quests (IDs TBD - update Jan 27)
+			Quest(0, "Twilight's Call", "Interface\\Icons\\spell_shadow_twilight"),
+			Quest(0, "Disrupt the Call", "Interface\\Icons\\spell_shadow_twilight"),
+			-- World Quests reward ~10 Insignias each (4-5 active at a time)
+		},
+	},
+	--[[
+	============================================================================
+	PLAYER HOUSING (Starts Jan 20 for Early Access)
+	============================================================================
+	Weekly neighborhood tasks and daily favor quests.
+	TODO: Get quest IDs from C_QuestLog dump on Jan 20
+	--]]
+	{
+		title = "Housing",
+		items = {
+			-- Weekly wrapper (ID TBD)
+			Quest(0, "Neighborhood Endeavors", "Interface\\Icons\\inv_misc_key_14"),
+			-- Dailies are small "Favor" quests from neighbors
+		},
+	},
 	{
 		title = "Ongoing Events",
 		items = {
@@ -104,7 +135,12 @@ local data = {
 	{
 		title = "Currencies",
 		items = {
-			-- TWW Currencies
+			-- Pre-Patch Event Currency (ID TBD - update Jan 27)
+			Currency(0, "Twilight's Blade Insignia"),
+			-- Housing Currencies (IDs TBD - update Jan 20)
+			Currency(0, "Neighborhood Favor"),
+			Currency(0, "Lumber"),
+			-- TWW Currencies (still active during pre-patch)
 			Currency(3056, "Kej"),
 			Currency(2815, "Resonance Crystals"),
 			Currency(3093, "Nerub-ar Finery"),
@@ -125,4 +161,5 @@ local data = {
 }
 
 -- Register as Expansion 11, Season 3.5 (Midnight Pre-Patch)
+-- This is triggered by TOC 120000 (12.0.0) but content is still TWW-based
 ns.Data:Register(11, 3.5, data)
