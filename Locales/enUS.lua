@@ -40,6 +40,8 @@ L["Determines which side the window grows from when resizing."] = true
 L["Top (Grows Down)"] = true
 L["Bottom (Grows Up)"] = true
 L["Background Opacity"] = true
+L["Show All Gated Content"] = true
+L["Show all time-gated sections regardless of current date. Useful for testing."] = true
 
 -- ConfigUI - Appearance
 L["Appearance"] = true

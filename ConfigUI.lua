@@ -143,6 +143,22 @@ function ConfigUI:Initialize()
 							ns.UI:ApplyFrameStyle()
 						end,
 					},
+					ignoreTimeGates = {
+						type = "toggle",
+						name = L["Show All Gated Content"],
+						desc = L["Show all time-gated sections regardless of current date. Useful for testing."],
+						order = 5,
+						get = function()
+							return ns.Config.debug and ns.Config.debug.ignoreTimeGates
+						end,
+						set = function(_, val)
+							if not ns.Config.debug then
+								ns.Config.debug = {}
+							end
+							ns.Config.debug.ignoreTimeGates = val
+							ns.UI:RefreshRows()
+						end,
+					},
 				},
 			},
 		},
@@ -279,7 +295,7 @@ function ConfigUI:Initialize()
 			local sortedItems = {}
 			for _, row in ipairs(section.items) do
 				if
-					row.id
+					row.id ~= nil
 					and (
 						row.type == "currency"
 						or row.type == "currency_cap"

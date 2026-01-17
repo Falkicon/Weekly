@@ -61,6 +61,12 @@ function ns:LoadConfig()
 		self.Config._autoShowMigrated = true
 	end
 
+	-- One-time migration: Reset anchor to TOP (setting was removed)
+	if self.Config._anchorMigrated == nil then
+		self.Config.anchor = "TOP"
+		self.Config._anchorMigrated = true
+	end
+
 	-- Callbacks
 	self.db.RegisterCallback(self, "OnProfileChanged", "RefreshConfig")
 	self.db.RegisterCallback(self, "OnProfileCopied", "RefreshConfig")
