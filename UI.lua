@@ -39,6 +39,43 @@ function UI:Initialize()
 		-- Content Frame (holds the rows)
 		self.content = CreateFrame("Frame", nil, self.frame)
 
+		-- Collapse/Expand All Toggle Button (top-left)
+		self.collapseToggleBtn = CreateFrame("Button", nil, self.frame)
+		self.collapseToggleBtn:SetSize(20, 16)
+		self.collapseToggleBtn:SetPoint("TOPLEFT", self.frame, "TOPLEFT", 4, -4)
+		self.collapseToggleBtn.text = self.collapseToggleBtn:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+		self.collapseToggleBtn.text:SetPoint("LEFT")
+		self.collapseToggleBtn.text:SetText("[-]")
+		self.collapseToggleBtn.text:SetTextColor(0.7, 0.7, 0.7)
+		self.collapseToggleBtn:SetScript("OnClick", function()
+			if self:AreAllCollapsed() then
+				self:ExpandAll()
+			else
+				self:CollapseAll()
+			end
+			self:UpdateCollapseToggleBtn()
+		end)
+		self.collapseToggleBtn:SetScript("OnEnter", function(btn)
+			btn.text:SetTextColor(1, 0.82, 0) -- Gold on hover
+			GameTooltip:SetOwner(btn, "ANCHOR_RIGHT")
+			if self:AreAllCollapsed() then
+				GameTooltip:SetText("Expand All", 1, 1, 1)
+			else
+				GameTooltip:SetText("Collapse All", 1, 1, 1)
+			end
+			GameTooltip:Show()
+		end)
+		self.collapseToggleBtn:SetScript("OnLeave", function(btn)
+			btn.text:SetTextColor(0.7, 0.7, 0.7)
+			GameTooltip:Hide()
+		end)
+
+		-- Title Text (after toggle button)
+		self.titleText = self.frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+		self.titleText:SetPoint("LEFT", self.collapseToggleBtn, "RIGHT", 2, 0)
+		self.titleText:SetText("WEEKLY")
+		self.titleText:SetTextColor(0.6, 0.6, 0.6)
+
 		-- Events
 		self.frame:RegisterEvent("CURRENCY_DISPLAY_UPDATE")
 		self.frame:RegisterEvent("QUEST_LOG_UPDATE")
@@ -187,9 +224,9 @@ function UI:ApplyFrameStyle()
 	local alpha = cfg.backgroundAlpha / 100
 	self.bg:SetColorTexture(0.1, 0.1, 0.1, alpha)
 
-	-- 4. Content Layout (Heading gone)
+	-- 4. Content Layout (starts below title row)
 	self.content:ClearAllPoints()
-	self.content:SetPoint("TOPLEFT", self.frame, "TOPLEFT", 10, -10)
+	self.content:SetPoint("TOPLEFT", self.frame, "TOPLEFT", 10, -24) -- Below [-] WEEKLY title
 	self.content:SetPoint("BOTTOMRIGHT", self.frame, "BOTTOMRIGHT", -10, 10)
 
 	-- Refresh rows in case width changed
@@ -354,71 +391,83 @@ function UI:RenderRows()
 		if #items == 0 then
 			-- Empty section - skip entirely
 		else
-			-- B. Header (only if there are visible items)
-			table.insert(visibleRows, { type = "header", text = section.title })
+			-- Check if this section is collapsed
+			local isCollapsed = cfg.collapsedSections and cfg.collapsedSections[section.title]
 
-			-- Measure Header
+			-- B. Header (only if there are visible items)
+			table.insert(visibleRows, { type = "header", text = section.title, isCollapsed = isCollapsed })
+
+			-- Measure Header (add space for collapse indicator)
 			self.measureFS:SetFont(fontPath, cfg.headerFontSize, "OUTLINE")
-			self.measureFS:SetText(section.title)
+			self.measureFS:SetText("[-] " .. section.title)
+
+			-- Include header width in maxLabelWidth so collapsed sections set proper frame width
+			local headerWidth = self.measureFS:GetStringWidth()
+			if headerWidth > maxLabelWidth then
+				maxLabelWidth = headerWidth
+			end
 
 			totalHeight = totalHeight + (cfg.headerFontSize + 6) + cfg.itemSpacing
 
-			-- Sort
-			if not section.noSort then
-				ns.Utils.SortItems(items)
-			end
+			-- Only process/show items if section is NOT collapsed
+			if not isCollapsed then
+				-- Sort
+				if not section.noSort then
+					ns.Utils.SortItems(items)
+				end
 
-			-- Measure Items
-			self.measureFS:SetFont(fontPath, cfg.itemFontSize)
+				-- Measure Items
+				self.measureFS:SetFont(fontPath, cfg.itemFontSize)
 
-			for _, item in ipairs(items) do
-				local renderItem = setmetatable({ section = section.title }, { __index = item })
-				table.insert(visibleRows, renderItem)
+				for _, item in ipairs(items) do
+					local renderItem = setmetatable({ section = section.title }, { __index = item })
+					table.insert(visibleRows, renderItem)
 
-				local textWidth = 0
-				local valueWidth = 0
+					local textWidth = 0
+					local valueWidth = 0
 
-				if item.type == "vault_row" then
-					self.measureFS:SetText(item.label)
-					textWidth = self.measureFS:GetStringWidth()
+					if item.type == "vault_row" then
+						self.measureFS:SetText(item.label)
+						textWidth = self.measureFS:GetStringWidth()
 
-					local done, max = ns.Utils.GetVault(item.id)
-					self.measureFS:SetText(done .. " / " .. max)
-					valueWidth = self.measureFS:GetStringWidth()
-				elseif item.type == "quest" then
-					self.measureFS:SetText(item.label)
-					textWidth = self.measureFS:GetStringWidth()
+						local done, max = ns.Utils.GetVault(item.id)
+						self.measureFS:SetText(done .. " / " .. max)
+						valueWidth = self.measureFS:GetStringWidth()
+					elseif item.type == "quest" then
+						self.measureFS:SetText(item.label)
+						textWidth = self.measureFS:GetStringWidth()
 
-					local _, prog, max, _, isPercent = ns.Utils.GetQuest(item.id)
-					if max >= 1 then
-						if isPercent then
-							self.measureFS:SetText(prog .. "%")
-						else
-							self.measureFS:SetText(prog .. " / " .. max)
+						local _, prog, max, _, isPercent = ns.Utils.GetQuest(item.id)
+						if max >= 1 then
+							if isPercent then
+								self.measureFS:SetText(prog .. "%")
+							else
+								self.measureFS:SetText(prog .. " / " .. max)
+							end
+							valueWidth = self.measureFS:GetStringWidth()
 						end
+					elseif item.type == "currency" or item.type == "currency_cap" then
+						local _, amt, max, name = ns.Utils.GetCurrency(item.id)
+						self.measureFS:SetText(item.label or name)
+						textWidth = self.measureFS:GetStringWidth()
+
+						local valText = amt
+						if max > 0 then
+							valText = amt .. " / " .. max
+						end
+						self.measureFS:SetText(valText)
 						valueWidth = self.measureFS:GetStringWidth()
 					end
-				elseif item.type == "currency" or item.type == "currency_cap" then
-					local _, amt, max, name = ns.Utils.GetCurrency(item.id)
-					self.measureFS:SetText(item.label or name)
-					textWidth = self.measureFS:GetStringWidth()
 
-					local valText = amt
-					if max > 0 then
-						valText = amt .. " / " .. max
+					if textWidth > maxLabelWidth then
+						maxLabelWidth = textWidth
 					end
-					self.measureFS:SetText(valText)
-					valueWidth = self.measureFS:GetStringWidth()
-				end
+					if valueWidth > maxValueWidth then
+						maxValueWidth = valueWidth
+					end
 
-				if textWidth > maxLabelWidth then
-					maxLabelWidth = textWidth
+					totalHeight = totalHeight + (cfg.itemFontSize + 6) + cfg.itemSpacing
 				end
-				if valueWidth > maxValueWidth then
-					maxValueWidth = valueWidth
-				end
-
-				totalHeight = totalHeight + (cfg.itemFontSize + 6) + cfg.itemSpacing
 			end
 		end
 	end
@@ -428,11 +477,21 @@ function UI:RenderRows()
 	local checkSize = 16
 	local gap = 16
 	local inset = 10
+	local titleHeight = 20 -- Space for [-] WEEKLY title row
 
 	local contentWidth = cfg.itemIndent + iconSize + 4 + maxLabelWidth + gap + maxValueWidth + gap + checkSize
 	local totalWidth = inset + contentWidth + inset
 
+	-- Add title height to total
+	totalHeight = totalHeight + titleHeight
+
+	-- Ensure minimum height
+	totalHeight = math.max(totalHeight, 40)
+
 	self.frame:SetSize(totalWidth, totalHeight)
+
+	-- Re-anchor from TOPLEFT so frame expands downward, not from center
+	self:EnforceAnchor()
 
 	-- 3. Render Pass
 	local yOffset = 0
@@ -453,6 +512,11 @@ function UI:RenderRows()
 		self:UpdateRow(row, rowData, context)
 
 		yOffset = yOffset - (row:GetHeight() + cfg.itemSpacing)
+	end
+
+	-- 4. Hide unused pool rows (critical for collapse to work)
+	for i = poolIndex, #self.rows do
+		self.rows[i]:Hide()
 	end
 end
 
@@ -589,6 +653,14 @@ function UI:UpdateRow(row, data, _ctx)
 	row.check:Hide()
 	row:SetAlpha(1.0)
 
+	-- Reset header click state (prevents pooled rows from capturing clicks)
+	row:EnableMouse(false)
+	row:SetScript("OnMouseDown", nil)
+	row.headerTitle = nil
+
+	-- Reset label color to default white (header rows will override to gold)
+	row.label:SetTextColor(1, 1, 1)
+
 	-- Alignments:
 	-- Icon: LEFT, indent, 0
 	-- Label: LEFT, Icon, RIGHT, 4, 0
@@ -601,9 +673,20 @@ function UI:UpdateRow(row, data, _ctx)
 		row.label:SetFont(fontPath, cfg.headerFontSize, "OUTLINE")
 		row.label:SetTextColor(unpack(C_HEADER))
 		row.label:SetPoint("LEFT", 0, -2)
-		row.label:SetText(data.text)
+
+		-- Add collapse indicator (use ASCII that WoW fonts support)
+		local indicator = data.isCollapsed and "[+] " or "[-] "
+		row.label:SetText(indicator .. data.text)
+
 		row.iconBtn:Hide()
 		row.value:SetText("")
+
+		-- Make header clickable for collapse toggle (set fresh each render)
+		row:EnableMouse(true)
+		local sectionTitle = data.text -- Capture for closure
+		row:SetScript("OnMouseDown", function()
+			UI:ToggleSection(sectionTitle)
+		end)
 	elseif data.type == "currency_cap" or data.type == "currency" then
 		local height = cfg.itemFontSize + 6
 		row:SetHeight(height)
@@ -812,5 +895,68 @@ function UI:Toggle()
 	else
 		self.frame:Show()
 		ns.Config.visible = true
+	end
+end
+
+-- Section Collapse/Expand Functions
+function UI:ToggleSection(sectionTitle)
+	if not ns.Config.collapsedSections then
+		ns.Config.collapsedSections = {}
+	end
+
+	-- Toggle the state
+	ns.Config.collapsedSections[sectionTitle] = not ns.Config.collapsedSections[sectionTitle]
+
+	-- Re-render and update button
+	self:RenderRows()
+	self:UpdateCollapseToggleBtn()
+end
+
+function UI:CollapseAll()
+	if not ns.Config.collapsedSections then
+		ns.Config.collapsedSections = {}
+	end
+
+	-- Collapse all sections
+	local sections = ns:GetCurrentSeasonData()
+	for _, section in ipairs(sections) do
+		ns.Config.collapsedSections[section.title] = true
+	end
+
+	self:RenderRows()
+end
+
+function UI:ExpandAll()
+	-- Clear all collapsed states
+	ns.Config.collapsedSections = {}
+	self:RenderRows()
+end
+
+function UI:AreAllCollapsed()
+	local sections = ns:GetCurrentSeasonData()
+	local cfg = ns.Config
+
+	if not cfg.collapsedSections then
+		return false
+	end
+
+	for _, section in ipairs(sections) do
+		if not cfg.collapsedSections[section.title] then
+			return false
+		end
+	end
+
+	return true
+end
+
+function UI:UpdateCollapseToggleBtn()
+	if not self.collapseToggleBtn then
+		return
+	end
+
+	if self:AreAllCollapsed() then
+		self.collapseToggleBtn.text:SetText("[+]") -- Can expand
+	else
+		self.collapseToggleBtn.text:SetText("[-]") -- Can collapse
 	end
 end

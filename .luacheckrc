@@ -88,6 +88,7 @@ read_globals = {
     "StaticPopupDialogs",
     "CANCEL",
     "HousingFramesUtil",
+    "GetMouseButtonClicked",
     "UiMapPoint",
     "AddonCompartmentFrame",
     "CreateColor",

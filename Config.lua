@@ -17,6 +17,7 @@ ns.ConfigDefaults = {
 		itemIndent = 10,
 		locked = false,
 		hiddenItems = {},
+		collapsedSections = {}, -- { ["sectionTitle"] = true, ... } for collapsed sections
 		anchor = "TOP", -- TOP or BOTTOM (controls growth direction)
 		position = nil,
 
