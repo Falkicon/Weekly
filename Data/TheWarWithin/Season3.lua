@@ -65,6 +65,20 @@ local data = {
 			Currency(3319, "Twilight's Blade Insignia"),
 		},
 	},
+	{
+		title = "Ongoing Events",
+		items = {
+			Quest(82483, "Worldsoul Weekly", "Interface\\Icons\\inv_misc_bag_34"), -- Worldsoul Satchel
+			Quest(83240, "The Theater Troupe", "Interface\\Icons\\INV_Mask_02"), -- Drama Mask
+			Quest(
+				83333,
+				"Awakening the Machine",
+				"Interface\\Icons\\inv_10_blacksmithing_consumable_repairhammer_color2"
+			),
+			Quest(76586, "Spreading the Light", "Interface\\Icons\\spell_holy_holybolt"),
+			Quest(85460, "Ecological Succession", "Interface\\Icons\\inv_misc_web_01"),
+		},
+	},
 	--------------------------------------------------------------------------------
 	-- HOUSING (Permanent - Starts Jan 20 with Early Access)
 	--------------------------------------------------------------------------------
@@ -80,20 +94,6 @@ local data = {
 			Item(248012, "Dornic Fir Lumber"),
 			Item(251766, "Shadowmoon Lumber"),
 			Currency(3363, "Community Coupons"),
-		},
-	},
-	{
-		title = "Ongoing Events",
-		items = {
-			Quest(82483, "Worldsoul Weekly", "Interface\\Icons\\inv_misc_bag_34"), -- Worldsoul Satchel
-			Quest(83240, "The Theater Troupe", "Interface\\Icons\\INV_Mask_02"), -- Drama Mask
-			Quest(
-				83333,
-				"Awakening the Machine",
-				"Interface\\Icons\\inv_10_blacksmithing_consumable_repairhammer_color2"
-			),
-			Quest(76586, "Spreading the Light", "Interface\\Icons\\spell_holy_holybolt"),
-			Quest(85460, "Ecological Succession", "Interface\\Icons\\inv_misc_web_01"),
 		},
 	},
 	{

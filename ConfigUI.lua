@@ -329,7 +329,13 @@ function ConfigUI:Initialize()
 					configID = configID[1]
 				end
 
-				trackingOptions.args["item_" .. configID] = {
+				-- Use label-based key for ID=0 to avoid collisions
+				local configKey = configID
+				if configID == 0 then
+					configKey = "0_" .. (row.label or "unknown"):gsub("%s+", "_")
+				end
+
+				trackingOptions.args["item_" .. configKey] = {
 					type = "toggle",
 					name = row.label or L["Item %s"]:format(configID),
 					width = "full",
