@@ -148,6 +148,7 @@ function ConfigUI:Initialize()
 						name = L["Show All Gated Content"],
 						desc = L["Show all time-gated sections regardless of current date. Reload UI to update Tracked Items list."],
 						order = 5,
+						width = "full",
 						get = function()
 							return ns.Config.debug and ns.Config.debug.ignoreTimeGates
 						end,
