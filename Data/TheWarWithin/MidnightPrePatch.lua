@@ -24,6 +24,9 @@ end
 local function Cap(id, label)
 	return { type = "currency_cap", id = id, label = label }
 end
+local function Item(id, label)
+	return { type = "item", id = id, label = label }
+end
 
 local data = {
 	--------------------------------------------------------------------------------
@@ -124,7 +127,12 @@ local data = {
 		items = {
 			-- Weekly wrapper (ID TBD - update Jan 20)
 			Quest(0, "Neighborhood Endeavors", "Interface\\Icons\\inv_misc_key_14"),
-			-- Dailies are small "Favor" quests from neighbors (not tracked individually)
+			-- Lumber types (up to 1000 stacks each)
+			Item(251764, "Ashwood Lumber"),
+			Item(242691, "Olemba Lumber"),
+			Item(245586, "Ironwood Lumber"),
+			Item(248012, "Dornic Fir Lumber"),
+			Item(251766, "Shadowmoon Lumber"),
 		},
 	},
 	--------------------------------------------------------------------------------

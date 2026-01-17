@@ -285,6 +285,29 @@ function Utils.GetQuest(id)
 	return status.isCompleted, status.progress, status.max, status.isOnQuest, status.isPercent, status.resolvedId
 end
 
+--------------------------------------------------------------------------------
+-- Utils.GetItem(id)
+-- Gets item count from bags/bank (for pseudo-currency items like Lumber)
+-- Delegates to Core/Actions/tracker.lua via Bridge
+--
+-- @param id: number - Item ID
+-- @returns: count, name, iconFileID
+--------------------------------------------------------------------------------
+function Utils.GetItem(id)
+	local blockStart = debugprofilestop()
+
+	local status = ns.Bridge:GetItemStatus(id)
+	if ns.PerfBlocks then
+		ns.PerfBlocks.dataQuery = ns.PerfBlocks.dataQuery + (debugprofilestop() - blockStart)
+	end
+
+	if not status then
+		return 0, "Unknown", nil
+	end
+
+	return status.amount, status.name, status.iconFileID
+end
+
 function Utils.GetVault(categoryID)
 	local blockStart = debugprofilestop()
 
@@ -742,6 +765,37 @@ function UI:UpdateRow(row, data, _ctx)
 		-- So Value Point should be: RIGHT, -20 (check+gap)
 		row.value:ClearAllPoints()
 		row.value:SetPoint("RIGHT", -24, 0) -- Fixed anchor to right side (Check space)
+	elseif data.type == "item" then
+		-- Item count (pseudo-currency like Lumber)
+		local height = cfg.itemFontSize + 6
+		row:SetHeight(height)
+		local fontPath = LibStub("LibSharedMedia-3.0"):Fetch("font", cfg.font or "Friz Quadrata TT")
+		row.label:SetFont(fontPath, cfg.itemFontSize)
+		row.value:SetFont(fontPath, cfg.itemFontSize)
+
+		local count, name, icon = ns.Utils.GetItem(data.id)
+
+		-- Icon
+		local iconSize = height - 2
+		row.iconBtn:Show()
+		row.iconBtn:SetSize(iconSize, iconSize)
+		row.icon:SetTexture(icon)
+		row.iconBtn:SetPoint("LEFT", cfg.itemIndent, 0)
+		row.iconBtn.type = "item"
+		row.iconBtn.id = data.id
+
+		-- Label
+		row.label:SetPoint("LEFT", row.iconBtn, "RIGHT", 4, 0)
+		row.label:SetText(data.label or name)
+
+		-- Value (just the count, no max)
+		row.value:Show()
+		row.value:SetTextColor(1, 1, 1)
+		row.value:SetText(count)
+		row.check:Hide()
+
+		row.value:ClearAllPoints()
+		row.value:SetPoint("RIGHT", -24, 0)
 	elseif data.type == "vault_visual" then
 		local height = cfg.itemFontSize + 6
 		row:SetHeight(height)

@@ -24,6 +24,11 @@ local actionRegistry = {
 		return ns.Actions.Tracker.GetQuestStatus(context)
 	end,
 
+	["tracker.getItemStatus"] = function(params)
+		local context = ns.Context:BuildItemContext(params.id)
+		return ns.Actions.Tracker.GetItemStatus(context)
+	end,
+
 	["tracker.getVaultStatus"] = function(params)
 		local context = ns.Context:BuildVaultContext(params.categoryID)
 		return ns.Actions.Tracker.GetVaultStatus(context)
@@ -121,6 +126,17 @@ end
 ---@return QuestStatusResult|nil, string|nil
 function Bridge:GetQuestStatus(questId)
 	local result = self:Execute("tracker.getQuestStatus", { id = questId })
+	if result.success then
+		return result.data, nil
+	else
+		return nil, result.error and result.error.message or "Unknown error"
+	end
+end
+
+---@param itemId number
+---@return ItemStatusResult|nil, string|nil
+function Bridge:GetItemStatus(itemId)
+	local result = self:Execute("tracker.getItemStatus", { id = itemId })
 	if result.success then
 		return result.data, nil
 	else

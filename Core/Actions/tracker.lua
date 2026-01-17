@@ -65,6 +65,35 @@ function Tracker.GetCurrencyStatus(context)
 end
 
 --------------------------------------------------------------------------------
+-- GetItemStatus
+-- Returns the count of an item in bags/bank (pseudo-currency items like Lumber)
+--------------------------------------------------------------------------------
+
+---@param context ItemContext
+---@return ActionResult<ItemStatusResult>
+function Tracker.GetItemStatus(context)
+	if not context or not context.itemId then
+		return Result.error("INVALID_CONTEXT", "Item context is missing or invalid")
+	end
+
+	local count = context.count or 0
+	local name = context.name or "Unknown"
+	local iconFileID = context.iconFileID
+
+	-- Format display text (just the count, no max)
+	local displayText = tostring(count)
+
+	return Result.success({
+		amount = count,
+		max = 0, -- Items don't have caps
+		isCapped = false,
+		displayText = displayText,
+		name = name,
+		iconFileID = iconFileID,
+	}, string.format("Item count: %d %s", count, name))
+end
+
+--------------------------------------------------------------------------------
 -- GetQuestStatus
 -- Returns the completion and progress status of a quest
 -- Handles both single-ID and multi-ID (rotating) quests

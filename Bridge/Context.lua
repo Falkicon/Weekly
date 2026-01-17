@@ -54,6 +54,27 @@ function Context:BuildQuestContext(questId)
 end
 
 --------------------------------------------------------------------------------
+-- Item Context Builder (for pseudo-currency items like Lumber)
+--------------------------------------------------------------------------------
+
+---@param itemId number
+---@return ItemContext
+function Context:BuildItemContext(itemId)
+	-- Get item count from bags, bank, reagent bank, and warband bank
+	local count = C_Item.GetItemCount(itemId, true, true) or 0
+
+	-- Get item info for name/icon
+	local itemName, _, _, _, _, _, _, _, _, itemIcon = C_Item.GetItemInfo(itemId)
+
+	return {
+		itemId = itemId,
+		count = count,
+		name = itemName or ("Item " .. itemId),
+		iconFileID = itemIcon,
+	}
+end
+
+--------------------------------------------------------------------------------
 -- Vault Context Builder
 --------------------------------------------------------------------------------
 
