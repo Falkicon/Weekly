@@ -280,6 +280,9 @@ function ConfigUI:Initialize()
 	local order = 10
 
 	for _, section in ipairs(data) do
+		-- Check if section should be processed (time-gate check)
+		local shouldProcess = true
+
 		-- Skip time-gated sections (unless debug override is enabled)
 		local showGated = ns.Config.debug and ns.Config.debug.ignoreTimeGates
 		if not showGated then
@@ -288,99 +291,98 @@ function ConfigUI:Initialize()
 				if y and m and d then
 					local showTime = time({ year = tonumber(y), month = tonumber(m), day = tonumber(d), hour = 0 })
 					if time() < showTime then
-						-- Skip this section - not yet visible
-						goto continue
+						shouldProcess = false
 					end
 				end
 			end
-			if section.hideAfter then
+			if shouldProcess and section.hideAfter then
 				local y, m, d = section.hideAfter:match("(%d+)-(%d+)-(%d+)")
 				if y and m and d then
 					local hideTime = time({ year = tonumber(y), month = tonumber(m), day = tonumber(d), hour = 0 })
 					if time() >= hideTime then
-						-- Skip this section - already hidden
-						goto continue
+						shouldProcess = false
 					end
 				end
 			end
 		end
 
-		-- Add Section Header
-		if section.title then
-			trackingOptions.args["header_" .. order] = {
-				type = "header",
-				name = section.title,
-				order = order,
-			}
-			order = order + 1
-		end
-
-		if section.items then
-			-- Create sorted copy of items (same logic as UI.lua)
-			local sortedItems = {}
-			for _, row in ipairs(section.items) do
-				if
-					row.id ~= nil
-					and (
-						row.type == "currency"
-						or row.type == "currency_cap"
-						or row.type == "quest"
-						or row.type == "vault_visual"
-						or row.type == "item"
-					)
-				then
-					table.insert(sortedItems, row)
-				end
-			end
-
-			-- Sort alphabetically (except for noSort sections and vault which has custom order)
-			if not section.noSort then
-				table.sort(sortedItems, function(a, b)
-					-- Vault has custom order: Raid(3) -> Dungeons(1) -> World(6)
-					if a.type == "vault_visual" and b.type == "vault_visual" then
-						local vaultOrder = { [3] = 1, [1] = 2, [6] = 3 }
-						local orderA = vaultOrder[a.id] or 99
-						local orderB = vaultOrder[b.id] or 99
-						return orderA < orderB
-					end
-					-- Alphabetical for everything else
-					return (a.label or "") < (b.label or "")
-				end)
-			end
-
-			for _, row in ipairs(sortedItems) do
-				local configID = row.id
-				if type(configID) == "table" then
-					configID = configID[1]
-				end
-
-				-- Use label-based key for ID=0 to avoid collisions
-				local configKey = configID
-				if configID == 0 then
-					configKey = "0_" .. (row.label or "unknown"):gsub("%s+", "_")
-				end
-
-				trackingOptions.args["item_" .. configKey] = {
-					type = "toggle",
-					name = row.label or L["Item %s"]:format(configID),
-					width = "full",
+		if shouldProcess then
+			-- Add Section Header
+			if section.title then
+				trackingOptions.args["header_" .. order] = {
+					type = "header",
+					name = section.title,
 					order = order,
-					get = function()
-						return not ns.Config.hiddenItems[configID]
-					end,
-					set = function(_, val)
-						if val then
-							ns.Config.hiddenItems[configID] = nil
-						else
-							ns.Config.hiddenItems[configID] = true
-						end
-						ns.UI:RefreshRows()
-					end,
 				}
 				order = order + 1
 			end
-		end
-		::continue::
+
+			if section.items then
+				-- Create sorted copy of items (same logic as UI.lua)
+				local sortedItems = {}
+				for _, row in ipairs(section.items) do
+					if
+						row.id ~= nil
+						and (
+							row.type == "currency"
+							or row.type == "currency_cap"
+							or row.type == "quest"
+							or row.type == "vault_visual"
+							or row.type == "item"
+						)
+					then
+						table.insert(sortedItems, row)
+					end
+				end
+
+				-- Sort alphabetically (except for noSort sections and vault which has custom order)
+				if not section.noSort then
+					table.sort(sortedItems, function(a, b)
+						-- Vault has custom order: Raid(3) -> Dungeons(1) -> World(6)
+						if a.type == "vault_visual" and b.type == "vault_visual" then
+							local vaultOrder = { [3] = 1, [1] = 2, [6] = 3 }
+							local orderA = vaultOrder[a.id] or 99
+							local orderB = vaultOrder[b.id] or 99
+							return orderA < orderB
+						end
+						-- Alphabetical for everything else
+						return (a.label or "") < (b.label or "")
+					end)
+				end
+
+				for _, row in ipairs(sortedItems) do
+					local configID = row.id
+					if type(configID) == "table" then
+						configID = configID[1]
+					end
+
+					-- Use label-based key for ID=0 to avoid collisions
+					local configKey = configID
+					if configID == 0 then
+						configKey = "0_" .. (row.label or "unknown"):gsub("%s+", "_")
+					end
+
+					trackingOptions.args["item_" .. configKey] = {
+						type = "toggle",
+						name = row.label or L["Item %s"]:format(configID),
+						width = "full",
+						order = order,
+						get = function()
+							return not ns.Config.hiddenItems[configID]
+						end,
+						set = function(_, val)
+							if val then
+								ns.Config.hiddenItems[configID] = nil
+							else
+								ns.Config.hiddenItems[configID] = true
+							end
+							ns.UI:RefreshRows()
+						end,
+					}
+					order = order + 1
+				end
+			end
+		end -- if shouldProcess
 	end
 
 	-- Register Main
