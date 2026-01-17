@@ -280,6 +280,31 @@ function ConfigUI:Initialize()
 	local order = 10
 
 	for _, section in ipairs(data) do
+		-- Skip time-gated sections (unless debug override is enabled)
+		local showGated = ns.Config.debug and ns.Config.debug.ignoreTimeGates
+		if not showGated then
+			if section.showAfter then
+				local y, m, d = section.showAfter:match("(%d+)-(%d+)-(%d+)")
+				if y and m and d then
+					local showTime = time({ year = tonumber(y), month = tonumber(m), day = tonumber(d), hour = 0 })
+					if time() < showTime then
+						-- Skip this section - not yet visible
+						goto continue
+					end
+				end
+			end
+			if section.hideAfter then
+				local y, m, d = section.hideAfter:match("(%d+)-(%d+)-(%d+)")
+				if y and m and d then
+					local hideTime = time({ year = tonumber(y), month = tonumber(m), day = tonumber(d), hour = 0 })
+					if time() >= hideTime then
+						-- Skip this section - already hidden
+						goto continue
+					end
+				end
+			end
+		end
+
 		-- Add Section Header
 		if section.title then
 			trackingOptions.args["header_" .. order] = {
@@ -355,6 +380,7 @@ function ConfigUI:Initialize()
 				order = order + 1
 			end
 		end
+		::continue::
 	end
 
 	-- Register Main
