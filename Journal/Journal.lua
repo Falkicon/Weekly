@@ -178,7 +178,7 @@ local function LoadJournalData()
 
 	-- Recount items
 	local count = 0
-	for category, items in pairs(Journal.tracker.items) do
+	for _category, items in pairs(Journal.tracker.items) do
 		for _ in pairs(items) do
 			count = count + 1
 		end
@@ -195,15 +195,16 @@ end
 -- Event Handlers
 --------------------------------------------------------------------------------
 
-local function OnAchievementEarned(tracker, event, achievementID, alreadyEarned)
+local function OnAchievementEarned(tracker, _event, achievementID, alreadyEarned)
 	if alreadyEarned then
 		return
 	end -- Skip if this was already earned before
 
-	local id, name, points, completed, month, day, year, description, flags, icon, rewardText, isGuild, wasEarnedByMe, earnedBy, isStatistic =
-		GetAchievementInfo(achievementID)
+	-- 12.0.1: GetAchievementInfo can throw hard errors for invalid IDs
+	local ok, _id, name, points, _completed, _month, _day, _year, description, _flags, icon, _rewardText, _isGuild, _wasEarnedByMe, _earnedBy, _isStatistic =
+		pcall(GetAchievementInfo, achievementID)
 
-	if not id then
+	if not ok or not name then
 		return
 	end
 
@@ -223,12 +224,12 @@ local function OnAchievementEarned(tracker, event, achievementID, alreadyEarned)
 	end
 end
 
-local function OnNewMountAdded(tracker, event, mountID)
+local function OnNewMountAdded(tracker, _event, mountID)
 	if not mountID then
 		return
 	end
 
-	local name, spellID, icon, isActive, isUsable, sourceType, isFavorite, isFactionSpecific, faction, shouldHideOnChar, isCollected, mountID2, isForDragonriding =
+	local name, spellID, icon, _isActive, _isUsable, sourceType, _isFavorite, _isFactionSpecific, _faction, _shouldHideOnChar, _isCollected, _mountID2, _isForDragonriding =
 		C_MountJournal.GetMountInfoByID(mountID)
 
 	if not name then
@@ -251,7 +252,7 @@ local function OnNewMountAdded(tracker, event, mountID)
 	end
 end
 
-local function OnNewPetAdded(tracker, event, battlePetGUID)
+local function OnNewPetAdded(tracker, _event, battlePetGUID)
 	if not battlePetGUID then
 		return
 	end
@@ -262,7 +263,7 @@ local function OnNewPetAdded(tracker, event, battlePetGUID)
 		return
 	end
 
-	local speciesName, speciesIcon, petType, companionID, tooltipSource, tooltipDescription, isWild, canBattle, isTradeable, isUnique, obtainable, creatureDisplayID =
+	local speciesName, speciesIcon, petType, _companionID, tooltipSource, _tooltipDescription, _isWild, _canBattle, _isTradeable, _isUnique, _obtainable, _creatureDisplayID =
 		C_PetJournal.GetPetInfoBySpeciesID(speciesID)
 
 	if not speciesName then
@@ -286,7 +287,7 @@ local function OnNewPetAdded(tracker, event, battlePetGUID)
 	end
 end
 
-local function OnNewToyAdded(tracker, event, itemID, isNew)
+local function OnNewToyAdded(tracker, _event, itemID, isNew)
 	if not itemID then
 		return
 	end
@@ -294,7 +295,7 @@ local function OnNewToyAdded(tracker, event, itemID, isNew)
 		return
 	end -- Only track newly added toys
 
-	local itemID2, toyName, icon, isFavorite, hasFanfare, itemQuality = C_ToyBox.GetToyInfo(itemID)
+	local _itemID2, toyName, icon, _isFavorite, _hasFanfare, itemQuality = C_ToyBox.GetToyInfo(itemID)
 
 	if not toyName then
 		-- Fallback to item info if toy info isn't available yet
@@ -317,7 +318,7 @@ local function OnNewToyAdded(tracker, event, itemID, isNew)
 	end
 end
 
-local function OnDecorAddedToChest(tracker, event, decorGUID, decorID)
+local function OnDecorAddedToChest(tracker, _event, decorGUID, decorID)
 	if not decorID then
 		return
 	end
@@ -366,7 +367,7 @@ end
 
 -- Check if an item is a trackable gathering material
 local function IsGatheringMaterial(itemID)
-	local itemName, itemLink, itemQuality, itemLevel, itemMinLevel, itemType, itemSubType, itemStackCount, itemEquipLoc, itemTexture, sellPrice, classID, subclassID, bindType, expansionID =
+	local _itemName, _itemLink, _itemQuality, _itemLevel, _itemMinLevel, _itemType, _itemSubType, _itemStackCount, _itemEquipLoc, _itemTexture, _sellPrice, classID, subclassID, _bindType, expansionID =
 		C_Item.GetItemInfo(itemID)
 
 	-- Must be Trade Goods class
@@ -382,22 +383,33 @@ local function IsGatheringMaterial(itemID)
 	return true, expansionID, subclassID
 end
 
-local function OnChatMsgLoot(tracker, event, message, ...)
+local function OnChatMsgLoot(_tracker, _event, message, ...)
+	local blockStart = debugprofilestop()
+
+	local function recordPerf()
+		if ns.PerfBlocks then
+			ns.PerfBlocks.journalTrack = ns.PerfBlocks.journalTrack + (debugprofilestop() - blockStart)
+		end
+	end
+
 	-- Only track our own loot
 	local itemLink, quantity = ParseLootMessage(message)
 	if not itemLink or not quantity then
+		recordPerf()
 		return
 	end
 
 	-- Extract item ID from link
 	local itemID = tonumber(itemLink:match("item:(%d+)"))
 	if not itemID then
+		recordPerf()
 		return
 	end
 
 	-- Check if it's a gathering material
 	local isGathering, expansionID, subclassID = IsGatheringMaterial(itemID)
 	if not isGathering then
+		recordPerf()
 		return
 	end
 
@@ -414,6 +426,7 @@ local function OnChatMsgLoot(tracker, event, message, ...)
 	if not itemName then
 		-- Queue the item for later (it will be tracked next time)
 		C_Item.RequestLoadItemDataByID(itemID)
+		recordPerf()
 		return
 	end
 
@@ -445,6 +458,8 @@ local function OnChatMsgLoot(tracker, event, message, ...)
 
 	-- Save periodically (not every single loot to avoid spam)
 	-- The logout handler will ensure final save
+
+	recordPerf()
 end
 
 --------------------------------------------------------------------------------
@@ -467,7 +482,7 @@ function Journal:Initialize()
 	-- Create tracker using TrackerCore
 	self.tracker = ns.TrackerCore:CreateTracker("WeeklyJournal", {
 		persistent = true,
-		onItemLogged = function(tracker, category, id, data)
+		onItemLogged = function(_tracker, category, id, data)
 			self:OnItemLogged(category, id, data)
 		end,
 	})
@@ -496,7 +511,7 @@ function Journal:Initialize()
 		CHAT_MSG_LOOT = OnChatMsgLoot,
 
 		-- Save on logout
-		PLAYER_LOGOUT = function(tracker, event)
+		PLAYER_LOGOUT = function(_tracker, _event)
 			SaveJournalData()
 		end,
 	})
@@ -519,7 +534,7 @@ function Journal:Shutdown()
 	self.tracker = nil
 end
 
-function Journal:OnItemLogged(category, id, data)
+function Journal:OnItemLogged(category, _id, data)
 	-- Optional: Show notification
 	if ns.Config.journal and ns.Config.journal.showNotifications then
 		local categoryInfo = self.CATEGORIES[category]
@@ -533,7 +548,7 @@ function Journal:OnItemLogged(category, id, data)
 	end
 end
 
-function Journal:OnGatheringLogged(itemID, quantity, data)
+function Journal:OnGatheringLogged(_itemID, quantity, data)
 	-- Optional: Show notification (less spammy for gathering)
 	-- Only notify for first-time items
 	if ns.Config.journal and ns.Config.journal.showNotifications and data.count == quantity then
@@ -573,7 +588,7 @@ function Journal:GetCategoryItems(category)
 	if not self.tracker then
 		return {}
 	end
-	return self.tracker:GetItems(function(cat, id, data)
+	return self.tracker:GetItems(function(cat, _id, _data)
 		return cat == category
 	end)
 end
@@ -587,7 +602,7 @@ function Journal:GetAchievementPointsThisWeek()
 	local total = 0
 	local achievements = self.tracker.items.achievement
 	if achievements then
-		for id, data in pairs(achievements) do
+		for _id, data in pairs(achievements) do
 			total = total + (data.points or 0)
 		end
 	end
@@ -721,7 +736,7 @@ function Journal:GetGatheringTotalCount()
 	end
 
 	local total = 0
-	for itemID, data in pairs(self.gathering) do
+	for _itemID, data in pairs(self.gathering) do
 		total = total + (data.count or 0)
 	end
 	return total
@@ -765,7 +780,7 @@ function Journal:GetGatheringByExpansion()
 	end
 
 	-- Sort items within each expansion by count (highest first)
-	for expID, items in pairs(byExpansion) do
+	for _expID, items in pairs(byExpansion) do
 		table.sort(items, function(a, b)
 			return (a.count or 0) > (b.count or 0)
 		end)
@@ -814,7 +829,7 @@ end
 
 local initFrame = CreateFrame("Frame")
 initFrame:RegisterEvent("PLAYER_LOGIN")
-initFrame:SetScript("OnEvent", function(self, event)
+initFrame:SetScript("OnEvent", function(self, _event)
 	-- Delay slightly to ensure Weekly is fully loaded
 	C_Timer.After(0.5, function()
 		if ns.Config and ns.Config.journal and ns.Config.journal.enabled then

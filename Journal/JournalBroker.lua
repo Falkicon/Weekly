@@ -110,7 +110,7 @@ end
 
 function JournalBroker:ShowContextMenu()
 	-- Modern Menu API (Retail 11.0+)
-	MenuUtil.CreateContextMenu(UIParent, function(owner, rootDescription)
+	MenuUtil.CreateContextMenu(UIParent, function(_owner, rootDescription)
 		rootDescription:CreateTitle("Weekly")
 
 		-- Weekly Tracker Section
@@ -231,7 +231,7 @@ end
 
 local initFrame = CreateFrame("Frame")
 initFrame:RegisterEvent("PLAYER_LOGIN")
-initFrame:SetScript("OnEvent", function(self, event)
+initFrame:SetScript("OnEvent", function(self, _event)
 	-- Delay to ensure libs are loaded
 	C_Timer.After(1, function()
 		JournalBroker:Initialize()

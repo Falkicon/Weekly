@@ -177,7 +177,7 @@ end
 function TrackerCore:Clear(category)
 	if category then
 		if self.items[category] then
-			for id in pairs(self.items[category]) do
+			for _id in pairs(self.items[category]) do
 				self.itemCount = self.itemCount - 1
 			end
 			self.items[category] = {}

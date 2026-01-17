@@ -258,7 +258,7 @@ function JournalUI:CreateWindow()
 		self.itemGrid = FenUI:CreateGrid(frame.scrollChild, {
 			columns = { "auto", "1fr", "auto" }, -- icon | name | extra
 			rowHeight = ROW_HEIGHT,
-			onRowBind = function(row, item, index)
+			onRowBind = function(row, item, _index)
 				-- Icon
 				row:GetCell(1):SetIcon(item.data and item.data.icon or "Interface\\Icons\\INV_Misc_QuestionMark")
 
@@ -384,7 +384,7 @@ function JournalUI:CreateTabs()
 	else
 		-- Fallback to basic tabs
 		local xOffset = 0
-		for i, tabInfo in ipairs(tabDefs) do
+		for _i, tabInfo in ipairs(tabDefs) do
 			local tab = self:CreateTab(tabInfo.key, tabInfo.text, tabInfo.icon)
 			tab:SetPoint("LEFT", frame.tabContainer, "LEFT", xOffset, 0)
 			xOffset = xOffset + tab:GetWidth() + 2
@@ -644,7 +644,7 @@ function JournalUI:UpdateWeekLabel()
 
 	-- Get current week number (approximate)
 	local date = C_DateAndTime.GetCurrentCalendarTime()
-	local weekNum = math.floor(date.monthDay / 7) + 1
+	local _weekNum = math.floor(date.monthDay / 7) + 1
 	local monthName = CALENDAR_FULLDATE_MONTH_NAMES[date.month] or date.month
 
 	self.frame.weekLabel:SetText(L["Week of %s %d"]:format(monthName, math.floor((date.monthDay - 1) / 7) * 7 + 1))
@@ -755,7 +755,7 @@ function JournalUI:RenderDashboard()
 		catRow.clickFunc = function()
 			self:SelectTab(catKey)
 		end
-		catRow.tooltipFunc = function(row)
+		catRow.tooltipFunc = function(_row)
 			GameTooltip:SetText(cat.name, unpack(C_GOLD))
 			GameTooltip:AddLine(L["Click to view %s"]:format(cat.name), unpack(C_GRAY))
 			GameTooltip:Show()
@@ -802,7 +802,7 @@ function JournalUI:RenderDashboard()
 	gatheringRow.clickFunc = function()
 		self:SelectTab("gathering")
 	end
-	gatheringRow.tooltipFunc = function(row)
+	gatheringRow.tooltipFunc = function(_row)
 		GameTooltip:SetText(L["Gathering"], unpack(C_GOLD))
 		GameTooltip:AddLine(L["%d (%d types)"]:format(gatheringTotal, gatheringUnique), unpack(C_WHITE))
 		GameTooltip:AddLine(L["Click to view %s"]:format(L["Gathering"]), unpack(C_GRAY))
@@ -985,8 +985,8 @@ function JournalUI:RenderGatheringTab()
 
 			-- Tooltip
 			local itemID = item.itemID
-			local itemData = item
-			row.tooltipFunc = function(r)
+			local _itemData = item
+			row.tooltipFunc = function(_r)
 				GameTooltip:SetItemByID(itemID)
 			end
 

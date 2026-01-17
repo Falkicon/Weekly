@@ -4,14 +4,14 @@ ns.UI = UI
 
 -- Visual Constants
 -- Visual Constants
-local C_BACKGROUND = { 0.1, 0.1, 0.1 }
-local C_BORDER = { 0.4, 0.4, 0.4, 1 }
+local _C_BACKGROUND = { 0.1, 0.1, 0.1 }
+local _C_BORDER = { 0.4, 0.4, 0.4, 1 }
 local C_HEADER = { 1, 0.8, 0 } -- Gold
-local C_BAR_VALOR = { 0.8, 0.6, 0.2 } -- Earthy Gold
-local C_BAR_CREST = { 0.7, 0.4, 0.9 } -- Purple
+local _C_BAR_VALOR = { 0.8, 0.6, 0.2 } -- Earthy Gold
+local _C_BAR_CREST = { 0.7, 0.4, 0.9 } -- Purple
 
 function UI:Initialize()
-	local cfg = ns.Config
+	local _cfg = ns.Config
 
 	-- Create Main Frame (Only once)
 	if not self.frame then
@@ -59,7 +59,7 @@ function UI:Initialize()
 end
 
 -- Removed Manual Minimized Logic (LibDBIcon handles visibility/hiding window)
-function UI:SetMinimized(minimized)
+function UI:SetMinimized(_minimized)
 	-- Deprecated by Broker, but kept for compatibility logic removal
 end
 
@@ -70,8 +70,8 @@ function UI:SavePosition()
 
 	-- When saving, convert the current position to our desired anchor point
 	local anchor = ns.Config.anchor or "TOP"
-	local scale = self.frame:GetEffectiveScale()
-	local uiScale = UIParent:GetEffectiveScale()
+	local _scale = self.frame:GetEffectiveScale()
+	local _uiScale = UIParent:GetEffectiveScale()
 
 	local left = self.frame:GetLeft()
 	local top = self.frame:GetTop()
@@ -196,251 +196,124 @@ function UI:ApplyFrameStyle()
 	self:RefreshRows()
 end
 
--- Helpers
+-- Helpers (Bridge wrappers for backward compatibility)
+-- Note: Core business logic is now in Core/Actions/tracker.lua
+-- These Utils are thin wrappers that call the Bridge
 local Utils = {}
+
 function Utils.GetCurrency(id)
+	local blockStart = debugprofilestop()
+
+	-- Use Bridge for the action, but also need raw API data for icon
 	local info = C_CurrencyInfo.GetCurrencyInfo(id)
 	if not info then
-		return "---", 0, 0
+		if ns.PerfBlocks then
+			ns.PerfBlocks.dataQuery = ns.PerfBlocks.dataQuery + (debugprofilestop() - blockStart)
+		end
+		return "---", 0, 0, nil, nil
 	end
 
-	local amount = info.quantity
-	-- Prefer weekly max if available, otherwise total max
-	local max = (info.maxWeeklyQuantity > 0) and info.maxWeeklyQuantity or info.maxQuantity
-	local earned = info.quantityEarnedThisWeek
-
-	if info.maxWeeklyQuantity > 0 then
-		-- For weekly capped currencies (e.g. Conquest), use earned vs weeklyMax
-		amount = earned
+	local status = ns.Bridge:GetCurrencyStatus(id)
+	if ns.PerfBlocks then
+		ns.PerfBlocks.dataQuery = ns.PerfBlocks.dataQuery + (debugprofilestop() - blockStart)
 	end
 
-	-- Safety for 0 max (uncapped)
-	-- if max == 0 then max = amount end -- REMOVED: Cause of fake caps
+	if not status then
+		return "---", 0, 0, info.name, info.iconFileID
+	end
 
-	return FormatLargeNumber(info.quantity), amount, max, info.name, info.iconFileID
+	return FormatLargeNumber(info.quantity), status.amount, status.max, status.name, status.iconFileID
 end
 
 --------------------------------------------------------------------------------
 -- Utils.GetQuest(id)
 -- Gets quest completion status and progress.
+-- Now delegates to Core/Actions/tracker.lua via Bridge
 --
 -- @param id: number or table - Single quest ID or table of variant IDs
---            (e.g., {83363, 83365, 83359} for rotating Timewalking quests)
---
--- @returns:
---   isCompleted (bool)  - Quest is flagged as completed
---   progress (number)   - Current progress value
---   max (number)        - Maximum progress value (for progress display)
---   isOnQuest (bool)    - Player currently has this quest
---   isPercent (bool)    - Progress should display as percentage (e.g., "50%")
---   resolvedId (number) - The actual quest ID (for multi-ID quests, returns the
---                         specific variant the player has; nil if none active)
+-- @returns: isCompleted, progress, max, isOnQuest, isPercent, resolvedId
 --------------------------------------------------------------------------------
 function Utils.GetQuest(id)
-	local resolvedId = nil -- Track the actual quest ID (for multi-ID quests)
+	local blockStart = debugprofilestop()
 
-	-- Handle table of IDs (Find first active or completed)
-	if type(id) == "table" then
-		local foundId = nil
-		for _, qid in ipairs(id) do
-			if C_QuestLog.IsOnQuest(qid) or C_QuestLog.IsQuestFlaggedCompleted(qid) then
-				foundId = qid
-				break
-			end
-		end
-		if foundId then
-			id = foundId
-			resolvedId = foundId -- Found the specific quest
-		else
-			-- If none valid found, return early (no quest active)
-			-- Return nil for resolvedId so we know it's a multi-ID quest with none active
-			return false, 0, 0, false, false, nil
-		end
-	else
-		resolvedId = id -- Single ID quest
+	local status = ns.Bridge:GetQuestStatus(id)
+	if ns.PerfBlocks then
+		ns.PerfBlocks.dataQuery = ns.PerfBlocks.dataQuery + (debugprofilestop() - blockStart)
 	end
 
-	if id == 0 then
+	if not status then
 		return false, 0, 0, false, false, nil
 	end
 
-	local isCompleted = C_QuestLog.IsQuestFlaggedCompleted(id)
-	local isOnQuest = C_QuestLog.IsOnQuest(id)
-
-	local progress = 0
-	local max = 0
-	local isPercent = false
-
-	if isOnQuest then
-		local objectives = C_QuestLog.GetQuestObjectives(id)
-		if objectives and #objectives > 0 then
-			-- Check if this is a multi-objective quest (multiple 0/1 or similar objectives)
-			if #objectives > 1 then
-				-- Multi-objective: count completed objectives vs total
-				local completedCount = 0
-				for _, obj in ipairs(objectives) do
-					if obj.finished then
-						completedCount = completedCount + 1
-					end
-				end
-				progress = completedCount
-				max = #objectives
-			else
-				-- Single objective
-				local obj = objectives[1]
-				progress = obj.numFulfilled or 0
-				max = obj.numRequired or 0
-
-				-- Check for percentage-based objectives
-				-- First, try to detect percentage from objective text (most reliable)
-				if obj.text then
-					local pct = obj.text:match("%((%d+)%%%)") -- Match "(X%)" format
-					if not pct then
-						pct = obj.text:match("(%d+)%%") -- Match "X%" format anywhere
-					end
-					if pct then
-						progress = tonumber(pct) or 0
-						max = 100
-						isPercent = true
-					end
-				end
-
-				-- Fallback: Some quests use numFulfilled/numRequired as 0-100 percentage
-				if not isPercent and max == 100 and progress <= 100 then
-					isPercent = true
-				end
-			end
-		end
-	elseif isCompleted then
-		progress = 1
-		max = 1 -- Treat as full
-	end
-
-	return isCompleted, progress, max, isOnQuest, isPercent, resolvedId
+	return status.isCompleted, status.progress, status.max, status.isOnQuest, status.isPercent, status.resolvedId
 end
 
 function Utils.GetVault(categoryID)
-	local activities = C_WeeklyRewards.GetActivities(categoryID)
-	local completed = 0
-	local max = #activities
-	for i, activity in ipairs(activities) do
-		if activity.progress >= activity.threshold then
-			completed = completed + 1
-		end
+	local blockStart = debugprofilestop()
+
+	local status = ns.Bridge:GetVaultStatus(categoryID)
+	if ns.PerfBlocks then
+		ns.PerfBlocks.vaultLookup = ns.PerfBlocks.vaultLookup + (debugprofilestop() - blockStart)
 	end
-	return completed, max
+
+	if not status then
+		return 0, 0
+	end
+	return status.completed, status.max
 end
 
 function Utils.GetVaultDetails(categoryID)
-	local activities = C_WeeklyRewards.GetActivities(categoryID)
-	table.sort(activities, function(a, b)
-		return a.index < b.index
-	end)
+	local blockStart = debugprofilestop()
 
-	local results = { slots = {}, history = {} }
-
-	for i, act in ipairs(activities) do
-		table.insert(results.slots, {
-			threshold = act.threshold,
-			progress = act.progress,
-			level = act.level or 0,
-			completed = (act.progress >= act.threshold),
-		})
-	end
-	-- Get M+ Runs for this week (Category 1 = Dungeons)
-	if categoryID == 1 then
-		local runs = C_MythicPlus.GetRunHistory(false, false)
-		if runs then
-			table.sort(runs, function(a, b)
-				return a.level > b.level
-			end)
-			for _, run in ipairs(runs) do
-				local mapName = C_ChallengeMode.GetMapUIInfo(run.mapChallengeModeID)
-				table.insert(results.history, {
-					name = mapName,
-					level = run.level,
-					completed = run.completed,
-				})
-			end
-		end
-
-	-- Raid History (Category 3 = Raid)
-	elseif categoryID == 3 then
-		-- Use SavedInstances (Lockouts) for accurate boss kill tracking
-		local numSaved = GetNumSavedInstances()
-		for i = 1, numSaved do
-			local name, _, _, _, locked, _, _, isRaid, _, diffName, numEncounters = GetSavedInstanceInfo(i)
-			if isRaid and locked then
-				for j = 1, numEncounters do
-					local bossName, _, isKilled = GetSavedInstanceEncounterInfo(i, j)
-					if isKilled then
-						table.insert(results.history, {
-							name = bossName,
-							level = diffName, -- e.g. "Heroic"
-							completed = true,
-						})
-					end
-				end
-			end
-		end
+	local details = ns.Bridge:GetVaultDetails(categoryID)
+	if ns.PerfBlocks then
+		ns.PerfBlocks.vaultLookup = ns.PerfBlocks.vaultLookup + (debugprofilestop() - blockStart)
 	end
 
-	return results
+	if not details then
+		return { slots = {}, history = {} }
+	end
+	return details
 end
 
 function Utils.SortItems(items)
-	local cfg = ns.Config
-
-	table.sort(items, function(a, b)
-		if a.type == "vault_visual" and b.type == "vault_visual" then
-			-- Custom Sort Order: Raid(3) -> Dungeons(1) -> World(6)
-			local order = { [3] = 1, [1] = 2, [6] = 3 }
-			local orderA = order[a.id] or 99
-			local orderB = order[b.id] or 99
-			return orderA < orderB
+	local sorted = ns.Bridge:SortItems(items)
+	if sorted then
+		-- Replace items in-place to maintain reference
+		for i = 1, #sorted do
+			items[i] = sorted[i]
 		end
-
-		-- 1. Completion (Active First) - Optional
-		if cfg.sortCompletedBottom then
-			local aDone = false
-			local bDone = false
-
-			-- Determine completion status
-			if a.type == "quest" then
-				aDone = Utils.GetQuest(a.id)
-			elseif a.type == "currency_cap" or a.type == "currency" then
-				local _, amt, max = Utils.GetCurrency(a.id)
-				aDone = (max > 0 and amt >= max)
-			end
-
-			if b.type == "quest" then
-				bDone = Utils.GetQuest(b.id)
-			elseif b.type == "currency_cap" or b.type == "currency" then
-				local _, amt, max = Utils.GetCurrency(b.id)
-				bDone = (max > 0 and amt >= max)
-			end
-
-			if aDone ~= bDone then
-				return not aDone -- Active (not done) comes first
-			end
+		-- Clear any extra items if the sorted list is shorter
+		for i = #sorted + 1, #items do
+			items[i] = nil
 		end
-
-		-- 2. Alphabetical
-		return (a.label or "") < (b.label or "")
-	end)
-
+	end
 	return items
 end
 
 ns.Utils = Utils
 
 function UI:RefreshRows()
+	local blockStart = debugprofilestop()
+
+	-- Reset perf counters for this refresh cycle
+	if ns.PerfBlocks then
+		ns.PerfBlocks.uiRefresh = 0
+		ns.PerfBlocks.dataQuery = 0
+		ns.PerfBlocks.vaultLookup = 0
+	end
+
 	if self.rows then
 		for _, row in ipairs(self.rows) do
 			row:Hide()
 		end
 	end
 	self:RenderRows()
+
+	-- Record total UI refresh time
+	if ns.PerfBlocks then
+		ns.PerfBlocks.uiRefresh = debugprofilestop() - blockStart
+	end
 end
 
 function UI:RenderRows()
@@ -479,7 +352,7 @@ function UI:RenderRows()
 
 		-- Skip section entirely if all items are hidden
 		if #items == 0 then
-			-- Do nothing, skip this section
+			-- Empty section - skip entirely
 		else
 			-- B. Header (only if there are visible items)
 			table.insert(visibleRows, { type = "header", text = section.title })
@@ -564,7 +437,7 @@ function UI:RenderRows()
 	-- 3. Render Pass
 	local yOffset = 0
 
-	for i, rowData in ipairs(visibleRows) do
+	for _i, rowData in ipairs(visibleRows) do
 		local row = self.rows[poolIndex]
 		if not row then
 			row = self:CreateRowFrame()
@@ -644,7 +517,7 @@ function UI:CreateRowFrame()
 				GameTooltip:AddLine(header, 1, 0.82, 0)
 				for _, run in ipairs(self.details.history) do
 					-- Format: [Name] - [Level]
-					local color = run.completed and { 0, 1, 0 } or { 0.5, 0.5, 0.5 }
+					local _color = run.completed and { 0, 1, 0 } or { 0.5, 0.5, 0.5 }
 					local rightText = run.level
 					if not run.completed then
 						rightText = rightText .. " (Failed)"
@@ -683,7 +556,7 @@ function UI:CreateRowFrame()
 
 	-- Vault Slots (Visual Boxes)
 	row.slots = {}
-	for i = 1, 3 do
+	for _i = 1, 3 do
 		local slot = CreateFrame("Frame", nil, row, "BackdropTemplate")
 		slot:SetSize(14, 14)
 		slot:SetBackdrop({
@@ -709,7 +582,7 @@ function UI:CreateRowFrame()
 	return row
 end
 
-function UI:UpdateRow(row, data, ctx)
+function UI:UpdateRow(row, data, _ctx)
 	local cfg = ns.Config
 	row.label:ClearAllPoints()
 	row.value:ClearAllPoints()
@@ -738,7 +611,7 @@ function UI:UpdateRow(row, data, ctx)
 		row.label:SetFont(fontPath, cfg.itemFontSize)
 		row.value:SetFont(fontPath, cfg.itemFontSize)
 
-		local textStr, amount, max, name, icon = ns.Utils.GetCurrency(data.id)
+		local _textStr, amount, max, name, icon = ns.Utils.GetCurrency(data.id)
 
 		-- Icon
 		local iconSize = height - 2
@@ -828,12 +701,12 @@ function UI:UpdateRow(row, data, ctx)
 		row.value:Hide()
 		row.check:Hide() -- Hide main check, we use individual slot checks
 
-		local prevSlot = nil
+		local _prevSlot = nil
 		-- Iterate backwards to align right? Or forward?
 		-- Let's align them to the RIGHT of the row, like the Value would be.
 		-- Slot 3 (Rightmost) -> Slot 2 -> Slot 1
 
-		local startX = -10
+		local _startX = -10
 		local spacing = 2
 		local size = 16
 

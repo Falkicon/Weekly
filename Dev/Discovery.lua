@@ -1,19 +1,15 @@
 -- Discovery.lua
--- Dev-only tool for discovering currencies and quests to add to Weekly's database
+-- Tool for discovering currencies and quests to add to Weekly's database
 -- Excluded from CurseForge builds via .pkgmeta
+-- When Mechanic is installed, accessed via Mechanic Dashboard > Tools > Weekly
 
 local _, ns = ...
-
--- Only run in dev mode
-if not ns.IS_DEV_MODE then
-	return
-end
 
 local Discovery = {}
 ns.Discovery = Discovery
 
 -- Current expansion for filtering
-local CURRENT_EXPANSION = GetExpansionLevel()
+local _CURRENT_EXPANSION = GetExpansionLevel()
 
 -- Persistence settings
 local MAX_STORED_ITEMS = 500 -- Cap to prevent unbounded growth
@@ -152,7 +148,7 @@ local function LoadDiscoveryData(tracker)
 
 	-- Recount to be safe
 	local count = 0
-	for category, items in pairs(tracker.items) do
+	for _category, items in pairs(tracker.items) do
 		for _ in pairs(items) do
 			count = count + 1
 		end
@@ -246,7 +242,7 @@ function Discovery:Initialize()
 	-- Create tracker using TrackerCore
 	self.tracker = ns.TrackerCore:CreateTracker("Discovery", {
 		persistent = true,
-		onItemLogged = function(tracker, category, id, data)
+		onItemLogged = function(_tracker, category, id, data)
 			self:OnItemLogged(category, id, data)
 		end,
 	})
@@ -282,27 +278,27 @@ function Discovery:Initialize()
 	self.tracker:RegisterEvents({
 		-- Currency events
 		CURRENCY_DISPLAY_UPDATE = function(
-			t,
-			event,
+			_t,
+			_event,
 			currencyType,
 			quantity,
 			quantityChange,
-			quantityGainSource,
-			quantityLostSource
+			_quantityGainSource,
+			_quantityLostSource
 		)
 			self:OnCurrencyUpdate(currencyType, quantity, quantityChange)
 		end,
 
 		-- Quest events
-		QUEST_ACCEPTED = function(t, event, questID)
+		QUEST_ACCEPTED = function(_t, _event, questID)
 			self:OnQuestEvent(questID, "accepted")
 		end,
-		QUEST_TURNED_IN = function(t, event, questID, xpReward, moneyReward)
+		QUEST_TURNED_IN = function(_t, _event, questID, _xpReward, _moneyReward)
 			self:OnQuestEvent(questID, "completed")
 		end,
 
 		-- Save on logout
-		PLAYER_LOGOUT = function(t, event)
+		PLAYER_LOGOUT = function(_t, _event)
 			self:Save()
 		end,
 	})
@@ -324,7 +320,7 @@ end
 -- Event Handlers
 --------------------------------------------------------------------------------
 
-function Discovery:OnCurrencyUpdate(currencyID, quantity, quantityChange)
+function Discovery:OnCurrencyUpdate(currencyID, _quantity, _quantityChange)
 	if not currencyID then
 		return
 	end
@@ -790,7 +786,7 @@ function Discovery:ExportData()
 	end
 
 	-- Build filter based on current settings
-	local function filterFunc(category, id, data)
+	local function filterFunc(category, _id, _data)
 		if category == "currency" and not self.filters.showCurrencies then
 			return false
 		end
@@ -831,13 +827,13 @@ end
 -- Auto-Initialize on Load
 --------------------------------------------------------------------------------
 
--- Initialize when Weekly loads (in dev mode)
+-- Initialize when Weekly loads
 local initFrame = CreateFrame("Frame")
 initFrame:RegisterEvent("PLAYER_LOGIN")
-initFrame:SetScript("OnEvent", function(self, event)
+initFrame:SetScript("OnEvent", function(self, _event)
 	-- Delay slightly to ensure Weekly is fully loaded
 	C_Timer.After(1, function()
-		if ns.IS_DEV_MODE and ns.TrackerCore then
+		if ns.TrackerCore then
 			Discovery:Initialize()
 		end
 	end)
