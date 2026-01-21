@@ -42,6 +42,7 @@ ns.ConfigDefaults = {
 
 		-- Debug Options
 		debug = {
+			enabled = false, -- Debug mode (shows quest ID on accept/complete)
 			ignoreTimeGates = false, -- Show all gated content regardless of date
 		},
 	},

@@ -97,9 +97,14 @@ function Weekly:SlashHandler(msg)
 	end
 
 	if cmd == "debug" then
-		ns.Config.debug = not ns.Config.debug
-		self:Printf(L["Debug Mode: %s"]:format(ns.Config.debug and "|cff00ff00ON|r" or "|cffff0000OFF|r"))
-		if ns.Config.debug then
+		-- Ensure debug is a table
+		if type(ns.Config.debug) ~= "table" then
+			ns.Config.debug = { ignoreTimeGates = false }
+		end
+		-- Toggle debug mode using a dedicated field
+		ns.Config.debug.enabled = not ns.Config.debug.enabled
+		self:Printf(L["Debug Mode: %s"]:format(ns.Config.debug.enabled and "|cff00ff00ON|r" or "|cffff0000OFF|r"))
+		if ns.Config.debug.enabled then
 			self:RegisterEvent("QUEST_TURNED_IN")
 			self:RegisterEvent("QUEST_ACCEPTED")
 		else
@@ -184,13 +189,13 @@ function Weekly:SlashHandler(msg)
 end
 
 function Weekly:QUEST_TURNED_IN(_event, questID, _xp, _money)
-	if ns.Config.debug then
+	if type(ns.Config.debug) == "table" and ns.Config.debug.enabled then
 		self:Printf(L["Quest Completed: ID %s"]:format(questID))
 	end
 end
 
 function Weekly:QUEST_ACCEPTED(_event, questID)
-	if ns.Config.debug then
+	if type(ns.Config.debug) == "table" and ns.Config.debug.enabled then
 		self:Printf(L["Quest Accepted: ID %s"]:format(questID))
 	end
 end
@@ -200,7 +205,7 @@ function Weekly:OnEnable()
 	-- If autoShow is enabled, always show on login
 	-- Otherwise, restore the last saved visibility state
 	local shouldShow = ns.Config.autoShow or ns.Config.visible
-	if shouldShow then
+	if shouldShow and ns.UI and ns.UI.frame then
 		ns.UI.frame:Show()
 		ns.Config.visible = true
 	end

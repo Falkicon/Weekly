@@ -26,7 +26,7 @@ end
 -- Check if section should be visible based on showAfter/hideAfter dates
 local function IsSectionVisible(section, cfg)
 	-- Debug override: show all gated content
-	if cfg.debug and cfg.debug.ignoreTimeGates then
+	if type(cfg.debug) == "table" and cfg.debug.ignoreTimeGates then
 		return true
 	end
 

@@ -151,10 +151,10 @@ function ConfigUI:Initialize()
 						order = 5,
 						width = "full",
 						get = function()
-							return ns.Config.debug and ns.Config.debug.ignoreTimeGates
+							return type(ns.Config.debug) == "table" and ns.Config.debug.ignoreTimeGates
 						end,
 						set = function(_, val)
-							if not ns.Config.debug then
+							if type(ns.Config.debug) ~= "table" then
 								ns.Config.debug = {}
 							end
 							ns.Config.debug.ignoreTimeGates = val
@@ -286,7 +286,7 @@ function ConfigUI:Initialize()
 		local shouldProcess = true
 
 		-- Skip time-gated sections (unless debug override is enabled)
-		local showGated = ns.Config.debug and ns.Config.debug.ignoreTimeGates
+		local showGated = type(ns.Config.debug) == "table" and ns.Config.debug.ignoreTimeGates
 		if not showGated then
 			if section.showAfter then
 				local y, m, d = section.showAfter:match("(%d+)-(%d+)-(%d+)")

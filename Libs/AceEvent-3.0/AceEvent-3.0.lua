@@ -12,7 +12,7 @@
 -- @release $Id$
 local CallbackHandler = LibStub("CallbackHandler-1.0")
 
-local MAJOR, MINOR = "AceEvent-3.0", 4
+local MAJOR, MINOR = "AceEvent-3.0", 5
 local AceEvent = LibStub:NewLibrary(MAJOR, MINOR)
 
 if not AceEvent then
@@ -22,7 +22,14 @@ end
 -- Lua APIs
 local pairs = pairs
 
-AceEvent.frame = AceEvent.frame or CreateFrame("Frame", "AceEvent30Frame") -- our event frame
+-- WoW 12.0+: Named frames can become protected. If the existing frame is named
+-- (from an older library version), create a new anonymous one.
+if AceEvent.frame and AceEvent.frame:GetName() then
+	AceEvent.frame:UnregisterAllEvents()
+	AceEvent.frame:SetScript("OnEvent", nil)
+	AceEvent.frame = nil
+end
+AceEvent.frame = AceEvent.frame or CreateFrame("Frame") -- anonymous frame
 AceEvent.embeds = AceEvent.embeds or {} -- what objects embed this lib
 
 -- APIs and registry for blizzard events, using CallbackHandler lib

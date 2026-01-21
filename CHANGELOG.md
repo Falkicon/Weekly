@@ -1,4 +1,9 @@
 # Changelog
+## [1.3.1] - 2026-01-20
+
+### Fixed
+- Fix crash when saved debug config was boolean instead of table (WoW 12.0 compatibility)
+
 
 All notable changes to Weekly will be documented in this file.
 
