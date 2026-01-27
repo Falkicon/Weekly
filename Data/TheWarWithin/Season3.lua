@@ -60,7 +60,7 @@ local data = {
 		hideAfter = "2026-03-02",
 		noSort = true,
 		items = {
-			Quest(0, "Twilight's Call", "Interface\\Icons\\spell_shadow_twilight"),
+			Quest(87308, "Twilight's Dawn", "Interface\\Icons\\spell_shadow_twilight"),
 			Quest(91795, "Disrupt the Call", "Interface\\Icons\\spell_shadow_twilight"),
 			Currency(3319, "Twilight's Blade Insignia"),
 		},

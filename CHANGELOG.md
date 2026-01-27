@@ -1,4 +1,10 @@
 # Changelog
+## [1.3.2] - 2026-01-27
+
+### Added
+- Twilight Ascension: Added "Twilight's Dawn" quest (87308) for pre-patch event
+
+
 ## [1.3.1] - 2026-01-20
 
 ### Fixed
