@@ -85,8 +85,8 @@ function ns:GetCurrentSeasonData()
 	end
 
 	-- Fallbacks
-	exp = exp or 11
-	sea = sea or 3
+	exp = exp or 12
+	sea = sea or 1
 
 	return self.Data:Get(exp, sea) or {}
 end

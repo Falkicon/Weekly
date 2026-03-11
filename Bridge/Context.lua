@@ -54,6 +54,26 @@ function Context:BuildQuestContext(questId)
 end
 
 --------------------------------------------------------------------------------
+-- Quest Count Context Builder (for grouped rows like Prey)
+--------------------------------------------------------------------------------
+
+---@param questIds number[]
+---@param targetCount number
+---@return QuestCountContext
+function Context:BuildQuestCountContext(questIds, targetCount)
+	return {
+		ids = questIds or {},
+		targetCount = targetCount or 0,
+		isOnQuest = function(id)
+			return C_QuestLog.IsOnQuest(id)
+		end,
+		isCompleted = function(id)
+			return C_QuestLog.IsQuestFlaggedCompleted(id)
+		end,
+	}
+end
+
+--------------------------------------------------------------------------------
 -- Item Context Builder (for pseudo-currency items like Lumber)
 --------------------------------------------------------------------------------
 
@@ -158,6 +178,11 @@ function Context:BuildSortContext(items)
 			local result = Actions.GetQuestStatus(questContext)
 			return result.success and result.data or nil
 		end,
+			getQuestCountStatus = function(ids, targetCount)
+				local questCountContext = self:BuildQuestCountContext(ids, targetCount)
+				local result = Actions.GetQuestCountStatus(questCountContext)
+				return result.success and result.data or nil
+			end,
 		getCurrencyStatus = function(id)
 			local currencyContext = self:BuildCurrencyContext(id)
 			local result = Actions.GetCurrencyStatus(currencyContext)

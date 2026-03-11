@@ -325,6 +325,70 @@ function Utils.GetQuest(id)
 end
 
 --------------------------------------------------------------------------------
+-- Utils.GetQuestCount(ids, targetCount)
+-- Gets grouped completion status for a set of quest IDs.
+-- Delegates to Core/Actions/tracker.lua via Bridge
+--------------------------------------------------------------------------------
+function Utils.GetQuestCount(ids, targetCount)
+	local blockStart = debugprofilestop()
+
+	local status = ns.Bridge:GetQuestCountStatus(ids, targetCount)
+	if ns.PerfBlocks then
+		ns.PerfBlocks.dataQuery = ns.PerfBlocks.dataQuery + (debugprofilestop() - blockStart)
+	end
+
+	if not status then
+		return false, 0, targetCount or 0, 0, nil
+	end
+
+	return status.isCompleted, status.progress, status.max, status.activeCount, status.activeId
+end
+
+function Utils.GetPrey(item)
+	local maxCount = item.maxCount or 0
+	local activeCount = 0
+	local completedCount = 0
+
+	if C_QuestLog and C_QuestLog.GetActivePreyQuest then
+		local ok, activeQuestID = pcall(C_QuestLog.GetActivePreyQuest)
+		if ok and activeQuestID then
+			activeCount = 1
+		end
+	end
+
+	if C_UIWidgetManager and C_UIWidgetManager.GetObjectiveTrackerWidgetSetID and C_UIWidgetManager.GetAllWidgetsBySetID and C_UIWidgetManager.GetPreyHuntProgressWidgetVisualizationInfo and Enum and Enum.UIWidgetVisualizationType and Enum.UIWidgetVisualizationType.PreyHuntProgress and Enum.PreyHuntProgressState and Enum.PreyHuntProgressState.Final then
+		local okSetID, widgetSetID = pcall(C_UIWidgetManager.GetObjectiveTrackerWidgetSetID)
+		if okSetID and widgetSetID then
+			local okWidgets, widgets = pcall(C_UIWidgetManager.GetAllWidgetsBySetID, widgetSetID)
+			if okWidgets and widgets then
+				local preyWidgets = 0
+				for _, widget in ipairs(widgets) do
+					if widget.widgetType == Enum.UIWidgetVisualizationType.PreyHuntProgress then
+						local okInfo, widgetInfo = pcall(C_UIWidgetManager.GetPreyHuntProgressWidgetVisualizationInfo, widget.widgetID)
+						if okInfo and widgetInfo and widgetInfo.shownState ~= Enum.WidgetShownState.Hidden then
+							preyWidgets = preyWidgets + 1
+							if widgetInfo.progressState == Enum.PreyHuntProgressState.Final then
+								completedCount = completedCount + 1
+							end
+						end
+					end
+				end
+
+				if preyWidgets > 0 then
+					local cappedMax = maxCount > 0 and math.min(preyWidgets, maxCount) or preyWidgets
+					if completedCount > cappedMax then
+						completedCount = cappedMax
+					end
+					return completedCount >= cappedMax, completedCount, cappedMax, activeCount
+				end
+			end
+		end
+	end
+
+	return false, 0, maxCount, activeCount
+end
+
+--------------------------------------------------------------------------------
 -- Utils.GetItem(id)
 -- Gets item count from bags/bank (for pseudo-currency items like Lumber)
 -- Delegates to Core/Actions/tracker.lua via Bridge
@@ -444,11 +508,13 @@ function UI:RenderRows()
 			for _, item in ipairs(section.items) do
 				-- Robust ID check: if table, use first ID as key
 				local checkID = item.id
-				if type(checkID) == "table" then
+				if item.ids then
+					checkID = item.ids[1] or item.label
+				elseif type(checkID) == "table" then
 					checkID = checkID[1]
 				end
 
-				if not (item.id and cfg.hiddenItems[checkID]) then
+				if not (checkID and cfg.hiddenItems[checkID]) then
 					table.insert(items, item)
 				end
 			end
@@ -510,6 +576,15 @@ function UI:RenderRows()
 								else
 									self.measureFS:SetText(prog .. " / " .. max)
 								end
+								valueWidth = self.measureFS:GetStringWidth()
+							end
+						elseif item.type == "prey" then
+							self.measureFS:SetText(item.label)
+							textWidth = self.measureFS:GetStringWidth()
+
+							local _, prog, max = ns.Utils.GetPrey(item)
+							if max >= 1 then
+								self.measureFS:SetText(prog .. " / " .. max)
 								valueWidth = self.measureFS:GetStringWidth()
 							end
 						elseif item.type == "currency" or item.type == "currency_cap" then
@@ -621,6 +696,19 @@ function UI:CreateRowFrame()
 				if mapInfo and mapInfo.name then
 					GameTooltip:AddLine("Location: " .. mapInfo.name, 0.5, 0.5, 0.8)
 				end
+			end
+			GameTooltip:Show()
+			return
+		end
+
+		if self.type == "prey" then
+			GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+			GameTooltip:SetText(self.label or "Prey", 1, 1, 1)
+			if self.progress and self.max then
+				GameTooltip:AddLine(string.format("Completed this week: %d / %d", self.progress, self.max), 0.8, 0.8, 0.8)
+			end
+			if self.activeCount and self.activeCount > 0 then
+				GameTooltip:AddLine(string.format("Active hunts: %d", self.activeCount), 0.7, 0.7, 0.7)
 			end
 			GameTooltip:Show()
 			return
@@ -921,6 +1009,46 @@ function UI:UpdateRow(row, data, _ctx)
 
 		-- Store for tooltip use
 		row.iconBtn.details = details
+	elseif data.type == "prey" then
+		local height = cfg.itemFontSize + 6
+		row:SetHeight(height)
+		local fontPath = LibStub("LibSharedMedia-3.0"):Fetch("font", cfg.font or "Friz Quadrata TT")
+		row.label:SetFont(fontPath, cfg.itemFontSize)
+		row.value:SetFont(fontPath, cfg.itemFontSize)
+
+		local isComplete, prog, max, activeCount = ns.Utils.GetPrey(data)
+
+		if prog == 0 and activeCount == 0 then
+			row:SetAlpha(0.5)
+		end
+
+		local iconSize = height - 2
+		row.iconBtn:Show()
+		row.iconBtn:SetSize(iconSize, iconSize)
+		row.icon:SetTexture(data.icon or "Interface\\Icons\\Achievement_Halloween_Witch_01")
+		row.iconBtn:SetPoint("LEFT", cfg.itemIndent, 0)
+		row.iconBtn.type = "prey"
+		row.iconBtn.label = data.label
+		row.iconBtn.progress = prog
+		row.iconBtn.max = max
+		row.iconBtn.activeCount = activeCount
+
+		row.label:SetPoint("LEFT", row.iconBtn, "RIGHT", 4, 0)
+		row.label:SetText(data.label)
+
+		row.value:Show()
+		row.value:SetText(prog .. " / " .. max)
+		row.value:ClearAllPoints()
+		row.value:SetPoint("RIGHT", -24, 0)
+		row.check:SetPoint("RIGHT", 0, 0)
+
+		if isComplete then
+			row.check:Show()
+			row.value:SetTextColor(0, 1, 0)
+		else
+			row.check:Hide()
+			row.value:SetTextColor(1, 1, 1)
+		end
 	elseif data.type == "quest" then
 		local height = cfg.itemFontSize + 6
 		row:SetHeight(height)

@@ -207,6 +207,49 @@ function Tracker.GetQuestStatus(context)
 end
 
 --------------------------------------------------------------------------------
+-- GetQuestCountStatus
+-- Returns grouped completion status for a set of related quests
+--------------------------------------------------------------------------------
+
+---@param context QuestCountContext
+---@return ActionResult<QuestCountStatusResult>
+function Tracker.GetQuestCountStatus(context)
+	if not context or not context.ids or not context.isCompleted or not context.isOnQuest then
+		return Result.error("INVALID_CONTEXT", "Quest count context is missing or invalid")
+	end
+
+	local targetCount = context.targetCount or #context.ids
+	local completedCount = 0
+	local activeCount = 0
+	local activeId = nil
+
+	for _, questID in ipairs(context.ids) do
+		if questID ~= 0 then
+			if context.isCompleted(questID) then
+				completedCount = completedCount + 1
+			elseif context.isOnQuest(questID) then
+				activeCount = activeCount + 1
+				if not activeId then
+					activeId = questID
+				end
+			end
+		end
+	end
+
+	local progress = completedCount > targetCount and targetCount or completedCount
+	local done = targetCount > 0 and progress >= targetCount
+	local reasoning = string.format("Grouped quest progress: %d/%d completed, %d active", progress, targetCount, activeCount)
+
+	return Result.success({
+		isCompleted = done,
+		progress = progress,
+		max = targetCount,
+		activeCount = activeCount,
+		activeId = activeId,
+	}, reasoning)
+end
+
+--------------------------------------------------------------------------------
 -- GetVaultStatus
 -- Returns the vault slot completion status (slots unlocked / total)
 --------------------------------------------------------------------------------
@@ -322,6 +365,7 @@ function Tracker.SortTrackerItems(context)
 
 	local sortCompletedBottom = context.sortCompletedBottom
 	local getQuestStatus = context.getQuestStatus
+	local getQuestCountStatus = context.getQuestCountStatus
 	local getCurrencyStatus = context.getCurrencyStatus
 
 	table.sort(items, function(a, b)
@@ -341,6 +385,14 @@ function Tracker.SortTrackerItems(context)
 			if a.type == "quest" and getQuestStatus then
 				local result = getQuestStatus(a.id)
 				aDone = result and result.isCompleted
+			elseif a.type == "prey" and getQuestCountStatus then
+				if a.id and getQuestStatus then
+					local result = getQuestStatus(a.id)
+					aDone = result and result.isCompleted
+				else
+					local result = getQuestCountStatus(a.ids or {}, a.maxCount or 0)
+					aDone = result and result.isCompleted
+				end
 			elseif (a.type == "currency_cap" or a.type == "currency") and getCurrencyStatus then
 				local result = getCurrencyStatus(a.id)
 				aDone = result and result.isCapped
@@ -349,6 +401,14 @@ function Tracker.SortTrackerItems(context)
 			if b.type == "quest" and getQuestStatus then
 				local result = getQuestStatus(b.id)
 				bDone = result and result.isCompleted
+			elseif b.type == "prey" and getQuestCountStatus then
+				if b.id and getQuestStatus then
+					local result = getQuestStatus(b.id)
+					bDone = result and result.isCompleted
+				else
+					local result = getQuestCountStatus(b.ids or {}, b.maxCount or 0)
+					bDone = result and result.isCompleted
+				end
 			elseif (b.type == "currency_cap" or b.type == "currency") and getCurrencyStatus then
 				local result = getCurrencyStatus(b.id)
 				bDone = result and result.isCapped

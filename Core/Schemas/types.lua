@@ -61,6 +61,19 @@
 ---@field isPercent boolean Progress should display as percentage
 ---@field resolvedId? number The actual quest ID (for multi-ID quests)
 
+---@class QuestCountContext
+---@field ids number[] Quest IDs to aggregate
+---@field targetCount number Number of completions required
+---@field isOnQuest fun(id: number): boolean Function to check if quest is active
+---@field isCompleted fun(id: number): boolean Function to check if quest is completed
+
+---@class QuestCountStatusResult
+---@field isCompleted boolean Whether the target count has been reached
+---@field progress number Number of completed quests
+---@field max number Required completions for the week
+---@field activeCount number Number of currently active quests from the set
+---@field activeId? number First active quest ID, if any
+
 ---@class VaultContext
 ---@field categoryID number Vault category (1=Dungeon, 3=Raid, 6=World)
 ---@field activities VaultActivity[] Activities from C_WeeklyRewards
@@ -136,11 +149,14 @@
 ---@field items TrackerItem[] Items to sort
 ---@field sortCompletedBottom boolean Whether to sort completed items to bottom
 ---@field getQuestStatus fun(id: number|number[]): QuestStatusResult Quest status lookup
+---@field getQuestCountStatus fun(ids: number[], targetCount: number): QuestCountStatusResult Quest-count status lookup
 ---@field getCurrencyStatus fun(id: number): CurrencyStatusResult Currency status lookup
 
 ---@class TrackerItem
----@field type string Item type (header, quest, currency, currency_cap, vault_visual)
----@field id? number|number[] Item ID (or array for multi-ID quests)
+---@field type string Item type (header, quest, prey, currency, currency_cap, vault_visual)
+---@field id? number|number[] Item ID (or array for multi-ID quests, or wrapper quest ID for prey rows)
+---@field ids? number[] Aggregated quest IDs for specialized rows like prey fallbacks
 ---@field label? string Display label
 ---@field icon? string Icon path
+---@field maxCount? number Required completions for aggregated quest rows
 ---@field coords? {mapID: number, x: number, y: number} Quest coordinates

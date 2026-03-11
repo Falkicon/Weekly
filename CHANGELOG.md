@@ -1,4 +1,21 @@
 # Changelog
+## [1.3.3] - 2026-03-10
+
+### Added
+- Midnight Season 1 launch data, including ongoing events, weekly quests, housing materials, currencies, and Artisan Moxie tracking
+- Dedicated Prey tracker row showing weekly hunt progress separately from the Midnight: Prey quest
+- FenCore library integration and documentation updates for shared pure-logic domains
+
+### Changed
+- Automatic season fallback now defaults to Midnight Season 1
+- Embedded library set updated, including FenUI, AceEvent, LibDBIcon, LibDataBroker, and LibStub changes currently in the Weekly repo
+
+### Fixed
+- Corrected Midnight Dawncrest currency IDs for Adventurer, Veteran, Champion, Hero, and Myth tracks
+- Corrected Midnight Artisan Moxie IDs and restored the full housing materials list
+- Prey progress now reads the live objective-tracker widget state instead of stale quest completion flags
+- Preserved WoW 12.0 secret cooldown values and fixed MultiLineEditBox text-selection behavior in embedded UI libraries
+
 ## [1.3.2] - 2026-01-27
 
 ### Added

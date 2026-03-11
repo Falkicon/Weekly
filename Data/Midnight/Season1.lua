@@ -16,6 +16,12 @@ end
 local function Cap(id, label)
 	return { type = "currency_cap", id = id, label = label }
 end
+local function Item(id, label)
+	return { type = "item", id = id, label = label }
+end
+local function Prey(ids, label, maxCount, icon)
+	return { type = "prey", ids = ids, label = label, maxCount = maxCount, icon = icon }
+end
 
 local data = {
 	{
@@ -52,29 +58,86 @@ local data = {
 			Quest(86852, "Light's Last Stand", "Interface\\GossipFrame\\AvailableQuestIcon"),
 		},
 	},
+	--------------------------------------------------------------------------------
+	-- ONGOING EVENTS
+	--------------------------------------------------------------------------------
+	{
+		title = "Ongoing Events",
+		items = {
+			Quest(0, "Abundant Offerings", "Interface\\Icons\\INV_Misc_Bag_17"),
+			Quest(0, "Fortify the Runestones", "Interface\\Icons\\INV_Misc_Gem_01"),
+			Quest(0, "Favor of the Court", "Interface\\Icons\\INV_Misc_Gem_01"),
+			Quest(0, "Lost Legends", "Interface\\Icons\\INV_Misc_Book_09"),
+			Quest(0, "Stand Your Ground", "Interface\\Icons\\Ability_Warrior_ShieldWall"),
+		},
+	},
 	{
 		title = "Weekly Quests",
 		items = {
-			Quest(0, "Weekly Quest Placeholder", "Interface\\Icons\\INV_Box_02"),
-			Quest(0, "Another Weekly Placeholder", "Interface\\Icons\\INV_Misc_Book_09"),
+			Quest(93910, "Midnight: Prey"),
+			Quest(93754, "Maisara Caverns"),
+			Quest(95114, "Prey: A Crimson Summons"),
+		},
+	},
+	{
+		title = "Prey",
+		noSort = true,
+		items = {
+			Prey({ 90912, 91151, 91402, 91098, 91102, 91099, 91135, 91123, 91120, 91154, 91118, 91142, 91108, 91136, 91119, 91143 }, "Prey Hunts", 4, "Interface\\Icons\\Achievement_Halloween_Witch_01"),
+		},
+	},
+	{
+		title = "Housing",
+		noSort = true,
+		items = {
+			Quest(0, "Neighborhood Endeavors", "Interface\\Icons\\inv_misc_key_14"),
+			Item(251764, "Ashwood Lumber"),
+			Item(242691, "Olemba Lumber"),
+			Item(245586, "Ironwood Lumber"),
+			Item(248012, "Dornic Fir Lumber"),
+			Item(251766, "Shadowmoon Lumber"),
+			Item(256963, "Thalassian Lumber"),
+			Currency(3363, "Community Coupons"),
 		},
 	},
 	{
 		title = "Upgrade Currencies",
 		noSort = true,
 		items = {
-			-- Dawncrests (Ordered)
-			Cap(0, "Veteran Dawncrest"),
-			Cap(0, "Champion Dawncrest"),
-			Cap(0, "Hero Dawncrest"),
-			Cap(0, "Myth Dawncrest"),
+			Cap(3383, "Adventurer Dawncrest"),
+			Cap(3341, "Veteran Dawncrest"),
+			Cap(3343, "Champion Dawncrest"),
+			Cap(3345, "Hero Dawncrest"),
+			Cap(3347, "Myth Dawncrest"),
 		},
 	},
 	{
 		title = "Currencies",
 		items = {
-			-- New Premium Currency
-			Currency(0, "Hearthsteel"),
+			Currency(3316, "Voidlight Marl"),
+			Currency(3376, "Shard of Dundun"),
+			Currency(3377, "Unalloyed Abundance"),
+			Currency(3385, "Luminous Dust"),
+			Currency(3392, "Remnant of Anguish"),
+			Currency(3379, "Brimming Arcana"),
+			Currency(3400, "Uncontaminated Void Sample"),
+			Currency(3373, "Angler Pearls"),
+		},
+	},
+	{
+		title = "Artisan Moxie",
+		items = {
+			Currency(3256, "Artisan Alchemist's Moxie"),
+			Currency(3257, "Artisan Blacksmith's Moxie"),
+			Currency(3258, "Artisan Enchanter's Moxie"),
+			Currency(3259, "Artisan Engineer's Moxie"),
+			Currency(3260, "Artisan Herbalist's Moxie"),
+			Currency(3261, "Artisan Scribe's Moxie"),
+			Currency(3262, "Artisan Jewelcrafter's Moxie"),
+			Currency(3263, "Artisan Leatherworker's Moxie"),
+			Currency(3264, "Artisan Miner's Moxie"),
+			Currency(3265, "Artisan Skinner's Moxie"),
+			Currency(3266, "Artisan Tailor's Moxie"),
 		},
 	},
 }

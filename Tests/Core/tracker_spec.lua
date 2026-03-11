@@ -257,6 +257,51 @@ describe("Tracker.GetQuestStatus", function()
 end)
 
 --------------------------------------------------------------------------------
+-- GetQuestCountStatus Tests
+--------------------------------------------------------------------------------
+
+describe("Tracker.GetQuestCountStatus", function()
+	it("counts completed grouped quests toward a target", function()
+		local result = Tracker.GetQuestCountStatus({
+			ids = { 1, 2, 3, 4, 5 },
+			targetCount = 4,
+			isCompleted = function(id)
+				return id == 1 or id == 3 or id == 5
+			end,
+			isOnQuest = function(id)
+				return id == 2
+			end,
+		})
+
+		assert.is_true(result.success)
+		assert.is_false(result.data.isCompleted)
+		assert.equals(3, result.data.progress)
+		assert.equals(4, result.data.max)
+		assert.equals(1, result.data.activeCount)
+		assert.equals(2, result.data.activeId)
+	end)
+
+	it("marks grouped quests complete when target is reached", function()
+		local result = Tracker.GetQuestCountStatus({
+			ids = { 1, 2, 3, 4, 5 },
+			targetCount = 4,
+			isCompleted = function(id)
+				return id <= 4
+			end,
+			isOnQuest = function(id)
+				return false
+			end,
+		})
+
+		assert.is_true(result.success)
+		assert.is_true(result.data.isCompleted)
+		assert.equals(4, result.data.progress)
+		assert.equals(4, result.data.max)
+		assert.equals(0, result.data.activeCount)
+	end)
+end)
+
+--------------------------------------------------------------------------------
 -- GetVaultStatus Tests
 --------------------------------------------------------------------------------
 
@@ -387,10 +432,14 @@ describe("Tracker.SortTrackerItems", function()
 			items = {
 				{ type = "quest", id = 1, label = "Quest A" },
 				{ type = "quest", id = 2, label = "Quest B" },
+				{ type = "prey", ids = { 10, 11, 12, 13 }, maxCount = 4, label = "Prey Hunts" },
 			},
 			sortCompletedBottom = true,
 			getQuestStatus = function(id)
 				return { isCompleted = id == 1 }
+			end,
+			getQuestCountStatus = function(ids, targetCount)
+				return { isCompleted = true }
 			end,
 			getCurrencyStatus = function(id)
 				return { isCapped = false }
@@ -399,7 +448,8 @@ describe("Tracker.SortTrackerItems", function()
 
 		assert.is_true(result.success)
 		assert.equals("Quest B", result.data.items[1].label) -- Active first
-		assert.equals("Quest A", result.data.items[2].label) -- Completed last
+		assert.equals("Prey Hunts", result.data.items[2].label) -- Completed entries sort down
+		assert.equals("Quest A", result.data.items[3].label) -- Completed last
 	end)
 
 	it("sorts alphabetically as fallback", function()
