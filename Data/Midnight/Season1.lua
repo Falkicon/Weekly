@@ -19,8 +19,8 @@ end
 local function Item(id, label)
 	return { type = "item", id = id, label = label }
 end
-local function Prey(ids, label, maxCount, icon)
-	return { type = "prey", ids = ids, label = label, maxCount = maxCount, icon = icon }
+local function Prey(ids, label, maxCount, icon, questId)
+	return { type = "prey", ids = ids, label = label, maxCount = maxCount, icon = icon, questId = questId }
 end
 
 local data = {
@@ -83,7 +83,13 @@ local data = {
 		title = "Prey",
 		noSort = true,
 		items = {
-			Prey({ 90912, 91151, 91402, 91098, 91102, 91099, 91135, 91123, 91120, 91154, 91118, 91142, 91108, 91136, 91119, 91143 }, "Prey Hunts", 4, "Interface\\Icons\\Achievement_Halloween_Witch_01"),
+			Prey({ 90912, 91151, 91402, 91098, 91102, 91099, 91135, 91123, 91120, 91154, 91118, 91142, 91108, 91136, 91119, 91143 }, "Prey Hunts", 4, "Interface\\Icons\\Achievement_Halloween_Witch_01", 93910),
+		},
+	},
+	{
+		title = "PvP",
+		items = {
+			Quest(94835, "Early Morning Training", "Interface\\Icons\\Achievement_BG_KillXEnemies_GeneralsBRoom"),
 		},
 	},
 	{

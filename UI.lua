@@ -356,36 +356,38 @@ function Utils.GetPrey(item)
 		end
 	end
 
-	if C_UIWidgetManager and C_UIWidgetManager.GetObjectiveTrackerWidgetSetID and C_UIWidgetManager.GetAllWidgetsBySetID and C_UIWidgetManager.GetPreyHuntProgressWidgetVisualizationInfo and Enum and Enum.UIWidgetVisualizationType and Enum.UIWidgetVisualizationType.PreyHuntProgress and Enum.PreyHuntProgressState and Enum.PreyHuntProgressState.Final then
-		local okSetID, widgetSetID = pcall(C_UIWidgetManager.GetObjectiveTrackerWidgetSetID)
-		if okSetID and widgetSetID then
-			local okWidgets, widgets = pcall(C_UIWidgetManager.GetAllWidgetsBySetID, widgetSetID)
-			if okWidgets and widgets then
-				local preyWidgets = 0
-				for _, widget in ipairs(widgets) do
-					if widget.widgetType == Enum.UIWidgetVisualizationType.PreyHuntProgress then
-						local okInfo, widgetInfo = pcall(C_UIWidgetManager.GetPreyHuntProgressWidgetVisualizationInfo, widget.widgetID)
-						if okInfo and widgetInfo and widgetInfo.shownState ~= Enum.WidgetShownState.Hidden then
-							preyWidgets = preyWidgets + 1
-							if widgetInfo.progressState == Enum.PreyHuntProgressState.Final then
-								completedCount = completedCount + 1
-							end
-						end
-					end
-				end
-
-				if preyWidgets > 0 then
-					local cappedMax = maxCount > 0 and math.min(preyWidgets, maxCount) or preyWidgets
-					if completedCount > cappedMax then
-						completedCount = cappedMax
-					end
-					return completedCount >= cappedMax, completedCount, cappedMax, activeCount
-				end
+	-- Strategy 1: Check umbrella prey quest (e.g. "Midnight: Prey" 93910)
+	-- If completed, the weekly prey quota is met → show maxCount/maxCount.
+	-- If on quest, read its objectives for progress count.
+	local preyQuestID = item.questId
+	if C_QuestLog then
+		if C_QuestLog.IsQuestFlaggedCompleted(preyQuestID) then
+			return true, maxCount, maxCount, activeCount
+		end
+		if C_QuestLog.IsOnQuest(preyQuestID) then
+			local objs = C_QuestLog.GetQuestObjectives(preyQuestID)
+			if objs and #objs > 0 then
+				local obj = objs[1]
+				completedCount = obj.numFulfilled or 0
+				local done = maxCount > 0 and completedCount >= maxCount
+				local displayCount = maxCount > 0 and math.min(completedCount, maxCount) or completedCount
+				return done, displayCount, maxCount, activeCount
 			end
 		end
 	end
 
-	return false, 0, maxCount, activeCount
+	-- Strategy 2: Fall back to quest completion flags
+	if item.ids and C_QuestLog and C_QuestLog.IsQuestFlaggedCompleted then
+		for _, questID in ipairs(item.ids) do
+			if questID ~= 0 and C_QuestLog.IsQuestFlaggedCompleted(questID) then
+				completedCount = completedCount + 1
+			end
+		end
+	end
+
+	local done = maxCount > 0 and completedCount >= maxCount
+	local displayCount = maxCount > 0 and math.min(completedCount, maxCount) or completedCount
+	return done, displayCount, maxCount, activeCount
 end
 
 --------------------------------------------------------------------------------

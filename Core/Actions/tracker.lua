@@ -157,6 +157,13 @@ function Tracker.GetQuestStatus(context)
 				progress = obj.numFulfilled or 0
 				max = obj.numRequired or 0
 
+				-- Guard against misleading numFulfilled/numRequired
+				-- Some quest types (boss kills, dungeon completions) report 1/1
+				-- even when obj.finished is false. Trust finished over the counts.
+				if not obj.finished and max > 0 and progress >= max then
+					progress = 0
+				end
+
 				-- Check for percentage-based objectives
 				if obj.text then
 					local pct = obj.text:match("%((%d+)%%%)") -- Match "(X%)"

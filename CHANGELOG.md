@@ -1,4 +1,13 @@
 # Changelog
+## [1.3.4] - 2026-03-15
+
+### Added
+- PvP section with Early Morning Training weekly quest tracking
+
+### Fixed
+- Quest objectives showing 1/1 for incomplete boss-kill quests (e.g. Maisara Caverns) — now checks obj.finished before trusting numFulfilled/numRequired
+- Prey Hunts showing incorrect count — now uses umbrella quest completion status instead of unreliable individual quest flags
+
 ## [1.3.3] - 2026-03-10
 
 ### Added
