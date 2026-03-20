@@ -42,7 +42,9 @@ function Context:BuildQuestContext(questId)
 	return {
 		ids = ids,
 		isOnQuest = function(id)
-			return C_QuestLog.IsOnQuest(id)
+			-- IsOnQuest can return true for PvP/auto-tracked quests even when
+			-- the quest isn't actually in the player's log. Verify with log index.
+			return C_QuestLog.IsOnQuest(id) and C_QuestLog.GetLogIndexForQuestID(id) ~= nil
 		end,
 		isCompleted = function(id)
 			return C_QuestLog.IsQuestFlaggedCompleted(id)

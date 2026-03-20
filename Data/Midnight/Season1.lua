@@ -67,15 +67,17 @@ local data = {
 			Quest(0, "Abundant Offerings", "Interface\\Icons\\INV_Misc_Bag_17"),
 			Quest(0, "Fortify the Runestones", "Interface\\Icons\\INV_Misc_Gem_01"),
 			Quest(0, "Favor of the Court", "Interface\\Icons\\INV_Misc_Gem_01"),
-			Quest(0, "Lost Legends", "Interface\\Icons\\INV_Misc_Book_09"),
+			Quest(89268, "Lost Legends", "Interface\\Icons\\INV_Misc_Book_09"),
 			Quest(0, "Stand Your Ground", "Interface\\Icons\\Ability_Warrior_ShieldWall"),
 		},
 	},
 	{
 		title = "Weekly Quests",
 		items = {
+			Quest(93909, "Midnight: Delves"),
 			Quest(93910, "Midnight: Prey"),
 			Quest(93754, "Maisara Caverns"),
+			Quest(93755, "Den of Nalorakk"),
 			Quest(95114, "Prey: A Crimson Summons"),
 		},
 	},
@@ -90,13 +92,15 @@ local data = {
 		title = "PvP",
 		items = {
 			Quest(94835, "Early Morning Training", "Interface\\Icons\\Achievement_BG_KillXEnemies_GeneralsBRoom"),
+			Quest(47148, "Something Different"),
 		},
 	},
 	{
-		title = "Housing",
+		title = "Neighborhood",
 		noSort = true,
 		items = {
 			Quest(0, "Neighborhood Endeavors", "Interface\\Icons\\inv_misc_key_14"),
+			Quest(95413, "Community Engagement"),
 			Item(251764, "Ashwood Lumber"),
 			Item(242691, "Olemba Lumber"),
 			Item(245586, "Ironwood Lumber"),

@@ -83,7 +83,7 @@ local data = {
 	-- HOUSING (Permanent - Starts Jan 20 with Early Access)
 	--------------------------------------------------------------------------------
 	{
-		title = "Housing",
+		title = "Neighborhood",
 		showAfter = "2026-01-20",
 		noSort = true,
 		items = {

@@ -1060,8 +1060,11 @@ function UI:UpdateRow(row, data, _ctx)
 
 		local isComplete, prog, max, isOnQuest, isPercent, resolvedId = ns.Utils.GetQuest(data.id)
 
-		if data.section == "Weekly Quests" and not isComplete and not isOnQuest then
+		local isUnavailable = not isComplete and not isOnQuest
+		if isUnavailable then
 			row:SetAlpha(0.5)
+		else
+			row:SetAlpha(1)
 		end
 
 		local iconSize = height - 2
@@ -1093,8 +1096,14 @@ function UI:UpdateRow(row, data, _ctx)
 		if isComplete then
 			row.check:Show()
 			row.value:SetText("")
+			row.label:SetTextColor(1, 1, 1)
+		elseif isUnavailable then
+			row.check:Hide()
+			row.value:SetText("")
+			row.label:SetTextColor(0.5, 0.5, 0.5)
 		else
 			row.check:Hide()
+			row.label:SetTextColor(1, 1, 1)
 			if max and max >= 1 then
 				if isPercent then
 					-- Show percentage format (e.g., "50%")
