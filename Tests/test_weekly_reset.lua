@@ -6,6 +6,7 @@ local function LoadFile(path)
 	if not func then
 		error("Failed to load " .. path .. ": " .. err)
 	end
+	setfenv(func, getfenv(1))
 	func(addonName, ns)
 end
 

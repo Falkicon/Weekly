@@ -9,13 +9,14 @@ local function LoadFile(path)
 	if not func then
 		error("Failed to load " .. path .. ": " .. err)
 	end
+	setfenv(func, getfenv(1))
 	func(addonName, ns)
 end
 
 describe("Weekly Bridge Context", function()
 	before_each(function()
 		ns = {}
-		C_QuestLog = {
+		_G.C_QuestLog = {
 			IsAccountQuest = function(id)
 				return id == 100
 			end,
@@ -26,7 +27,7 @@ describe("Weekly Bridge Context", function()
 				return id == 200
 			end,
 		}
-		C_Item = {
+		_G.C_Item = {
 			GetItemCount = function()
 				return 0
 			end,
@@ -34,10 +35,10 @@ describe("Weekly Bridge Context", function()
 				return nil
 			end,
 		}
-		GetServerTime = function()
+		_G.GetServerTime = function()
 			return 1000
 		end
-		C_DateAndTime = {
+		_G.C_DateAndTime = {
 			GetSecondsUntilWeeklyReset = function()
 				return 5000
 			end,
@@ -58,7 +59,7 @@ describe("Weekly Bridge Context", function()
 
 	it("includes bank, reagent bank, and account bank in item counts", function()
 		local captured = {}
-		C_Item.GetItemCount = function(...)
+		_G.C_Item.GetItemCount = function(...)
 			captured = { ... }
 			return 42
 		end

@@ -6,6 +6,7 @@ local function LoadFile(path)
 	if not func then
 		error("Failed to load " .. path .. ": " .. err)
 	end
+	setfenv(func, getfenv(1))
 	func(addonName, ns)
 end
 
@@ -19,7 +20,7 @@ describe("Weekly Prey Tracker", function()
 				end,
 			},
 		}
-		C_QuestLog = {
+		_G.C_QuestLog = {
 			IsOnQuest = function()
 				return false
 			end,
@@ -75,13 +76,13 @@ describe("Weekly Prey Tracker", function()
 	end)
 
 	it("uses the cache quest as a lower bound without treating it as the weekly cap", function()
-		C_QuestLog.IsOnQuest = function(id)
+		_G.C_QuestLog.IsOnQuest = function(id)
 			return id == 93910
 		end
-		C_QuestLog.GetLogIndexForQuestID = function()
+		_G.C_QuestLog.GetLogIndexForQuestID = function()
 			return 1
 		end
-		C_QuestLog.GetQuestObjectives = function()
+		_G.C_QuestLog.GetQuestObjectives = function()
 			return { { numFulfilled = 2, numRequired = 3 } }
 		end
 

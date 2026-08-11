@@ -29,6 +29,7 @@ _G.ns.FenCore = {
 local function loadAddonFile(path)
 	local chunk = loadfile(path)
 	if chunk then
+		setfenv(chunk, getfenv(1))
 		-- Call with addon name and namespace as varargs
 		chunk("Weekly", _G.ns)
 	end

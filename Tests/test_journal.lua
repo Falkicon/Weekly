@@ -6,7 +6,7 @@ local ns = {}
 
 -- Mock WoW APIs
 _G = _G or {}
-C_DateAndTime = {
+_G.C_DateAndTime = {
 	GetServerTimeLocal = function()
 		return 1734566400
 	end, -- A Tuesday
@@ -23,19 +23,19 @@ C_DateAndTime = {
 		return 604800
 	end,
 }
-time = function()
+_G.time = function()
 	return 1734566400
 end
-GetServerTime = function()
+_G.GetServerTime = function()
 	return 1734566400
 end
-debugprofilestop = function()
+_G.debugprofilestop = function()
 	return 0
 end
-GetRealZoneText = function()
+_G.GetRealZoneText = function()
 	return "Dornogal"
 end
-LibStub = function(name)
+_G.LibStub = function(name)
 	return {
 		GetLocale = function()
 			return setmetatable({}, {
@@ -46,7 +46,7 @@ LibStub = function(name)
 		end,
 	}
 end
-CreateFrame = function()
+_G.CreateFrame = function()
 	return {
 		RegisterEvent = function() end,
 		SetScript = function() end,
@@ -112,6 +112,7 @@ local function LoadFile(path)
 	if not func then
 		error("Failed to load " .. path .. ": " .. err)
 	end
+	setfenv(func, getfenv(1))
 	func(addonName, ns)
 end
 
@@ -119,11 +120,11 @@ LoadFile("Core/WeeklyReset.lua")
 
 describe("Weekly Journal", function()
 	before_each(function()
-		LOOT_ITEM_SELF = "You receive loot: %s."
-		LOOT_ITEM_SELF_MULTIPLE = "You receive loot: %s x%d."
+		_G.LOOT_ITEM_SELF = "You receive loot: %s."
+		_G.LOOT_ITEM_SELF_MULTIPLE = "You receive loot: %s x%d."
 		local itemCached = true
 		local requestedItemID
-		C_Item = {
+		_G.C_Item = {
 			GetItemNameByID = function()
 				return "Test Herb"
 			end,
@@ -249,7 +250,7 @@ describe("Weekly Journal", function()
 		onLoot(ns.Journal.tracker, "CHAT_MSG_LOOT", "Another player receives loot: " .. link .. " x5.")
 		assert.are.equal(0, ns.Journal:GetGatheringTotalCount())
 
-		onLoot(ns.Journal.tracker, "CHAT_MSG_LOOT", (LOOT_ITEM_SELF_MULTIPLE):format(link, 5))
+		onLoot(ns.Journal.tracker, "CHAT_MSG_LOOT", (_G.LOOT_ITEM_SELF_MULTIPLE):format(link, 5))
 		assert.are.equal(5, ns.Journal:GetGatheringTotalCount())
 	end)
 
@@ -259,7 +260,7 @@ describe("Weekly Journal", function()
 		ns.Journal.tracker.events.CHAT_MSG_LOOT(
 			ns.Journal.tracker,
 			"CHAT_MSG_LOOT",
-			(LOOT_ITEM_SELF_MULTIPLE):format(link, 3)
+			(_G.LOOT_ITEM_SELF_MULTIPLE):format(link, 3)
 		)
 		assert.are.equal(12345, ns._journalTest.getRequestedItemID())
 		assert.are.equal(0, ns.Journal:GetGatheringTotalCount())

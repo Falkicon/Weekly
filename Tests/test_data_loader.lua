@@ -6,10 +6,10 @@ local ns = {}
 
 -- Mock WoW APIs
 _G = _G or {}
-GetBuildInfo = function()
+_G.GetBuildInfo = function()
 	return "11.2.7", "67748", "Dec 20 2025", 110207 -- TWW S3
 end
-time = function(value)
+_G.time = function(value)
 	if value then
 		return (value.year * 10000) + (value.month * 100) + value.day
 	end
@@ -23,6 +23,7 @@ local function LoadFile(path)
 	if not func then
 		error("Failed to load " .. path .. ": " .. err)
 	end
+	setfenv(func, getfenv(1))
 	func(addonName, ns)
 end
 
@@ -43,7 +44,7 @@ describe("Weekly Data Loader", function()
 
 	it("should return recommended season for TWW Season 3", function()
 		-- Mock TWW S3 build
-		GetBuildInfo = function()
+		_G.GetBuildInfo = function()
 			return "11.2.7", "12345", "Dec 2025", 110207
 		end
 
@@ -53,7 +54,7 @@ describe("Weekly Data Loader", function()
 	end)
 
 	it("should keep TWW Season 3 selected before the Midnight pre-patch", function()
-		GetBuildInfo = function()
+		_G.GetBuildInfo = function()
 			return "11.2.8", "12345", "Dec 2025", 110208
 		end
 
@@ -63,7 +64,7 @@ describe("Weekly Data Loader", function()
 	end)
 
 	it("should keep TWW Season 3 selected during the Midnight pre-patch", function()
-		GetBuildInfo = function()
+		_G.GetBuildInfo = function()
 			return "12.0.0", "12345", "Jan 2026", 120000
 		end
 
@@ -73,7 +74,7 @@ describe("Weekly Data Loader", function()
 	end)
 
 	it("should select Midnight Season 1 on 12.0.1 clients", function()
-		GetBuildInfo = function()
+		_G.GetBuildInfo = function()
 			return "12.0.1", "12345", "Mar 2026", 120001
 		end
 
@@ -83,7 +84,7 @@ describe("Weekly Data Loader", function()
 	end)
 
 	it("should select Midnight Season 2 on 12.1.0 clients", function()
-		GetBuildInfo = function()
+		_G.GetBuildInfo = function()
 			return "12.1.0", "12345", "Aug 2026", 120100
 		end
 
@@ -136,7 +137,7 @@ describe("Weekly Data Loader", function()
 		ns.Data:Register(11, 3, s3Data)
 
 		-- Mock TWW S3 build
-		GetBuildInfo = function()
+		_G.GetBuildInfo = function()
 			return "11.2.7", "12345", "Dec 2025", 110207
 		end
 
