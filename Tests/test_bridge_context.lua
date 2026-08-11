@@ -43,6 +43,11 @@ describe("Weekly Bridge Context", function()
 		assert.is_false(ns.Context:IsQuestCompleted(300))
 	end)
 
+	it("keeps character-specific completion available for trackers like Prey", function()
+		assert.is_false(ns.Context:IsCharacterQuestCompleted(100))
+		assert.is_true(ns.Context:IsCharacterQuestCompleted(200))
+	end)
+
 	it("includes bank, reagent bank, and account bank in item counts", function()
 		local captured = {}
 		C_Item.GetItemCount = function(...)

@@ -35,6 +35,12 @@ end
 
 ---@param questId number
 ---@return boolean
+function Context:IsCharacterQuestCompleted(questId)
+	return C_QuestLog.IsQuestFlaggedCompleted(questId)
+end
+
+---@param questId number
+---@return boolean
 function Context:IsQuestCompleted(questId)
 	if
 		C_QuestLog.IsAccountQuest
@@ -44,7 +50,7 @@ function Context:IsQuestCompleted(questId)
 		return C_QuestLog.IsQuestFlaggedCompletedOnAccount(questId)
 	end
 
-	return C_QuestLog.IsQuestFlaggedCompleted(questId)
+	return self:IsCharacterQuestCompleted(questId)
 end
 
 ---@param questId number|number[] Single ID or table of IDs for rotating quests

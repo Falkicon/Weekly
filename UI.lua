@@ -361,7 +361,9 @@ function Utils.GetPrey(item)
 	-- If on quest, read its objectives for progress count.
 	local preyQuestID = item.questId
 	if C_QuestLog then
-		if ns.Context:IsQuestCompleted(preyQuestID) then
+		-- Hunt availability resets per character. Do not use the account-wide
+		-- completion helper here; Prey Journey rewards are a separate Warband system.
+		if ns.Context:IsCharacterQuestCompleted(preyQuestID) then
 			return true, maxCount, maxCount, activeCount
 		end
 		if C_QuestLog.IsOnQuest(preyQuestID) then
@@ -389,7 +391,7 @@ function Utils.GetPrey(item)
 	-- Strategy 2: Fall back to quest completion flags
 	if item.ids and C_QuestLog and C_QuestLog.IsQuestFlaggedCompleted then
 		for _, questID in ipairs(item.ids) do
-			if questID ~= 0 and ns.Context:IsQuestCompleted(questID) then
+			if questID ~= 0 and ns.Context:IsCharacterQuestCompleted(questID) then
 				completedCount = completedCount + 1
 			end
 		end
