@@ -37,7 +37,7 @@ local data = {
 		title = "Weekly Quests",
 		items = {
 			Quest(93909, "Midnight: Delves"),
-			Quest(93910, "Midnight: Prey"),
+			{ type = "quest", id = 93910, label = "Midnight: Prey Cache", preyCacheMax = 3 },
 			Quest(93913, "Midnight: World Boss"),
 			Quest(94446, "A Nightmarish Task"),
 			Quest(95842, "Midnight: Void Assaults"),
@@ -50,27 +50,9 @@ local data = {
 		noSort = true,
 		items = {
 			Prey(
-				{
-					90912,
-					91151,
-					91402,
-					91098,
-					91102,
-					91099,
-					91135,
-					91123,
-					91120,
-					91154,
-					91118,
-					91142,
-					91108,
-					91136,
-					91119,
-					91143,
-					95022,
-				},
+				nil,
 				"Prey Hunts",
-				12,
+				15,
 				"Interface\\Icons\\Achievement_Halloween_Witch_01",
 				93910
 			),

@@ -34,6 +34,9 @@ Data\Midnight\Season2.lua
 Config.lua
 ConfigUI.lua
 
+# Character-scoped activity ledgers
+PreyTracker.lua
+
 # View Layer (UI)
 UI.lua
 

@@ -345,61 +345,10 @@ function Utils.GetQuestCount(ids, targetCount)
 end
 
 function Utils.GetPrey(item)
-	local maxCount = item.resolvedMaxCount or item.maxCount or 0
-	local activeCount = 0
-	local completedCount = 0
-
-	if C_QuestLog and C_QuestLog.GetActivePreyQuest then
-		local ok, activeQuestID = pcall(C_QuestLog.GetActivePreyQuest)
-		if ok and activeQuestID then
-			activeCount = 1
-		end
+	if not ns.PreyTracker then
+		return false, 0, item.maxCount or 0, true, 0
 	end
-
-	-- Strategy 1: Check umbrella prey quest (e.g. "Midnight: Prey" 93910)
-	-- If completed, the weekly prey quota is met → show maxCount/maxCount.
-	-- If on quest, read its objectives for progress count.
-	local preyQuestID = item.questId
-	if C_QuestLog then
-		-- Hunt availability resets per character. Do not use the account-wide
-		-- completion helper here; Prey Journey rewards are a separate Warband system.
-		if ns.Context:IsCharacterQuestCompleted(preyQuestID) then
-			return true, maxCount, maxCount, activeCount
-		end
-		if C_QuestLog.IsOnQuest(preyQuestID) then
-			local objs = C_QuestLog.GetQuestObjectives(preyQuestID)
-			if objs and #objs > 0 then
-				local obj = objs[1]
-				for _, candidate in ipairs(objs) do
-					if (candidate.numRequired or 0) > (obj.numRequired or 0) then
-						obj = candidate
-					end
-				end
-				completedCount = obj.numFulfilled or 0
-				local objectiveMax = obj.numRequired or 0
-				if objectiveMax > 0 then
-					maxCount = objectiveMax
-					item.resolvedMaxCount = objectiveMax
-				end
-				local done = maxCount > 0 and completedCount >= maxCount
-				local displayCount = maxCount > 0 and math.min(completedCount, maxCount) or completedCount
-				return done, displayCount, maxCount, activeCount
-			end
-		end
-	end
-
-	-- Strategy 2: Fall back to quest completion flags
-	if item.ids and C_QuestLog and C_QuestLog.IsQuestFlaggedCompleted then
-		for _, questID in ipairs(item.ids) do
-			if questID ~= 0 and ns.Context:IsCharacterQuestCompleted(questID) then
-				completedCount = completedCount + 1
-			end
-		end
-	end
-
-	local done = maxCount > 0 and completedCount >= maxCount
-	local displayCount = maxCount > 0 and math.min(completedCount, maxCount) or completedCount
-	return done, displayCount, maxCount, activeCount
+	return ns.PreyTracker:GetStatus(item.maxCount, item.questId, item.cacheMax)
 end
 
 --------------------------------------------------------------------------------
@@ -724,6 +673,9 @@ function UI:CreateRowFrame()
 			if self.activeCount and self.activeCount > 0 then
 				GameTooltip:AddLine(string.format("Active hunts: %d", self.activeCount), 0.7, 0.7, 0.7)
 			end
+			if self.partial then
+				GameTooltip:AddLine("Lower bound: tracking began during this reset.", 1, 0.82, 0)
+			end
 			GameTooltip:Show()
 			return
 		end
@@ -1030,7 +982,7 @@ function UI:UpdateRow(row, data, _ctx)
 		row.label:SetFont(fontPath, cfg.itemFontSize)
 		row.value:SetFont(fontPath, cfg.itemFontSize)
 
-		local isComplete, prog, max, activeCount = ns.Utils.GetPrey(data)
+		local isComplete, prog, max, isPartial, activeCount = ns.Utils.GetPrey(data)
 
 		if prog == 0 and activeCount == 0 then
 			row:SetAlpha(0.5)
@@ -1046,12 +998,13 @@ function UI:UpdateRow(row, data, _ctx)
 		row.iconBtn.progress = prog
 		row.iconBtn.max = max
 		row.iconBtn.activeCount = activeCount
+		row.iconBtn.partial = isPartial
 
 		row.label:SetPoint("LEFT", row.iconBtn, "RIGHT", 4, 0)
 		row.label:SetText(data.label)
 
 		row.value:Show()
-		row.value:SetText(prog .. " / " .. max)
+		row.value:SetText(prog .. (isPartial and "+ / " or " / ") .. max)
 		row.value:ClearAllPoints()
 		row.value:SetPoint("RIGHT", -24, 0)
 		row.check:SetPoint("RIGHT", 0, 0)
@@ -1070,7 +1023,14 @@ function UI:UpdateRow(row, data, _ctx)
 		row.label:SetFont(fontPath, cfg.itemFontSize)
 		row.value:SetFont(fontPath, cfg.itemFontSize)
 
-		local isComplete, prog, max, isOnQuest, isPercent, resolvedId = ns.Utils.GetQuest(data.id)
+		local isComplete, prog, max, isOnQuest, isPercent, resolvedId
+		if data.preyCacheMax and ns.PreyTracker then
+			isComplete, prog, max, isOnQuest = ns.PreyTracker:GetCacheStatus(data.id, data.preyCacheMax)
+			isPercent = false
+			resolvedId = isOnQuest and data.id or nil
+		else
+			isComplete, prog, max, isOnQuest, isPercent, resolvedId = ns.Utils.GetQuest(data.id)
+		end
 
 		local isUnavailable = not isComplete and not isOnQuest
 		if isUnavailable then
@@ -1109,7 +1069,7 @@ function UI:UpdateRow(row, data, _ctx)
 			row.check:Show()
 			row.value:SetText("")
 			row.label:SetTextColor(1, 1, 1)
-		elseif isUnavailable then
+		elseif isUnavailable and not data.preyCacheMax then
 			row.check:Hide()
 			row.value:SetText("")
 			row.label:SetTextColor(0.5, 0.5, 0.5)

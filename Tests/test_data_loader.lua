@@ -86,6 +86,18 @@ describe("Weekly Data Loader", function()
 		assert.are.equal(2, sea)
 	end)
 
+	it("should expose the Season 2 cache objective separately from the 15-hunt ledger", function()
+		LoadFile("_dev_/Weekly/Data/Midnight/Season2.lua")
+		local data = ns.Data:Get(12, 2)
+		local cache = data[2].items[2]
+		local hunts = data[3].items[1]
+
+		assert.are.equal(93910, cache.id)
+		assert.are.equal(3, cache.preyCacheMax)
+		assert.are.equal(15, hunts.maxCount)
+		assert.are.equal(93910, hunts.questId)
+	end)
+
 	it("should list registered expansions correctly", function()
 		ns.Data:Register(11, 3, {})
 		ns.Data:Register(12, 1, {})

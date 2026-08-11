@@ -3,6 +3,18 @@ local _, ns = ...
 local AceDB = LibStub("AceDB-3.0")
 
 ns.ConfigDefaults = {
+	char = {
+		-- Prey has no API for the full weekly hunt count. Keep the observed
+		-- ledger per character and mark it partial until we witness a reset.
+		prey = {
+			count = 0,
+			partial = true,
+			nextReset = 0,
+			activeQuestID = 0,
+			lastTurnInQuestID = 0,
+			lastTurnInAt = 0,
+		},
+	},
 	profile = {
 		-- Data Selection
 		selectedExpansion = "auto", -- Automatic detection
@@ -54,6 +66,7 @@ function ns:LoadConfig()
 
 	-- Set easy alias. Updates to ns.Config will now update the DB profile directly.
 	self.Config = self.db.profile
+	self.CharConfig = self.db.char
 
 	-- One-time migration: Fix old autoShow default (was true, now false)
 	-- If autoShow was never explicitly set by user, update to new default
@@ -76,6 +89,7 @@ end
 
 function ns:RefreshConfig()
 	self.Config = self.db.profile
+	self.CharConfig = self.db.char
 	if self.UI then
 		self.UI:ApplyFrameStyle()
 		self.UI:RenderRows()

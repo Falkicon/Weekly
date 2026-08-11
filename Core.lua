@@ -8,6 +8,9 @@ function Weekly:OnInitialize()
 
 	-- Load Config (AceDB)
 	ns:LoadConfig()
+	if ns.PreyTracker then
+		ns.PreyTracker:Initialize()
+	end
 
 	-- Initialize Modules
 	-- Note: We can make these real AceAddon modules later, for now just init headers
