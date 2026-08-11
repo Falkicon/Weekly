@@ -57,6 +57,7 @@ function Tracker.GetCurrencyStatus(context)
 	return Result.success({
 		amount = displayAmount,
 		max = displayMax,
+		quantity = quantity,
 		isCapped = isCapped,
 		displayText = displayText,
 		name = context.name,
@@ -279,6 +280,7 @@ function Tracker.GetVaultStatus(context)
 			completed = completed + 1
 		end
 		table.insert(slots, {
+			index = activity.index,
 			threshold = activity.threshold,
 			progress = activity.progress,
 			level = activity.level or 0,
@@ -374,6 +376,31 @@ function Tracker.SortTrackerItems(context)
 	local getQuestStatus = context.getQuestStatus
 	local getQuestCountStatus = context.getQuestCountStatus
 	local getCurrencyStatus = context.getCurrencyStatus
+	local getPreyStatus = context.getPreyStatus
+	local completionByItem = {}
+
+	local function GetCompletion(item)
+		if item.type == "quest" and getQuestStatus then
+			local result = getQuestStatus(item.id)
+			return result and result.isCompleted or false
+		elseif item.type == "prey" and getPreyStatus then
+			local result = getPreyStatus(item)
+			return result and result.isCompleted or false
+		elseif item.type == "prey" and getQuestCountStatus then
+			local result = getQuestCountStatus(item.ids or {}, item.maxCount or 0)
+			return result and result.isCompleted or false
+		elseif (item.type == "currency_cap" or item.type == "currency") and getCurrencyStatus then
+			local result = getCurrencyStatus(item.id)
+			return result and result.isCapped or false
+		end
+		return false
+	end
+
+	if sortCompletedBottom then
+		for _, item in ipairs(items) do
+			completionByItem[item] = GetCompletion(item)
+		end
+	end
 
 	table.sort(items, function(a, b)
 		-- Vault items have custom sort order
@@ -386,40 +413,8 @@ function Tracker.SortTrackerItems(context)
 
 		-- Completion sorting (if enabled)
 		if sortCompletedBottom then
-			local aDone = false
-			local bDone = false
-
-			if a.type == "quest" and getQuestStatus then
-				local result = getQuestStatus(a.id)
-				aDone = result and result.isCompleted
-			elseif a.type == "prey" and getQuestCountStatus then
-				if a.id and getQuestStatus then
-					local result = getQuestStatus(a.id)
-					aDone = result and result.isCompleted
-				else
-					local result = getQuestCountStatus(a.ids or {}, a.maxCount or 0)
-					aDone = result and result.isCompleted
-				end
-			elseif (a.type == "currency_cap" or a.type == "currency") and getCurrencyStatus then
-				local result = getCurrencyStatus(a.id)
-				aDone = result and result.isCapped
-			end
-
-			if b.type == "quest" and getQuestStatus then
-				local result = getQuestStatus(b.id)
-				bDone = result and result.isCompleted
-			elseif b.type == "prey" and getQuestCountStatus then
-				if b.id and getQuestStatus then
-					local result = getQuestStatus(b.id)
-					bDone = result and result.isCompleted
-				else
-					local result = getQuestCountStatus(b.ids or {}, b.maxCount or 0)
-					bDone = result and result.isCompleted
-				end
-			elseif (b.type == "currency_cap" or b.type == "currency") and getCurrencyStatus then
-				local result = getCurrencyStatus(b.id)
-				bDone = result and result.isCapped
-			end
+			local aDone = completionByItem[a]
+			local bDone = completionByItem[b]
 
 			if aDone ~= bDone then
 				return not aDone -- Active (not done) comes first

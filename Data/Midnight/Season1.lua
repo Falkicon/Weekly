@@ -4,24 +4,9 @@ local _, ns = ...
 -- Midnight Season 1 (Expansion 12, 12.0.1+)
 --------------------------------------------------------------------------------
 
-local function Vault(id, label)
-	return { type = "vault_visual", id = id, label = label }
-end
-local function Quest(id, label, icon, coords)
-	return { type = "quest", id = id, label = label, icon = icon, coords = coords }
-end
-local function Currency(id, label)
-	return { type = "currency", id = id, label = label }
-end
-local function Cap(id, label)
-	return { type = "currency_cap", id = id, label = label }
-end
-local function Item(id, label)
-	return { type = "item", id = id, label = label }
-end
-local function Prey(ids, label, maxCount, icon, questId)
-	return { type = "prey", ids = ids, label = label, maxCount = maxCount, icon = icon, questId = questId }
-end
+local Factory = ns.DataFactory
+local Vault, Quest, Currency, Cap, Item, Prey =
+	Factory.Vault, Factory.Quest, Factory.Currency, Factory.Cap, Factory.Item, Factory.Prey
 
 local data = {
 	{

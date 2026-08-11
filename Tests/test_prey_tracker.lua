@@ -33,7 +33,7 @@ describe("Weekly Prey Tracker", function()
 				return nil
 			end,
 		}
-		LoadFile("_dev_/Weekly/PreyTracker.lua")
+		LoadFile("PreyTracker.lua")
 	end)
 
 	it("starts with an explicitly partial weekly count", function()
@@ -107,5 +107,24 @@ describe("Weekly Prey Tracker", function()
 
 		ns.PreyTracker:OnQuestTurnedIn(93910)
 		assert.are.equal(1, state.count)
+	end)
+
+	it("clears the active indicator while retaining the last hunt for turn-in matching", function()
+		local state = ns.PreyTracker:GetState()
+		state.activeQuestID = 95100
+		state.lastActiveQuestID = 95100
+		ns.PreyTracker:RefreshActiveQuest()
+		assert.are.equal(0, state.activeQuestID)
+		assert.are.equal(95100, state.lastActiveQuestID)
+	end)
+
+	it("does not truncate persisted progress when viewing a lower historical cap", function()
+		local state = ns.PreyTracker:GetState()
+		state.count = 10
+		local complete, displayCount, max = ns.PreyTracker:GetStatus(4, 93910, 3)
+		assert.is_true(complete)
+		assert.are.equal(4, displayCount)
+		assert.are.equal(4, max)
+		assert.are.equal(10, state.count)
 	end)
 end)

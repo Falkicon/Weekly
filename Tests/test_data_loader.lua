@@ -9,6 +9,12 @@ _G = _G or {}
 GetBuildInfo = function()
 	return "11.2.7", "67748", "Dec 20 2025", 110207 -- TWW S3
 end
+time = function(value)
+	if value then
+		return (value.year * 10000) + (value.month * 100) + value.day
+	end
+	return 20260810
+end
 
 -- Load the code under test
 -- (In a real Busted environment, we'd use loadfile)
@@ -24,7 +30,7 @@ end
 describe("Weekly Data Loader", function()
 	before_each(function()
 		ns = {}
-		LoadFile("_dev_/Weekly/Data/Loader.lua")
+		LoadFile("Data/Loader.lua")
 	end)
 
 	it("should register and retrieve data correctly", function()
@@ -87,7 +93,8 @@ describe("Weekly Data Loader", function()
 	end)
 
 	it("should expose the Season 2 cache objective separately from the 15-hunt ledger", function()
-		LoadFile("_dev_/Weekly/Data/Midnight/Season2.lua")
+		LoadFile("Data/Factories.lua")
+		LoadFile("Data/Midnight/Season2.lua")
 		local data = ns.Data:Get(12, 2)
 		local cache = data[2].items[2]
 		local hunts = data[3].items[1]
@@ -135,5 +142,35 @@ describe("Weekly Data Loader", function()
 
 		local data = ns:GetCurrentSeasonData()
 		assert.are.equal(s3Data, data)
+	end)
+
+	it("should choose the latest season for a manually selected expansion", function()
+		ns.Config = {
+			selectedExpansion = 11,
+			selectedSeason = "auto",
+		}
+		ns.Data:Register(11, 3, { { id = "latest-tww" } })
+		local data = ns:GetCurrentSeasonData()
+		assert.are.equal("latest-tww", data[1].id)
+	end)
+
+	it("should generate collision-free configuration keys for placeholder rows", function()
+		local first = ns.Data:GetItemConfigKey({ type = "quest", id = 0, label = "First" })
+		local second = ns.Data:GetItemConfigKey({ type = "quest", id = 0, label = "Second" })
+		assert.are.equal("quest:First", first)
+		assert.are.equal("quest:Second", second)
+	end)
+
+	it("should namespace configuration keys by tracker type", function()
+		assert.are.equal("quest:123", ns.Data:GetItemConfigKey({ type = "quest", id = 123 }))
+		assert.are.equal("currency:123", ns.Data:GetItemConfigKey({ type = "currency", id = 123 }))
+	end)
+
+	it("should apply shared section time gates", function()
+		local section = { showAfter = "2026-08-11", hideAfter = "2026-08-20" }
+		assert.is_false(ns.Data:IsSectionVisible(section, {}, 20260810))
+		assert.is_true(ns.Data:IsSectionVisible(section, {}, 20260811))
+		assert.is_false(ns.Data:IsSectionVisible(section, {}, 20260820))
+		assert.is_true(ns.Data:IsSectionVisible(section, { debug = { ignoreTimeGates = true } }, 20260810))
 	end)
 end)

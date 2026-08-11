@@ -8,6 +8,93 @@ local AceConfigDialog = LibStub("AceConfigDialog-3.0")
 local LSM = LibStub("LibSharedMedia-3.0")
 local L = LibStub("AceLocale-3.0"):GetLocale("Weekly")
 
+local TRACKABLE_TYPES = {
+	currency = true,
+	currency_cap = true,
+	quest = true,
+	vault_visual = true,
+	item = true,
+	prey = true,
+}
+
+local function BuildTrackingArgs()
+	local args = {
+		desc = {
+			type = "description",
+			name = L["Uncheck items to hide them from the list."],
+			order = 0,
+		},
+	}
+	local order = 10
+	local visibilityNow = time()
+	for sectionIndex, section in ipairs(ns:GetCurrentSeasonData()) do
+		if ns.Data:IsSectionVisible(section, ns.Config, visibilityNow) then
+			args["header_" .. sectionIndex] = {
+				type = "header",
+				name = section.title,
+				order = order,
+			}
+			order = order + 1
+
+			local items = {}
+			for _, row in ipairs(section.items or {}) do
+				if TRACKABLE_TYPES[row.type] then
+					table.insert(items, row)
+				end
+			end
+			if not section.noSort then
+				table.sort(items, function(a, b)
+					if a.type == "vault_visual" and b.type == "vault_visual" then
+						local vaultOrder = { [3] = 1, [1] = 2, [6] = 3 }
+						return (vaultOrder[a.id] or 99) < (vaultOrder[b.id] or 99)
+					end
+					return (a.label or "") < (b.label or "")
+				end)
+			end
+
+			for itemIndex, row in ipairs(items) do
+				local configKey = ns.Data:GetItemConfigKey(row)
+				local legacyKey = ns.Data:GetLegacyItemConfigKey(row)
+				args[string.format("item_%d_%d", sectionIndex, itemIndex)] = {
+					type = "toggle",
+					name = row.label or L["Item %s"]:format(legacyKey or configKey),
+					width = "full",
+					order = order,
+					get = function()
+						return not ns.Config.hiddenItems[configKey]
+							and not (legacyKey ~= nil and ns.Config.hiddenItems[legacyKey])
+					end,
+					set = function(_, val)
+						if val then
+							ns.Config.hiddenItems[configKey] = nil
+							if legacyKey ~= nil then
+								ns.Config.hiddenItems[legacyKey] = nil
+							end
+						else
+							ns.Config.hiddenItems[configKey] = true
+						end
+						ns.UI:RefreshRows()
+					end,
+				}
+				order = order + 1
+			end
+		end
+	end
+	return args
+end
+
+function ConfigUI:RefreshTrackingOptions()
+	if not self.trackingOptions then
+		return
+	end
+
+	self.trackingOptions.args = BuildTrackingArgs()
+	local registry = LibStub("AceConfigRegistry-3.0", true)
+	if registry then
+		registry:NotifyChange("Weekly_Tracking")
+	end
+end
+
 function ConfigUI:Initialize()
 	-- 1. Main Options (General)
 	local mainOptions = {
@@ -53,12 +140,13 @@ function ConfigUI:Initialize()
 										ns.Config.selectedSeason = "auto"
 									else
 										-- Reset Season to latest available for this expansion
-										local seasons = ns.Data:GetSeasons(val)
-										if seasons and #seasons > 0 then
-											ns.Config.selectedSeason = seasons[#seasons]
-										end
+									local seasons = ns.Data:GetSeasons(val)
+									if seasons and #seasons > 0 then
+										ns.Config.selectedSeason = seasons[#seasons]
 									end
-									ns.UI:RefreshRows()
+								end
+								ConfigUI:RefreshTrackingOptions()
+								ns.UI:RefreshRows()
 								end,
 							},
 							season = {
@@ -92,6 +180,7 @@ function ConfigUI:Initialize()
 								end,
 								set = function(_, val)
 									ns.Config.selectedSeason = val
+									ConfigUI:RefreshTrackingOptions()
 									ns.UI:RefreshRows()
 								end,
 							},
@@ -107,8 +196,9 @@ function ConfigUI:Initialize()
 
 									local currentStatus = ""
 									if ns.Config.selectedExpansion == "auto" or ns.Config.selectedSeason == "auto" then
-										currentStatus = "\n"
-											.. L["Currently detecting: %s, %s"]:format("|cff888888", expName, seaName)
+									currentStatus = "\n|cff888888"
+										.. L["Currently detecting: %s, %s"]:format(expName, seaName)
+										.. "|r"
 									end
 									return currentStatus
 								end,
@@ -142,12 +232,13 @@ function ConfigUI:Initialize()
 						set = function(_, val)
 							ns.Config.locked = val
 							ns.UI:ApplyFrameStyle()
+							ns.UI:RefreshRows()
 						end,
 					},
 					ignoreTimeGates = {
 						type = "toggle",
 						name = L["Show All Gated Content"],
-						desc = L["Show all time-gated sections regardless of current date. Reload UI to update Tracked Items list."],
+						desc = L["Show all time-gated sections regardless of current date."],
 						order = 5,
 						width = "full",
 						get = function()
@@ -158,6 +249,7 @@ function ConfigUI:Initialize()
 								ns.Config.debug = {}
 							end
 							ns.Config.debug.ignoreTimeGates = val
+							ConfigUI:RefreshTrackingOptions()
 							ns.UI:RefreshRows()
 						end,
 					},
@@ -265,127 +357,11 @@ function ConfigUI:Initialize()
 	}
 
 	-- 3. Tracking Sub-Table
-	local trackingOptions = {
+	self.trackingOptions = {
 		name = L["Tracked Items"],
 		type = "group",
-		args = {
-			desc = {
-				type = "description",
-				name = L["Uncheck items to hide them from the list."],
-				order = 0,
-			},
-		},
+		args = BuildTrackingArgs(),
 	}
-
-	-- Dynamically generate tracking toggles
-	local data = ns:GetCurrentSeasonData()
-	local order = 10
-
-	for _, section in ipairs(data) do
-		-- Check if section should be processed (time-gate check)
-		local shouldProcess = true
-
-		-- Skip time-gated sections (unless debug override is enabled)
-		local showGated = type(ns.Config.debug) == "table" and ns.Config.debug.ignoreTimeGates
-		if not showGated then
-			if section.showAfter then
-				local y, m, d = section.showAfter:match("(%d+)-(%d+)-(%d+)")
-				if y and m and d then
-					local showTime = time({ year = tonumber(y), month = tonumber(m), day = tonumber(d), hour = 0 })
-					if time() < showTime then
-						shouldProcess = false
-					end
-				end
-			end
-			if shouldProcess and section.hideAfter then
-				local y, m, d = section.hideAfter:match("(%d+)-(%d+)-(%d+)")
-				if y and m and d then
-					local hideTime = time({ year = tonumber(y), month = tonumber(m), day = tonumber(d), hour = 0 })
-					if time() >= hideTime then
-						shouldProcess = false
-					end
-				end
-			end
-		end
-
-		if shouldProcess then
-			-- Add Section Header
-			if section.title then
-				trackingOptions.args["header_" .. order] = {
-					type = "header",
-					name = section.title,
-					order = order,
-				}
-				order = order + 1
-			end
-
-			if section.items then
-				-- Create sorted copy of items (same logic as UI.lua)
-				local sortedItems = {}
-				for _, row in ipairs(section.items) do
-					if
-						row.id ~= nil
-						and (
-							row.type == "currency"
-							or row.type == "currency_cap"
-							or row.type == "quest"
-							or row.type == "vault_visual"
-							or row.type == "item"
-						)
-					then
-						table.insert(sortedItems, row)
-					end
-				end
-
-				-- Sort alphabetically (except for noSort sections and vault which has custom order)
-				if not section.noSort then
-					table.sort(sortedItems, function(a, b)
-						-- Vault has custom order: Raid(3) -> Dungeons(1) -> World(6)
-						if a.type == "vault_visual" and b.type == "vault_visual" then
-							local vaultOrder = { [3] = 1, [1] = 2, [6] = 3 }
-							local orderA = vaultOrder[a.id] or 99
-							local orderB = vaultOrder[b.id] or 99
-							return orderA < orderB
-						end
-						-- Alphabetical for everything else
-						return (a.label or "") < (b.label or "")
-					end)
-				end
-
-				for _, row in ipairs(sortedItems) do
-					local configID = row.id
-					if type(configID) == "table" then
-						configID = configID[1]
-					end
-
-					-- Use label-based key for ID=0 to avoid collisions
-					local configKey = configID
-					if configID == 0 then
-						configKey = "0_" .. (row.label or "unknown"):gsub("%s+", "_")
-					end
-
-					trackingOptions.args["item_" .. configKey] = {
-						type = "toggle",
-						name = row.label or L["Item %s"]:format(configID),
-						width = "full",
-						order = order,
-						get = function()
-							return not ns.Config.hiddenItems[configID]
-						end,
-						set = function(_, val)
-							if val then
-								ns.Config.hiddenItems[configID] = nil
-							else
-								ns.Config.hiddenItems[configID] = true
-							end
-							ns.UI:RefreshRows()
-						end,
-					}
-					order = order + 1
-				end
-			end
-		end -- if shouldProcess
-	end
 
 	-- Register Main
 	AceConfig:RegisterOptionsTable("Weekly", mainOptions)
@@ -407,13 +383,13 @@ function ConfigUI:Initialize()
 	AceConfig:RegisterOptionsTable("Weekly_Appearance", appearanceOptions)
 	AceConfigDialog:AddToBlizOptions("Weekly_Appearance", L["Appearance"], "Weekly")
 
-	AceConfig:RegisterOptionsTable("Weekly_Tracking", trackingOptions)
+	AceConfig:RegisterOptionsTable("Weekly_Tracking", self.trackingOptions)
 	AceConfigDialog:AddToBlizOptions("Weekly_Tracking", L["Tracked Items"], "Weekly")
 
 	-- Register Profiles
 	local profiles = LibStub("AceDBOptions-3.0"):GetOptionsTable(ns.db)
 	AceConfig:RegisterOptionsTable("Weekly_Profiles", profiles)
-	AceConfigDialog:AddToBlizOptions("Weekly_Profiles", "Profiles", "Weekly")
+	AceConfigDialog:AddToBlizOptions("Weekly_Profiles", L["Profiles"], "Weekly")
 
 	-- 4. Journal Tab
 	local journalOptions = {
@@ -472,7 +448,7 @@ function ConfigUI:Initialize()
 			showMinimapIcon = {
 				type = "toggle",
 				name = L["Show Minimap Icon"],
-				desc = L["Show a separate minimap icon for the Journal. (Requires reload)"],
+				desc = L["Show a separate minimap icon for the Journal."],
 				width = "full",
 				order = 12,
 				disabled = function()

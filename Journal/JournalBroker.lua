@@ -6,6 +6,7 @@ local _, ns = ...
 
 local JournalBroker = {}
 ns.JournalBroker = JournalBroker
+local L = LibStub("AceLocale-3.0"):GetLocale("Weekly")
 
 local LDB = LibStub("LibDataBroker-1.1", true)
 local LDBIcon = LibStub("LibDBIcon-1.0", true)
@@ -13,21 +14,28 @@ local LDBIcon = LibStub("LibDBIcon-1.0", true)
 -- Broker data object
 local brokerObj = nil
 
+local function GetMinimapSettings()
+	WeeklyDB = WeeklyDB or {}
+	WeeklyDB.journalMinimapIcon = WeeklyDB.journalMinimapIcon or { hide = false }
+	return WeeklyDB.journalMinimapIcon
+end
+
 --------------------------------------------------------------------------------
 -- Broker Object
 --------------------------------------------------------------------------------
 
 function JournalBroker:Initialize()
-	if not LDB then
+	if self.initialized or not LDB then
 		return
 	end
+	self.initialized = true
 
 	-- Create the broker data object
 	brokerObj = LDB:NewDataObject("WeeklyJournal", {
 		type = "launcher",
 		icon = "Interface\\Icons\\INV_Misc_Book_09",
-		label = "Weekly Journal",
-		text = "Journal",
+		label = L["Weekly Journal"],
+		text = L["Journal"],
 
 		OnClick = function(_, button)
 			if button == "LeftButton" then
@@ -49,15 +57,9 @@ function JournalBroker:Initialize()
 	-- Register with LibDBIcon for minimap button
 	if LDBIcon then
 		-- Use a separate saved variable key for the journal minimap icon
-		if not WeeklyDB then
-			WeeklyDB = {}
-		end
-		if not WeeklyDB.journalMinimapIcon then
-			WeeklyDB.journalMinimapIcon = { hide = false }
-		end
-
-		LDBIcon:Register("WeeklyJournal", brokerObj, WeeklyDB.journalMinimapIcon)
+		LDBIcon:Register("WeeklyJournal", brokerObj, GetMinimapSettings())
 	end
+	self:UpdateText()
 end
 
 --------------------------------------------------------------------------------
@@ -65,7 +67,7 @@ end
 --------------------------------------------------------------------------------
 
 function JournalBroker:UpdateTooltip(tooltip)
-	tooltip:AddLine("Weekly Journal", 1, 0.82, 0)
+	tooltip:AddLine(L["Weekly Journal"], 1, 0.82, 0)
 	tooltip:AddLine(" ")
 
 	-- Show stats if journal is initialized
@@ -73,10 +75,10 @@ function JournalBroker:UpdateTooltip(tooltip)
 		local totalCount = ns.Journal:GetTotalCount()
 		local achievePoints = ns.Journal:GetAchievementPointsThisWeek()
 
-		tooltip:AddDoubleLine("Items this week:", tostring(totalCount), 1, 1, 1, 0.2, 0.8, 0.2)
+		tooltip:AddDoubleLine(L["Items this week:"], tostring(totalCount), 1, 1, 1, 0.2, 0.8, 0.2)
 
 		if achievePoints > 0 then
-			tooltip:AddDoubleLine("Achievement points:", tostring(achievePoints), 1, 1, 1, 1, 0.82, 0)
+			tooltip:AddDoubleLine(L["Achievement points:"], tostring(achievePoints), 1, 1, 1, 1, 0.82, 0)
 		end
 
 		tooltip:AddLine(" ")
@@ -96,12 +98,12 @@ function JournalBroker:UpdateTooltip(tooltip)
 			tooltip:AddLine(" ")
 		end
 	else
-		tooltip:AddLine("Journal not initialized", 0.5, 0.5, 0.5)
+		tooltip:AddLine(L["Journal not initialized"], 0.5, 0.5, 0.5)
 		tooltip:AddLine(" ")
 	end
 
-	tooltip:AddLine("|cff00ff00Left-click|r to toggle journal", 0.7, 0.7, 0.7)
-	tooltip:AddLine("|cff00ff00Right-click|r for options", 0.7, 0.7, 0.7)
+	tooltip:AddLine(L["|cff00ff00Left-click|r to toggle journal"], 0.7, 0.7, 0.7)
+	tooltip:AddLine(L["|cff00ff00Right-click|r for options"], 0.7, 0.7, 0.7)
 end
 
 --------------------------------------------------------------------------------
@@ -114,7 +116,7 @@ function JournalBroker:ShowContextMenu()
 		rootDescription:CreateTitle("Weekly")
 
 		-- Weekly Tracker Section
-		rootDescription:CreateCheckbox("Show Weekly", function()
+		rootDescription:CreateCheckbox(L["Show Weekly"], function()
 			return ns.UI.frame and ns.UI.frame:IsShown()
 		end, function()
 			if ns.UI then
@@ -122,19 +124,20 @@ function JournalBroker:ShowContextMenu()
 			end
 		end)
 
-		rootDescription:CreateCheckbox("Lock Weekly", function()
+		rootDescription:CreateCheckbox(L["Lock Weekly"], function()
 			return ns.Config.locked
 		end, function()
 			ns.Config.locked = not ns.Config.locked
 			if ns.UI then
 				ns.UI:ApplyFrameStyle()
+				ns.UI:RefreshRows()
 			end
 		end)
 
 		rootDescription:CreateDivider()
 
 		-- Journal Section
-		rootDescription:CreateCheckbox("Show Journal", function()
+		rootDescription:CreateCheckbox(L["Show Journal"], function()
 			return ns.JournalUI and ns.JournalUI:IsShown()
 		end, function()
 			if ns.JournalUI then
@@ -145,7 +148,7 @@ function JournalBroker:ShowContextMenu()
 		-- Add category quick-access submenu
 		if ns.Journal and ns.Journal.tracker then
 			local categories = ns.Journal:GetOrderedCategories()
-			local submenu = rootDescription:CreateButton("Jump to Journal Category")
+			local submenu = rootDescription:CreateButton(L["Jump to Journal Category"])
 
 			for _, cat in ipairs(categories) do
 				local count = ns.Journal:GetCategoryCount(cat.key)
@@ -162,7 +165,7 @@ function JournalBroker:ShowContextMenu()
 		rootDescription:CreateDivider()
 
 		-- Settings & Minimap Section
-		rootDescription:CreateButton("Settings", function()
+		rootDescription:CreateButton(L["Settings"], function()
 			-- Open Weekly settings
 			if ns.ConfigUI and ns.ConfigUI.categoryID then
 				Settings.OpenToCategory(ns.ConfigUI.categoryID)
@@ -174,7 +177,7 @@ function JournalBroker:ShowContextMenu()
 
 		-- Add minimap icon toggle
 		if LDBIcon then
-			rootDescription:CreateCheckbox("Show Minimap Icon", function()
+			rootDescription:CreateCheckbox(L["Show Minimap Icon"], function()
 				return self:IsMinimapIconShown()
 			end, function()
 				if self:IsMinimapIconShown() then
@@ -194,21 +197,23 @@ end
 -- Show/hide minimap icon
 function JournalBroker:ShowMinimapIcon()
 	if LDBIcon then
-		WeeklyDB.journalMinimapIcon.hide = false
+		self:Initialize()
+		GetMinimapSettings().hide = false
 		LDBIcon:Show("WeeklyJournal")
 	end
 end
 
 function JournalBroker:HideMinimapIcon()
 	if LDBIcon then
-		WeeklyDB.journalMinimapIcon.hide = true
+		self:Initialize()
+		GetMinimapSettings().hide = true
 		LDBIcon:Hide("WeeklyJournal")
 	end
 end
 
 function JournalBroker:IsMinimapIconShown()
 	if LDBIcon then
-		return not WeeklyDB.journalMinimapIcon.hide
+		return not GetMinimapSettings().hide
 	end
 	return false
 end
@@ -218,9 +223,9 @@ function JournalBroker:UpdateText()
 	if brokerObj and ns.Journal then
 		local count = ns.Journal:GetTotalCount()
 		if count > 0 then
-			brokerObj.text = string.format("Journal (%d)", count)
+			brokerObj.text = L["Journal (%d)"]:format(count)
 		else
-			brokerObj.text = "Journal"
+			brokerObj.text = L["Journal"]
 		end
 	end
 end

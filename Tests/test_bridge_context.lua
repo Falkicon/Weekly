@@ -34,7 +34,15 @@ describe("Weekly Bridge Context", function()
 				return nil
 			end,
 		}
-		LoadFile("_dev_/Weekly/Bridge/Context.lua")
+		GetServerTime = function()
+			return 1000
+		end
+		C_DateAndTime = {
+			GetSecondsUntilWeeklyReset = function()
+				return 5000
+			end,
+		}
+		LoadFile("Bridge/Context.lua")
 	end)
 
 	it("uses account-wide completion only for account quests", function()
@@ -63,5 +71,14 @@ describe("Weekly Bridge Context", function()
 		assert.is_false(captured[3])
 		assert.is_true(captured[4])
 		assert.is_true(captured[5])
+	end)
+
+	it("builds journal reset context from Blizzard's live boundary", function()
+		ns.Config = { journal = { nextReset = 5500 } }
+		local context = ns.Context:BuildJournalResetContext()
+
+		assert.are.equal(1000, context.currentServerTime)
+		assert.are.equal(5500, context.savedNextReset)
+		assert.are.equal(6000, context.observedNextReset)
 	end)
 end)

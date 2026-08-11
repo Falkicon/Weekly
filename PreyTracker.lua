@@ -44,12 +44,16 @@ function PreyTracker:GetState()
 	end
 	state.nextReset = tonumber(state.nextReset) or 0
 	state.activeQuestID = tonumber(state.activeQuestID) or 0
+	state.lastActiveQuestID = tonumber(state.lastActiveQuestID) or 0
 	state.lastTurnInQuestID = tonumber(state.lastTurnInQuestID) or 0
 	state.lastTurnInAt = tonumber(state.lastTurnInAt) or 0
 	return state
 end
 
 function PreyTracker:GetNextReset(now)
+	if ns.WeeklyReset then
+		return ns.WeeklyReset:GetObservedNextReset(now)
+	end
 	if not C_DateAndTime or not C_DateAndTime.GetSecondsUntilWeeklyReset then
 		return nil
 	end
@@ -67,26 +71,39 @@ function PreyTracker:CheckReset(state, now, observedNextReset)
 		return false
 	end
 
-	if state.nextReset <= 0 then
-		state.nextReset = observedNextReset or 0
+	local firstObservation = state.nextReset <= 0
+	local resetOccurred
+	if ns.WeeklyReset then
+		resetOccurred = ns.WeeklyReset:Check(state, now, observedNextReset)
+	else
+		-- Test/dev fallback when this module is loaded in isolation.
+		if firstObservation then
+			state.nextReset = observedNextReset or 0
+			resetOccurred = false
+		else
+			local resetPassed = now >= state.nextReset
+			local apiRolledForward = observedNextReset and observedNextReset > state.nextReset + (6 * 60 * 60)
+			resetOccurred = resetPassed or apiRolledForward
+			if resetOccurred then
+				state.nextReset = observedNextReset or 0
+			end
+		end
+	end
+
+	if firstObservation then
 		state.partial = true
 		return false
 	end
-
-	-- The first condition covers an addon running through reset. The second
-	-- covers logging in after reset, when the API already points at next week.
-	local resetPassed = now >= state.nextReset
-	local apiRolledForward = observedNextReset and observedNextReset > state.nextReset + (6 * 60 * 60)
-	if not resetPassed and not apiRolledForward then
+	if not resetOccurred then
 		return false
 	end
 
 	state.count = 0
 	state.partial = false
 	state.activeQuestID = 0
+	state.lastActiveQuestID = 0
 	state.lastTurnInQuestID = 0
 	state.lastTurnInAt = 0
-	state.nextReset = observedNextReset or 0
 	return true
 end
 
@@ -108,8 +125,10 @@ function PreyTracker:RefreshActiveQuest()
 	local ok, questID = pcall(C_QuestLog.GetActivePreyQuest)
 	if ok and type(questID) == "number" and questID > 0 then
 		state.activeQuestID = questID
+		state.lastActiveQuestID = questID
 		return questID
 	end
+	state.activeQuestID = 0
 	return 0
 end
 
@@ -171,6 +190,7 @@ function PreyTracker:RecordCompletion(state, questID, now, weeklyMax)
 	state.lastTurnInQuestID = questID
 	state.lastTurnInAt = now
 	state.activeQuestID = 0
+	state.lastActiveQuestID = 0
 	return true
 end
 
@@ -181,12 +201,16 @@ function PreyTracker:OnQuestTurnedIn(questID)
 	end
 
 	self:RefreshReset()
-	local isTrackedHunt = questID == state.activeQuestID or self:IsKnownHuntQuest(questID)
+	local isTrackedHunt = questID == state.activeQuestID
+		or questID == state.lastActiveQuestID
+		or self:IsKnownHuntQuest(questID)
 	if not isTrackedHunt or not self:RecordCompletion(state, questID) then
 		return
 	end
 
-	if ns.UI and ns.UI.RenderRows then
+	if ns.UI and ns.UI.QueueRefresh then
+		ns.UI:QueueRefresh()
+	elseif ns.UI and ns.UI.RenderRows then
 		ns.UI:RenderRows()
 	end
 end
@@ -201,9 +225,9 @@ function PreyTracker:GetStatus(weeklyMax, cacheQuestID, cacheMax)
 	self:RefreshReset()
 	self:RefreshActiveQuest()
 	self:ReconcileCacheProgress(state, cacheQuestID or CACHE_QUEST_ID, cacheMax or DEFAULT_CACHE_MAX)
-	state.count = Clamp(state.count, 0, weeklyMax)
+	local displayCount = Clamp(state.count, 0, weeklyMax)
 	local activeCount = state.activeQuestID > 0 and 1 or 0
-	return state.count >= weeklyMax, state.count, weeklyMax, state.partial, activeCount
+	return displayCount >= weeklyMax, displayCount, weeklyMax, state.partial, activeCount
 end
 
 function PreyTracker:Initialize()

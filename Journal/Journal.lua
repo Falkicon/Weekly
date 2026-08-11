@@ -60,24 +60,6 @@ Journal.EXPANSION_NAMES = {
 	[11] = L["Midnight"],
 }
 
--- Trade Goods class ID
-local ITEM_CLASS_TRADEGOODS = 7
-
--- Trade Goods subclasses we want to track (gathering materials)
--- These are the subclasses that represent raw gathered materials
-local TRACKED_SUBCLASSES = {
-	[5] = true, -- Cloth
-	[6] = true, -- Leather
-	[7] = true, -- Metal & Stone (Ore)
-	[8] = true, -- Cooking (Meat, Fish ingredients)
-	[9] = true, -- Herb
-	[10] = true, -- Elemental
-	[11] = true, -- Other (some reagents)
-	[12] = true, -- Enchanting
-	[16] = true, -- Inscription (Pigments)
-	[18] = true, -- Optional Reagents (crafting mats)
-}
-
 -- Collections Journal tab indices (for opening official UI)
 local COLLECTIONS_TAB_MOUNTS = 1
 local COLLECTIONS_TAB_PETS = 2
@@ -89,58 +71,52 @@ local COLLECTIONS_TAB_TOYS = 3
 -- Weekly Reset Detection
 --------------------------------------------------------------------------------
 
--- Get the timestamp for the start of the current week (Tuesday 00:00 server time)
--- WoW weekly reset is Tuesday at different times per region, but we use midnight
--- server time as a reasonable approximation
-local function GetWeekStartTimestamp()
-	local serverTime = C_DateAndTime.GetServerTimeLocal()
-	local date = C_DateAndTime.GetCurrentCalendarTime()
-
-	-- Get current day of week (1=Sunday, 2=Monday, 3=Tuesday, etc.)
-	local weekday = date.weekday
-
-	-- Calculate days since last Tuesday
-	-- Tuesday is weekday 3 in WoW's calendar
-	local daysSinceTuesday
-	if weekday >= 3 then
-		daysSinceTuesday = weekday - 3
-	else
-		daysSinceTuesday = weekday + 4 -- Wrap around (Sun=1 -> 5, Mon=2 -> 6)
+-- Check if we need to reset for a new week
+local function CheckWeeklyReset(force)
+	local journalConfig = ns.Config.journal
+	if not journalConfig or not ns.WeeklyReset then
+		return false
 	end
 
-	-- Get midnight of today
-	local hour = date.hour
-	local minute = date.minute
-	local secondsIntoDay = (hour * 3600) + (minute * 60)
-	local midnightToday = serverTime - secondsIntoDay
+	local now = ns.WeeklyReset:GetNow()
+	if not force and Journal.lastResetCheckAt and now - Journal.lastResetCheckAt < 60 then
+		return false
+	end
+	Journal.lastResetCheckAt = now
 
-	-- Go back to Tuesday midnight
-	local tuesdayMidnight = midnightToday - (daysSinceTuesday * 86400)
+	local resetOccurred = ns.WeeklyReset:Check(journalConfig, now)
+	if journalConfig.weekStart == 0 and journalConfig.nextReset and journalConfig.nextReset > 0 then
+		journalConfig.weekStart = journalConfig.nextReset - (7 * 24 * 60 * 60)
+	end
 
-	return tuesdayMidnight
-end
-
--- Check if we need to reset for a new week
-local function CheckWeeklyReset()
-	local currentWeekStart = GetWeekStartTimestamp()
-	local savedWeekStart = ns.Config.journal and ns.Config.journal.weekStart or 0
-
-	if currentWeekStart > savedWeekStart then
+	if resetOccurred then
 		-- New week! Clear journal data
 		if Journal.tracker then
 			Journal.tracker:Clear()
 		end
 
-		-- Update the week start timestamp
-		if ns.Config.journal then
-			ns.Config.journal.weekStart = currentWeekStart
-			ns.Config.journal.categories = {}
+		Journal.gathering = {}
+		journalConfig.weekStart = journalConfig.nextReset > 0
+			and (journalConfig.nextReset - (7 * 24 * 60 * 60))
+			or now
+		journalConfig.categories = {}
+		journalConfig.gathering = Journal.gathering
+		journalConfig.itemCount = 0
+		if ns.JournalBroker then
+			ns.JournalBroker:UpdateText()
 		end
 
 		return true -- Reset occurred
 	end
 
 	return false -- No reset needed
+end
+
+local function ResetAware(handler)
+	return function(...)
+		CheckWeeklyReset(false)
+		return handler(...)
+	end
 end
 
 --------------------------------------------------------------------------------
@@ -209,7 +185,7 @@ local function OnAchievementEarned(tracker, _event, achievementID, alreadyEarned
 	end
 
 	-- Get current zone for source info
-	local zoneName = GetRealZoneText() or "Unknown"
+	local zoneName = GetRealZoneText() or L["Unknown"]
 
 	local logged = tracker:LogItem("achievement", achievementID, {
 		name = name,
@@ -237,7 +213,7 @@ local function OnNewMountAdded(tracker, _event, mountID)
 	end
 
 	-- Get current zone for source info
-	local zoneName = GetRealZoneText() or "Unknown"
+	local zoneName = GetRealZoneText() or L["Unknown"]
 
 	local logged = tracker:LogItem("mount", mountID, {
 		name = name,
@@ -271,7 +247,7 @@ local function OnNewPetAdded(tracker, _event, battlePetGUID)
 	end
 
 	-- Get current zone for source info
-	local zoneName = GetRealZoneText() or "Unknown"
+	local zoneName = GetRealZoneText() or L["Unknown"]
 
 	local logged = tracker:LogItem("pet", speciesID, {
 		name = speciesName,
@@ -304,7 +280,7 @@ local function OnNewToyAdded(tracker, _event, itemID, isNew)
 	end
 
 	-- Get current zone for source info
-	local zoneName = GetRealZoneText() or "Unknown"
+	local zoneName = GetRealZoneText() or L["Unknown"]
 
 	local logged = tracker:LogItem("toy", itemID, {
 		name = toyName,
@@ -327,11 +303,11 @@ local function OnDecorAddedToChest(tracker, _event, decorGUID, decorID)
 	local icon = C_HousingDecor.GetDecorIcon(decorID)
 
 	if not name then
-		name = "Decor " .. decorID
+		name = L["Decor %d"]:format(decorID)
 	end
 
 	-- Get current zone for source info
-	local zoneName = GetRealZoneText() or "Unknown"
+	local zoneName = GetRealZoneText() or L["Unknown"]
 
 	local logged = tracker:LogItem("decor", decorID, {
 		name = name,
@@ -349,38 +325,86 @@ end
 -- Gathering Event Handler
 --------------------------------------------------------------------------------
 
--- Parse item link from loot message
--- Format: "You receive loot: [Item Name] x5" or "You receive loot: [Item Name]"
-local function ParseLootMessage(message)
-	-- Match item link pattern |cxxxxxxxx|Hitem:itemID:...|h[Name]|h|r
-	local itemLink = message:match("|c%x+|Hitem:[^|]+|h%[.-%]|h|r")
-	if not itemLink then
-		return nil, nil
+local SELF_LOOT_FORMATS = {
+	"LOOT_ITEM_SELF",
+	"LOOT_ITEM_SELF_MULTIPLE",
+	"LOOT_ITEM_PUSHED_SELF",
+	"LOOT_ITEM_PUSHED_SELF_MULTIPLE",
+	"LOOT_ITEM_CREATED_SELF",
+	"LOOT_ITEM_CREATED_SELF_MULTIPLE",
+}
+
+local function IsSelfLootMessage(message, itemLink, quantity)
+	for _, globalName in ipairs(SELF_LOOT_FORMATS) do
+		local template = _G[globalName]
+		if template then
+			local ok, expected = pcall(string.format, template, itemLink, quantity)
+			if ok and expected == message then
+				return true
+			end
+		end
 	end
-
-	-- Extract quantity (defaults to 1)
-	local quantity = message:match("x(%d+)") or 1
-	quantity = tonumber(quantity)
-
-	return itemLink, quantity
+	return false
 end
 
--- Check if an item is a trackable gathering material
-local function IsGatheringMaterial(itemID)
-	local _itemName, _itemLink, _itemQuality, _itemLevel, _itemMinLevel, _itemType, _itemSubType, _itemStackCount, _itemEquipLoc, _itemTexture, _sellPrice, classID, subclassID, _bindType, expansionID =
-		C_Item.GetItemInfo(itemID)
+local function GetGatheringClassification(itemID)
+	local context = ns.Context and ns.Context:BuildLootClassifyContext(itemID)
+	if not context then
+		return nil
+	end
+	local result = ns.Actions.Journal.ClassifyLootItem(context)
+	if not result.success then
+		return false
+	end
+	return result.data.isGathering, result.data.expansion, context.itemSubClassID
+end
 
-	-- Must be Trade Goods class
-	if classID ~= ITEM_CLASS_TRADEGOODS then
-		return false, nil, nil
+local function QueueGatheringItem(itemID, quantity)
+	Journal.pendingGathering = Journal.pendingGathering or {}
+	Journal.pendingGathering[itemID] = (Journal.pendingGathering[itemID] or 0) + quantity
+	C_Item.RequestLoadItemDataByID(itemID)
+end
+
+local function RecordGatheringItem(itemID, quantity)
+	local isGathering, expansionID, subclassID = GetGatheringClassification(itemID)
+	if isGathering == nil then
+		QueueGatheringItem(itemID, quantity)
+		return false
+	end
+	if not isGathering then
+		return false
 	end
 
-	-- Check if it's a tracked subclass
-	if not TRACKED_SUBCLASSES[subclassID] then
-		return false, nil, nil
+	local itemName = C_Item.GetItemNameByID(itemID)
+	local itemIcon = C_Item.GetItemIconByID(itemID)
+	if not itemName then
+		QueueGatheringItem(itemID, quantity)
+		return false
 	end
 
-	return true, expansionID, subclassID
+	Journal.gathering = Journal.gathering or {}
+	local entry = Journal.gathering[itemID]
+	if not entry then
+		entry = {
+			name = itemName,
+			icon = itemIcon,
+			count = 0,
+			expansion = expansionID or 0,
+			subclass = subclassID,
+			firstSeen = time(),
+		}
+		Journal.gathering[itemID] = entry
+	end
+
+	entry.count = entry.count + quantity
+	entry.lastSeen = time()
+	entry.name = entry.name or itemName
+	entry.icon = entry.icon or itemIcon
+	if ns.Config.journal then
+		ns.Config.journal.gathering = Journal.gathering
+	end
+	Journal:OnGatheringLogged(itemID, quantity, entry)
+	return true
 end
 
 local function OnChatMsgLoot(_tracker, _event, message, ...)
@@ -392,74 +416,34 @@ local function OnChatMsgLoot(_tracker, _event, message, ...)
 		end
 	end
 
-	-- Only track our own loot
-	local itemLink, quantity = ParseLootMessage(message)
-	if not itemLink or not quantity then
+	CheckWeeklyReset(false)
+
+	local parsed = ns.Actions.Journal.ParseLootMessage({ message = message })
+	if not parsed.success or not parsed.data.itemLink or not parsed.data.itemID then
 		recordPerf()
 		return
 	end
-
-	-- Extract item ID from link
-	local itemID = tonumber(itemLink:match("item:(%d+)"))
-	if not itemID then
+	local itemLink = parsed.data.itemLink
+	local itemID = parsed.data.itemID
+	local quantity = parsed.data.quantity
+	if not IsSelfLootMessage(message, itemLink, quantity) then
 		recordPerf()
 		return
 	end
-
-	-- Check if it's a gathering material
-	local isGathering, expansionID, subclassID = IsGatheringMaterial(itemID)
-	if not isGathering then
-		recordPerf()
-		return
-	end
-
-	-- Initialize gathering storage if needed
-	if not Journal.gathering then
-		Journal.gathering = {}
-	end
-
-	-- Get item info for display
-	local itemName = C_Item.GetItemNameByID(itemID)
-	local itemIcon = C_Item.GetItemIconByID(itemID)
-
-	-- Item info might not be cached yet, request it
-	if not itemName then
-		-- Queue the item for later (it will be tracked next time)
-		C_Item.RequestLoadItemDataByID(itemID)
-		recordPerf()
-		return
-	end
-
-	-- Add to running total
-	if not Journal.gathering[itemID] then
-		Journal.gathering[itemID] = {
-			name = itemName,
-			icon = itemIcon,
-			count = 0,
-			expansion = expansionID or 0,
-			subclass = subclassID,
-			firstSeen = time(),
-		}
-	end
-
-	Journal.gathering[itemID].count = Journal.gathering[itemID].count + quantity
-	Journal.gathering[itemID].lastSeen = time()
-
-	-- Update name/icon if we didn't have it before
-	if itemName and not Journal.gathering[itemID].name then
-		Journal.gathering[itemID].name = itemName
-	end
-	if itemIcon and not Journal.gathering[itemID].icon then
-		Journal.gathering[itemID].icon = itemIcon
-	end
-
-	-- Notify
-	Journal:OnGatheringLogged(itemID, quantity, Journal.gathering[itemID])
-
-	-- Save periodically (not every single loot to avoid spam)
-	-- The logout handler will ensure final save
+	RecordGatheringItem(itemID, quantity)
 
 	recordPerf()
+end
+
+local function OnItemInfoReceived(_tracker, _event, itemID, success)
+	if not Journal.pendingGathering or not Journal.pendingGathering[itemID] then
+		return
+	end
+	local quantity = Journal.pendingGathering[itemID]
+	Journal.pendingGathering[itemID] = nil
+	if success then
+		RecordGatheringItem(itemID, quantity)
+	end
 end
 
 --------------------------------------------------------------------------------
@@ -488,7 +472,7 @@ function Journal:Initialize()
 	})
 
 	-- Check for weekly reset before loading data
-	local wasReset = CheckWeeklyReset()
+	local wasReset = CheckWeeklyReset(true)
 
 	-- If reset, also clear gathering
 	if wasReset then
@@ -503,12 +487,13 @@ function Journal:Initialize()
 
 	-- Register events
 	self.tracker:RegisterEvents({
-		ACHIEVEMENT_EARNED = OnAchievementEarned,
-		NEW_MOUNT_ADDED = OnNewMountAdded,
-		NEW_PET_ADDED = OnNewPetAdded,
-		NEW_TOY_ADDED = OnNewToyAdded,
-		HOUSE_DECOR_ADDED_TO_CHEST = OnDecorAddedToChest,
+		ACHIEVEMENT_EARNED = ResetAware(OnAchievementEarned),
+		NEW_MOUNT_ADDED = ResetAware(OnNewMountAdded),
+		NEW_PET_ADDED = ResetAware(OnNewPetAdded),
+		NEW_TOY_ADDED = ResetAware(OnNewToyAdded),
+		HOUSE_DECOR_ADDED_TO_CHEST = ResetAware(OnDecorAddedToChest),
 		CHAT_MSG_LOOT = OnChatMsgLoot,
+		GET_ITEM_INFO_RECEIVED = OnItemInfoReceived,
 
 		-- Save on logout
 		PLAYER_LOGOUT = function(_tracker, _event)
@@ -532,6 +517,18 @@ function Journal:Shutdown()
 	SaveJournalData()
 	self.tracker:UnregisterEvents()
 	self.tracker = nil
+	self.gathering = nil
+	self.pendingGathering = nil
+end
+
+function Journal:ReloadForProfile()
+	if self.tracker then
+		self.tracker:UnregisterEvents()
+	end
+	self.tracker = nil
+	self.gathering = nil
+	self.pendingGathering = nil
+	self.lastResetCheckAt = nil
 end
 
 function Journal:OnItemLogged(category, _id, data)
@@ -539,12 +536,15 @@ function Journal:OnItemLogged(category, _id, data)
 	if ns.Config.journal and ns.Config.journal.showNotifications then
 		local categoryInfo = self.CATEGORIES[category]
 		local categoryName = categoryInfo and categoryInfo.name or category
-		ns.Weekly:Printf(L["New %s: %s"], categoryName, data.name or "Unknown")
+		ns.Weekly:Printf(L["New %s: %s"], categoryName, data.name or L["Unknown"])
 	end
 
 	-- Update UI if visible
 	if ns.JournalUI and ns.JournalUI.frame and ns.JournalUI.frame:IsShown() then
 		ns.JournalUI:RefreshCurrentTab()
+	end
+	if ns.JournalBroker then
+		ns.JournalBroker:UpdateText()
 	end
 end
 
@@ -552,7 +552,7 @@ function Journal:OnGatheringLogged(_itemID, quantity, data)
 	-- Optional: Show notification (less spammy for gathering)
 	-- Only notify for first-time items
 	if ns.Config.journal and ns.Config.journal.showNotifications and data.count == quantity then
-		ns.Weekly:Printf(L["Started gathering: %s"], data.name or "Unknown")
+		ns.Weekly:Printf(L["Started gathering: %s"], data.name or L["Unknown"])
 	end
 
 	-- Update UI if visible on gathering tab
@@ -560,6 +560,9 @@ function Journal:OnGatheringLogged(_itemID, quantity, data)
 		if ns.JournalUI.currentTab == "gathering" then
 			ns.JournalUI:RefreshCurrentTab()
 		end
+	end
+	if ns.JournalBroker then
+		ns.JournalBroker:UpdateText()
 	end
 end
 
@@ -614,6 +617,9 @@ function Journal:ClearCategory(category)
 	if category == "gathering" then
 		self.gathering = {}
 		SaveJournalData()
+		if ns.JournalBroker then
+			ns.JournalBroker:UpdateText()
+		end
 		return
 	end
 
@@ -622,6 +628,9 @@ function Journal:ClearCategory(category)
 	end
 	self.tracker:Clear(category)
 	SaveJournalData()
+	if ns.JournalBroker then
+		ns.JournalBroker:UpdateText()
+	end
 end
 
 -- Clear all categories (full manual reset)
@@ -632,6 +641,9 @@ function Journal:ClearAll()
 	self.tracker:Clear()
 	self.gathering = {}
 	SaveJournalData()
+	if ns.JournalBroker then
+		ns.JournalBroker:UpdateText()
+	end
 end
 
 -- Open the official UI for a specific item
@@ -703,7 +715,7 @@ function Journal:OpenOfficialUI(category, id, data)
 			C_Timer.After(0.2, SetupCatalogSearch)
 		else
 			-- Fallback if HousingFramesUtil isn't loaded yet
-			ns.Weekly:Printf("Decor: %s (ID: %d)", data and data.name or "Unknown", id)
+			ns.Weekly:Printf(L["Decor: %s (ID: %d)"], data and data.name or L["Unknown"], id)
 		end
 	end
 end

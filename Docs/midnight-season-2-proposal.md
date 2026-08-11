@@ -4,11 +4,11 @@ Research date: 2026-08-10
 
 Target client: World of Warcraft 12.1.0, *Curse of Ula'tek*
 
-Scope: exploration and implementation proposal only; this document does not implement the Season 2 update.
+Status: initial Season 2 dataset and tracker support implemented; PTR-derived IDs still require launch validation.
 
 ## Recommendation
 
-Create a new `Data/Midnight/Season2.lua` dataset, select it for client builds `>= 120100`, and use the August 11–18 launch window to validate all PTR-derived IDs with the addon's Discovery tool before publishing.
+Use the new `Data/Midnight/Season2.lua` dataset on client builds `>= 120100`, and use the August 11–18 launch window to validate all PTR-derived IDs with the addon's Discovery tool before publishing.
 
 Do not clone `Season1.lua` wholesale. It contains launch-era placeholders (`id = 0`), one-time campaign quests, and it predates the 12.0.5/12.0.7 weekly systems that remain relevant in Season 2. Season 2 should be rebuilt from an audited evergreen baseline plus the new 12.1 content.
 

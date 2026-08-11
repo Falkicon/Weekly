@@ -1,53 +1,10 @@
 local _, ns = ...
 local UI = {}
 ns.UI = UI
+local L = LibStub("AceLocale-3.0"):GetLocale("Weekly")
 
 -- Visual Constants
--- Visual Constants
-local _C_BACKGROUND = { 0.1, 0.1, 0.1 }
-local _C_BORDER = { 0.4, 0.4, 0.4, 1 }
 local C_HEADER = { 1, 0.8, 0 } -- Gold
-local _C_BAR_VALOR = { 0.8, 0.6, 0.2 } -- Earthy Gold
-local _C_BAR_CREST = { 0.7, 0.4, 0.9 } -- Purple
-
---------------------------------------------------------------------------------
--- Time-Gating Utilities
---------------------------------------------------------------------------------
-
--- Parse "YYYY-MM-DD" date string to timestamp
-local function ParseDate(dateStr)
-	local y, m, d = dateStr:match("(%d+)-(%d+)-(%d+)")
-	if y and m and d then
-		return time({ year = tonumber(y), month = tonumber(m), day = tonumber(d), hour = 0 })
-	end
-	return nil
-end
-
--- Check if section should be visible based on showAfter/hideAfter dates
-local function IsSectionVisible(section, cfg)
-	-- Debug override: show all gated content
-	if type(cfg.debug) == "table" and cfg.debug.ignoreTimeGates then
-		return true
-	end
-
-	local now = time()
-
-	if section.showAfter then
-		local showTime = ParseDate(section.showAfter)
-		if showTime and now < showTime then
-			return false -- Not yet visible
-		end
-	end
-
-	if section.hideAfter then
-		local hideTime = ParseDate(section.hideAfter)
-		if hideTime and now >= hideTime then
-			return false -- Already hidden
-		end
-	end
-
-	return true
-end
 
 function UI:Initialize()
 	local _cfg = ns.Config
@@ -98,9 +55,9 @@ function UI:Initialize()
 			btn.text:SetTextColor(1, 0.82, 0) -- Gold on hover
 			GameTooltip:SetOwner(btn, "ANCHOR_RIGHT")
 			if self:AreAllCollapsed() then
-				GameTooltip:SetText("Expand All", 1, 1, 1)
+				GameTooltip:SetText(L["Expand All"], 1, 1, 1)
 			else
-				GameTooltip:SetText("Collapse All", 1, 1, 1)
+				GameTooltip:SetText(L["Collapse All"], 1, 1, 1)
 			end
 			GameTooltip:Show()
 		end)
@@ -112,7 +69,7 @@ function UI:Initialize()
 		-- Title Text (after toggle button)
 		self.titleText = self.frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
 		self.titleText:SetPoint("LEFT", self.collapseToggleBtn, "RIGHT", 2, 0)
-		self.titleText:SetText("WEEKLY")
+		self.titleText:SetText(L["WEEKLY"])
 		self.titleText:SetTextColor(0.6, 0.6, 0.6)
 
 		-- Events
@@ -120,7 +77,7 @@ function UI:Initialize()
 		self.frame:RegisterEvent("QUEST_LOG_UPDATE")
 		self.frame:RegisterEvent("WEEKLY_REWARDS_UPDATE")
 		self.frame:SetScript("OnEvent", function()
-			self:RefreshRows()
+			self:QueueRefresh()
 		end)
 
 		self.frame:Hide()
@@ -132,11 +89,6 @@ function UI:Initialize()
 	-- Initial Style Application
 	self:ApplyFrameStyle()
 	self:RenderRows()
-end
-
--- Removed Manual Minimized Logic (LibDBIcon handles visibility/hiding window)
-function UI:SetMinimized(_minimized)
-	-- Deprecated by Broker, but kept for compatibility logic removal
 end
 
 function UI:SavePosition()
@@ -243,9 +195,11 @@ function UI:ApplyFrameStyle()
 	if cfg.locked then
 		self.frame:SetMovable(false)
 		self.frame:EnableMouse(false)
+		self.collapseToggleBtn:EnableMouse(false)
 	else
 		self.frame:SetMovable(true)
 		self.frame:EnableMouse(true)
+		self.collapseToggleBtn:EnableMouse(true)
 	end
 	self.content:EnableMouse(false)
 
@@ -268,8 +222,6 @@ function UI:ApplyFrameStyle()
 	self.content:SetPoint("TOPLEFT", self.frame, "TOPLEFT", 10, -24) -- Below [-] WEEKLY title
 	self.content:SetPoint("BOTTOMRIGHT", self.frame, "BOTTOMRIGHT", -10, 10)
 
-	-- Refresh rows in case width changed
-	self:RefreshRows()
 end
 
 -- Helpers (Bridge wrappers for backward compatibility)
@@ -277,28 +229,47 @@ end
 -- These Utils are thin wrappers that call the Bridge
 local Utils = {}
 
-function Utils.GetCurrency(id)
-	local blockStart = debugprofilestop()
+local function CacheKey(value)
+	if type(value) ~= "table" then
+		return tostring(value)
+	end
+	local parts = {}
+	for _, entry in ipairs(value) do
+		table.insert(parts, tostring(entry))
+	end
+	return table.concat(parts, ",")
+end
 
-	-- Use Bridge for the action, but also need raw API data for icon
-	local info = C_CurrencyInfo.GetCurrencyInfo(id)
-	if not info then
+local function Pack(...)
+	return { n = select("#", ...), ... }
+end
+
+local function CachedResult(key, query)
+	local cache = UI.refreshCache
+	if not cache then
+		return query()
+	end
+	local cached = cache[key]
+	if cached then
+		return unpack(cached, 1, cached.n)
+	end
+	cached = Pack(query())
+	cache[key] = cached
+	return unpack(cached, 1, cached.n)
+end
+
+function Utils.GetCurrency(id)
+	return CachedResult("currency:" .. tostring(id), function()
+		local blockStart = debugprofilestop()
+		local status = ns.Bridge:GetCurrencyStatus(id)
 		if ns.PerfBlocks then
 			ns.PerfBlocks.dataQuery = ns.PerfBlocks.dataQuery + (debugprofilestop() - blockStart)
 		end
-		return "---", 0, 0, nil, nil
-	end
-
-	local status = ns.Bridge:GetCurrencyStatus(id)
-	if ns.PerfBlocks then
-		ns.PerfBlocks.dataQuery = ns.PerfBlocks.dataQuery + (debugprofilestop() - blockStart)
-	end
-
-	if not status then
-		return "---", 0, 0, info.name, info.iconFileID
-	end
-
-	return FormatLargeNumber(info.quantity), status.amount, status.max, status.name, status.iconFileID
+		if not status then
+			return "---", 0, 0, nil, nil
+		end
+		return FormatLargeNumber(status.quantity or status.amount), status.amount, status.max, status.name, status.iconFileID
+	end)
 end
 
 --------------------------------------------------------------------------------
@@ -310,18 +281,27 @@ end
 -- @returns: isCompleted, progress, max, isOnQuest, isPercent, resolvedId
 --------------------------------------------------------------------------------
 function Utils.GetQuest(id)
-	local blockStart = debugprofilestop()
+	return CachedResult("quest:" .. CacheKey(id), function()
+		local blockStart = debugprofilestop()
+		local status = ns.Bridge:GetQuestStatus(id)
+		if ns.PerfBlocks then
+			ns.PerfBlocks.dataQuery = ns.PerfBlocks.dataQuery + (debugprofilestop() - blockStart)
+		end
+		if not status then
+			return false, 0, 0, false, false, nil
+		end
+		return status.isCompleted, status.progress, status.max, status.isOnQuest, status.isPercent, status.resolvedId
+	end)
+end
 
-	local status = ns.Bridge:GetQuestStatus(id)
-	if ns.PerfBlocks then
-		ns.PerfBlocks.dataQuery = ns.PerfBlocks.dataQuery + (debugprofilestop() - blockStart)
+function Utils.GetQuestItem(item)
+	if item.preyCacheMax and ns.PreyTracker then
+		return CachedResult("prey-cache:" .. tostring(item.id), function()
+			local complete, progress, max, active = ns.PreyTracker:GetCacheStatus(item.id, item.preyCacheMax)
+			return complete, progress, max, active, false, active and item.id or nil
+		end)
 	end
-
-	if not status then
-		return false, 0, 0, false, false, nil
-	end
-
-	return status.isCompleted, status.progress, status.max, status.isOnQuest, status.isPercent, status.resolvedId
+	return Utils.GetQuest(item.id)
 end
 
 --------------------------------------------------------------------------------
@@ -345,10 +325,12 @@ function Utils.GetQuestCount(ids, targetCount)
 end
 
 function Utils.GetPrey(item)
-	if not ns.PreyTracker then
-		return false, 0, item.maxCount or 0, true, 0
-	end
-	return ns.PreyTracker:GetStatus(item.maxCount, item.questId, item.cacheMax)
+	return CachedResult("prey:" .. ns.Data:GetItemConfigKey(item), function()
+		if not ns.PreyTracker then
+			return false, 0, item.maxCount or 0, true, 0
+		end
+		return ns.PreyTracker:GetStatus(item.maxCount, item.questId, item.cacheMax)
+	end)
 end
 
 --------------------------------------------------------------------------------
@@ -360,18 +342,17 @@ end
 -- @returns: count, name, iconFileID
 --------------------------------------------------------------------------------
 function Utils.GetItem(id)
-	local blockStart = debugprofilestop()
-
-	local status = ns.Bridge:GetItemStatus(id)
-	if ns.PerfBlocks then
-		ns.PerfBlocks.dataQuery = ns.PerfBlocks.dataQuery + (debugprofilestop() - blockStart)
-	end
-
-	if not status then
-		return 0, "Unknown", nil
-	end
-
-	return status.amount, status.name, status.iconFileID
+	return CachedResult("item:" .. tostring(id), function()
+		local blockStart = debugprofilestop()
+		local status = ns.Bridge:GetItemStatus(id)
+		if ns.PerfBlocks then
+			ns.PerfBlocks.dataQuery = ns.PerfBlocks.dataQuery + (debugprofilestop() - blockStart)
+		end
+		if not status then
+			return 0, L["Unknown"], nil
+		end
+		return status.amount, status.name, status.iconFileID
+	end)
 end
 
 function Utils.GetVault(categoryID)
@@ -389,17 +370,17 @@ function Utils.GetVault(categoryID)
 end
 
 function Utils.GetVaultDetails(categoryID)
-	local blockStart = debugprofilestop()
-
-	local details = ns.Bridge:GetVaultDetails(categoryID)
-	if ns.PerfBlocks then
-		ns.PerfBlocks.vaultLookup = ns.PerfBlocks.vaultLookup + (debugprofilestop() - blockStart)
-	end
-
-	if not details then
-		return { slots = {}, history = {} }
-	end
-	return details
+	return CachedResult("vault-details:" .. tostring(categoryID), function()
+		local blockStart = debugprofilestop()
+		local details = ns.Bridge:GetVaultDetails(categoryID)
+		if ns.PerfBlocks then
+			ns.PerfBlocks.vaultLookup = ns.PerfBlocks.vaultLookup + (debugprofilestop() - blockStart)
+		end
+		if not details then
+			return { slots = {}, history = {} }
+		end
+		return details
+	end)
 end
 
 function Utils.SortItems(items)
@@ -429,11 +410,6 @@ function UI:RefreshRows()
 		ns.PerfBlocks.vaultLookup = 0
 	end
 
-	if self.rows then
-		for _, row in ipairs(self.rows) do
-			row:Hide()
-		end
-	end
 	self:RenderRows()
 
 	-- Record total UI refresh time
@@ -442,7 +418,26 @@ function UI:RefreshRows()
 	end
 end
 
+function UI:QueueRefresh()
+	if self.refreshPending then
+		return
+	end
+	self.refreshPending = true
+	local function Refresh()
+		self.refreshPending = false
+		if self.frame and self.frame:IsShown() then
+			self:RefreshRows()
+		end
+	end
+	if C_Timer and C_Timer.After then
+		C_Timer.After(0.05, Refresh)
+	else
+		Refresh()
+	end
+end
+
 function UI:RenderRows()
+	self.refreshCache = {}
 	local sections = ns:GetCurrentSeasonData()
 	local cfg = ns.Config
 	self.rows = self.rows or {}
@@ -453,6 +448,7 @@ function UI:RenderRows()
 	local maxLabelWidth = 0
 	local maxValueWidth = 0
 	local totalHeight = 20 -- Padding
+	local visibilityNow = time()
 
 	if not self.measureFS then
 		self.measureFS = self.content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
@@ -462,7 +458,7 @@ function UI:RenderRows()
 
 	for _, section in ipairs(sections) do
 		-- Skip time-gated sections that shouldn't be visible yet
-		if not IsSectionVisible(section, cfg) then
+		if not ns.Data:IsSectionVisible(section, cfg, visibilityNow) then
 			-- Section is time-gated out - skip entirely
 		else
 			-- A. Process Items first to check if any are visible
@@ -470,14 +466,11 @@ function UI:RenderRows()
 			local items = {}
 			for _, item in ipairs(section.items) do
 				-- Robust ID check: if table, use first ID as key
-				local checkID = item.id
-				if item.ids then
-					checkID = item.ids[1] or item.label
-				elseif type(checkID) == "table" then
-					checkID = checkID[1]
-				end
+				local configKey = ns.Data:GetItemConfigKey(item)
+				local legacyKey = ns.Data:GetLegacyItemConfigKey(item)
+				local isHidden = cfg.hiddenItems[configKey] or (legacyKey ~= nil and cfg.hiddenItems[legacyKey])
 
-				if not (checkID and cfg.hiddenItems[checkID]) then
+				if not isHidden then
 					table.insert(items, item)
 				end
 			end
@@ -521,18 +514,14 @@ function UI:RenderRows()
 						local textWidth = 0
 						local valueWidth = 0
 
-						if item.type == "vault_row" then
+						if item.type == "vault_visual" then
 							self.measureFS:SetText(item.label)
 							textWidth = self.measureFS:GetStringWidth()
-
-							local done, max = ns.Utils.GetVault(item.id)
-							self.measureFS:SetText(done .. " / " .. max)
-							valueWidth = self.measureFS:GetStringWidth()
 						elseif item.type == "quest" then
 							self.measureFS:SetText(item.label)
 							textWidth = self.measureFS:GetStringWidth()
 
-							local _, prog, max, _, isPercent = ns.Utils.GetQuest(item.id)
+							local _, prog, max, _, isPercent = ns.Utils.GetQuestItem(item)
 							if max >= 1 then
 								if isPercent then
 									self.measureFS:SetText(prog .. "%")
@@ -545,9 +534,9 @@ function UI:RenderRows()
 							self.measureFS:SetText(item.label)
 							textWidth = self.measureFS:GetStringWidth()
 
-							local _, prog, max = ns.Utils.GetPrey(item)
+							local _, prog, max, isPartial = ns.Utils.GetPrey(item)
 							if max >= 1 then
-								self.measureFS:SetText(prog .. " / " .. max)
+								self.measureFS:SetText(prog .. (isPartial and "+ / " or " / ") .. max)
 								valueWidth = self.measureFS:GetStringWidth()
 							end
 						elseif item.type == "currency" or item.type == "currency_cap" then
@@ -560,6 +549,12 @@ function UI:RenderRows()
 								valText = amt .. " / " .. max
 							end
 							self.measureFS:SetText(valText)
+							valueWidth = self.measureFS:GetStringWidth()
+						elseif item.type == "item" then
+							local count, name = ns.Utils.GetItem(item.id)
+							self.measureFS:SetText(item.label or name)
+							textWidth = self.measureFS:GetStringWidth()
+							self.measureFS:SetText(count)
 							valueWidth = self.measureFS:GetStringWidth()
 						end
 
@@ -623,6 +618,7 @@ function UI:RenderRows()
 	for i = poolIndex, #self.rows do
 		self.rows[i]:Hide()
 	end
+	self.refreshCache = nil
 end
 
 function UI:CreateRowFrame()
@@ -646,18 +642,18 @@ function UI:CreateRowFrame()
 		-- Quests: No tooltip, click to open quest log
 		if self.type == "quest" then
 			GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-			GameTooltip:SetText(self.label or "Quest", 1, 1, 1)
+			GameTooltip:SetText(self.label or L["Quest"], 1, 1, 1)
 
 			-- Show hint tooltip only if player has the quest
 			if self.isOnQuest then
-				GameTooltip:AddLine("Left-click: Open Quest Log", 0.7, 0.7, 0.7)
+				GameTooltip:AddLine(L["Left-click: Open Quest Log"], 0.7, 0.7, 0.7)
 			elseif self.coords and self.coords.mapID then
-				GameTooltip:AddLine("Left-click: Set Map Marker", 0.7, 0.7, 0.7)
+				GameTooltip:AddLine(L["Left-click: Set Map Marker"], 0.7, 0.7, 0.7)
 
 				-- Add zone name if available
 				local mapInfo = C_Map.GetMapInfo(self.coords.mapID)
 				if mapInfo and mapInfo.name then
-					GameTooltip:AddLine("Location: " .. mapInfo.name, 0.5, 0.5, 0.8)
+					GameTooltip:AddLine(L["Location: %s"]:format(mapInfo.name), 0.5, 0.5, 0.8)
 				end
 			end
 			GameTooltip:Show()
@@ -666,15 +662,15 @@ function UI:CreateRowFrame()
 
 		if self.type == "prey" then
 			GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-			GameTooltip:SetText(self.label or "Prey", 1, 1, 1)
+			GameTooltip:SetText(self.label or L["Prey"], 1, 1, 1)
 			if self.progress and self.max then
-				GameTooltip:AddLine(string.format("Completed this week: %d / %d", self.progress, self.max), 0.8, 0.8, 0.8)
+				GameTooltip:AddLine(L["Completed this week: %d / %d"]:format(self.progress, self.max), 0.8, 0.8, 0.8)
 			end
 			if self.activeCount and self.activeCount > 0 then
-				GameTooltip:AddLine(string.format("Active hunts: %d", self.activeCount), 0.7, 0.7, 0.7)
+				GameTooltip:AddLine(L["Active hunts: %d"]:format(self.activeCount), 0.7, 0.7, 0.7)
 			end
 			if self.partial then
-				GameTooltip:AddLine("Lower bound: tracking began during this reset.", 1, 0.82, 0)
+				GameTooltip:AddLine(L["Lower bound: tracking began during this reset."], 1, 0.82, 0)
 			end
 			GameTooltip:Show()
 			return
@@ -684,20 +680,20 @@ function UI:CreateRowFrame()
 		if self.type == "currency" and self.id then
 			GameTooltip:SetCurrencyByID(self.id)
 		elseif self.type == "vault" and self.details then
-			GameTooltip:SetText(self.label or "Vault", 1, 1, 1)
+			GameTooltip:SetText(self.label or L["Vault"], 1, 1, 1)
 			if self.details and self.details.slots then
 				for i, info in ipairs(self.details.slots) do
 					local color = info.completed and { 0, 1, 0 } or { 0.5, 0.5, 0.5 }
-					local status = info.completed and ("Level " .. info.level) or "Incomplete"
-					GameTooltip:AddDoubleLine("Slot " .. i, status, 1, 1, 1, color[1], color[2], color[3])
+					local status = info.completed and L["Level %s"]:format(info.level) or L["Incomplete"]
+					GameTooltip:AddDoubleLine(L["Slot %d"]:format(i), status, 1, 1, 1, color[1], color[2], color[3])
 				end
 			end
 
 			if self.details and self.details.history and #self.details.history > 0 then
 				GameTooltip:AddLine(" ")
-				local header = "Runs this Week:"
+				local header = L["Runs this Week:"]
 				if self.id == 3 then
-					header = "Bosses Defeated:"
+					header = L["Bosses Defeated:"]
 				end -- Raid
 				GameTooltip:AddLine(header, 1, 0.82, 0)
 				for _, run in ipairs(self.details.history) do
@@ -705,7 +701,7 @@ function UI:CreateRowFrame()
 					local _color = run.completed and { 0, 1, 0 } or { 0.5, 0.5, 0.5 }
 					local rightText = run.level
 					if not run.completed then
-						rightText = rightText .. " (Failed)"
+						rightText = rightText .. L[" (Failed)"]
 					end
 					GameTooltip:AddDoubleLine(run.name, rightText, 1, 1, 1, 1, 1, 1)
 				end
@@ -733,7 +729,7 @@ function UI:CreateRowFrame()
 				local point = UiMapPoint.CreateFromCoordinates(self.coords.mapID, self.coords.x, self.coords.y)
 				C_Map.SetUserWaypoint(point)
 				C_SuperTrack.SetSuperTrackedUserWaypoint(true)
-				print(string.format("|cff00ff00[Weekly]|r Set map marker for: %s", self.label or "Quest"))
+				print(L["|cff00ff00[Weekly]|r Set map marker for: %s"]:format(self.label or L["Quest"]))
 			end
 		end
 	end)
@@ -771,8 +767,28 @@ function UI:UpdateRow(row, data, _ctx)
 	local cfg = ns.Config
 	row.label:ClearAllPoints()
 	row.value:ClearAllPoints()
+	row.check:ClearAllPoints()
+	row.value:Show()
+	row.value:SetTextColor(1, 1, 1)
 	row.check:Hide()
 	row:SetAlpha(1.0)
+	for _, slot in ipairs(row.slots) do
+		slot:Hide()
+		slot.check:Hide()
+	end
+	row.iconBtn.details = nil
+	row.iconBtn.coords = nil
+	row.iconBtn.isOnQuest = false
+	row.iconBtn.type = nil
+	row.iconBtn.id = nil
+	row.iconBtn.label = nil
+	row.iconBtn.progress = nil
+	row.iconBtn.max = nil
+	row.iconBtn.activeCount = nil
+	row.iconBtn.partial = nil
+	row.iconBtn:ClearAllPoints()
+	row.iconBtn:Hide()
+	row.iconBtn:EnableMouse(not cfg.locked)
 
 	-- Reset header click state (prevents pooled rows from capturing clicks)
 	row:EnableMouse(false)
@@ -803,11 +819,13 @@ function UI:UpdateRow(row, data, _ctx)
 		row.value:SetText("")
 
 		-- Make header clickable for collapse toggle (set fresh each render)
-		row:EnableMouse(true)
+		row:EnableMouse(not cfg.locked)
 		local sectionTitle = data.text -- Capture for closure
-		row:SetScript("OnMouseDown", function()
-			UI:ToggleSection(sectionTitle)
-		end)
+		if not cfg.locked then
+			row:SetScript("OnMouseDown", function()
+				UI:ToggleSection(sectionTitle)
+			end)
+		end
 	elseif data.type == "currency_cap" or data.type == "currency" then
 		local height = cfg.itemFontSize + 6
 		row:SetHeight(height)
@@ -1024,13 +1042,7 @@ function UI:UpdateRow(row, data, _ctx)
 		row.value:SetFont(fontPath, cfg.itemFontSize)
 
 		local isComplete, prog, max, isOnQuest, isPercent, resolvedId
-		if data.preyCacheMax and ns.PreyTracker then
-			isComplete, prog, max, isOnQuest = ns.PreyTracker:GetCacheStatus(data.id, data.preyCacheMax)
-			isPercent = false
-			resolvedId = isOnQuest and data.id or nil
-		else
-			isComplete, prog, max, isOnQuest, isPercent, resolvedId = ns.Utils.GetQuest(data.id)
-		end
+		isComplete, prog, max, isOnQuest, isPercent, resolvedId = ns.Utils.GetQuestItem(data)
 
 		local isUnavailable = not isComplete and not isOnQuest
 		if isUnavailable then
@@ -1103,6 +1115,7 @@ function UI:Toggle()
 		ns.Config.visible = false
 	else
 		self.frame:Show()
+		self:RefreshRows()
 		ns.Config.visible = true
 	end
 end

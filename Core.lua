@@ -116,16 +116,16 @@ function Weekly:SlashHandler(msg)
 		end
 
 		-- Dump Vault Info
-		self:Printf("--- DEBUG VAULT (Raid) ---")
+		self:Printf(L["--- DEBUG VAULT (Raid) ---"])
 		local acts = C_WeeklyRewards.GetActivities(3) -- Raid
 		local tierID = nil
 
 		if acts then
-			self:Printf("Activities Found: " .. #acts)
+			self:Printf(L["Activities Found: %d"], #acts)
 			for i, act in ipairs(acts) do
 				self:Printf(
 					format(
-						"Slot %d: Tier %s, Level %s, Progress %s/%s",
+						L["Slot %d: Tier %s, Level %s, Progress %s/%s"],
 						i,
 						tostring(act.activityTierID),
 						tostring(act.level),
@@ -138,53 +138,53 @@ function Weekly:SlashHandler(msg)
 				end
 			end
 		else
-			self:Printf("No Raid Activities found.")
+			self:Printf(L["No Raid Activities found."])
 		end
 
 		if tierID then
-			self:Printf("Using Tier ID: " .. tierID)
+			self:Printf(L["Using Tier ID: %s"], tierID)
 			local i = 1
 			while true do
 				local encID = C_WeeklyRewards.GetActivityEncounterInfo(tierID, i)
 				if not encID then
-					self:Printf("Index " .. i .. ": nil (End)")
+					self:Printf(L["Index %d: nil (End)"], i)
 					break
 				end
 				if encID == 0 then
-					self:Printf("Index " .. i .. ": 0 (End?)")
+					self:Printf(L["Index %d: 0 (End?)"], i)
 					break
 				end
 
 				local name = EJ_GetEncounterInfo(encID)
-				self:Printf("Index " .. i .. ": EncID " .. encID .. " (" .. (name or "Unknown") .. ")")
+				self:Printf(L["Index %d: EncID %d (%s)"], i, encID, name or L["Unknown"])
 				i = i + 1
 				if i > 20 then
 					break
 				end -- Safety
 			end
 		end
-		self:Printf("--- END DEBUG VAULT ---")
+		self:Printf(L["--- END DEBUG VAULT ---"])
 
-		self:Printf("--- DEBUG LOCKOUTS ---")
+		self:Printf(L["--- DEBUG LOCKOUTS ---"])
 		-- Check Saved Instances (Lockouts)
 		local num = GetNumSavedInstances()
-		self:Printf("Saved Instances: " .. num)
+		self:Printf(L["Saved Instances: %d"], num)
 		for i = 1, num do
 			local name, _id, _reset, _diff, locked, _extended, _instanceIDMostSig, isRaid, _maxPlayers, diffName, numEncounters, _encounterProgress =
 				GetSavedInstanceInfo(i)
 			if isRaid then
-				self:Printf(format("Raid %d: %s (%s) - Locked: %s", i, name, diffName, tostring(locked)))
+				self:Printf(L["Raid %d: %s (%s) - Locked: %s"], i, name, diffName, tostring(locked))
 				if locked then
 					for j = 1, numEncounters do
 						local bossName, _, isKilled = GetSavedInstanceEncounterInfo(i, j)
 						if isKilled then
-							self:Printf(format("  - %s (Killed)", bossName))
+							self:Printf(L["  - %s (Killed)"], bossName)
 						end
 					end
 				end
 			end
 		end
-		self:Printf("--- END DEBUG LOCKOUTS ---")
+		self:Printf(L["--- END DEBUG LOCKOUTS ---"])
 	else
 		self:Printf(L["Toggling UI..."])
 		ns.UI:Toggle()
@@ -197,7 +197,7 @@ function Weekly:QUEST_TURNED_IN(_event, questID, _xp, _money)
 	end
 end
 
-function Weekly:QUEST_ACCEPTED(_event, questID)
+function Weekly:QUEST_ACCEPTED(_event, _questLogIndex, questID)
 	if type(ns.Config.debug) == "table" and ns.Config.debug.enabled then
 		self:Printf(L["Quest Accepted: ID %s"]:format(questID))
 	end

@@ -334,6 +334,19 @@ describe("Tracker.GetVaultStatus", function()
 		assert.is_false(result.data.slots[2].completed)
 	end)
 
+	it("orders vault slots by their activity index", function()
+		local result = Tracker.GetVaultStatus({
+			activities = {
+				{ index = 2, threshold = 4, progress = 2, level = 0 },
+				{ index = 1, threshold = 1, progress = 1, level = 450 },
+			},
+		})
+
+		assert.is_true(result.success)
+		assert.equals(1, result.data.slots[1].index)
+		assert.equals(2, result.data.slots[2].index)
+	end)
+
 	it("handles empty activities", function()
 		local result = Tracker.GetVaultStatus({
 			activities = {},
@@ -466,5 +479,24 @@ describe("Tracker.SortTrackerItems", function()
 		assert.equals("Apple Quest", result.data.items[1].label)
 		assert.equals("Middle Quest", result.data.items[2].label)
 		assert.equals("Zebra Quest", result.data.items[3].label)
+	end)
+
+	it("queries completion only once per item while sorting", function()
+		local calls = 0
+		local result = Tracker.SortTrackerItems({
+			items = {
+				{ type = "quest", id = 1, label = "C" },
+				{ type = "quest", id = 2, label = "B" },
+				{ type = "quest", id = 3, label = "A" },
+			},
+			sortCompletedBottom = true,
+			getQuestStatus = function(id)
+				calls = calls + 1
+				return { isCompleted = id == 1 }
+			end,
+		})
+
+		assert.is_true(result.success)
+		assert.equals(3, calls)
 	end)
 end)

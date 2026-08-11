@@ -290,7 +290,7 @@ function Discovery:Initialize()
 		end,
 
 		-- Quest events
-		QUEST_ACCEPTED = function(_t, _event, questID)
+		QUEST_ACCEPTED = function(_t, _event, _questLogIndex, questID)
 			self:OnQuestEvent(questID, "accepted")
 		end,
 		QUEST_TURNED_IN = function(_t, _event, questID, _xpReward, _moneyReward)

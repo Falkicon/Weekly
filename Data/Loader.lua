@@ -4,6 +4,61 @@ local _, ns = ...
 ns.Data = ns.Data or {}
 ns.Data.Registry = {}
 
+local parsedDates = {}
+
+local function ParseDate(dateStr)
+	if not dateStr then
+		return nil
+	end
+	if parsedDates[dateStr] ~= nil then
+		return parsedDates[dateStr] or nil
+	end
+
+	local y, m, d = dateStr:match("(%d+)-(%d+)-(%d+)")
+	if y and m and d then
+		parsedDates[dateStr] = time({ year = tonumber(y), month = tonumber(m), day = tonumber(d), hour = 0 })
+		return parsedDates[dateStr]
+	end
+	parsedDates[dateStr] = false
+	return nil
+end
+
+function ns.Data:IsSectionVisible(section, cfg, now)
+	if cfg and type(cfg.debug) == "table" and cfg.debug.ignoreTimeGates then
+		return true
+	end
+	now = now or time()
+	local showTime = ParseDate(section.showAfter)
+	local hideTime = ParseDate(section.hideAfter)
+	return not (showTime and now < showTime) and not (hideTime and now >= hideTime)
+end
+
+function ns.Data:GetItemConfigKey(item)
+	if item.key then
+		return tostring(item.key)
+	end
+	local id = item.id
+	if type(id) == "table" then
+		id = id[1]
+	elseif id == nil and item.ids then
+		id = item.ids[1]
+	end
+	if id ~= nil and id ~= 0 then
+		return string.format("%s:%s", item.type or "item", tostring(id))
+	end
+	return string.format("%s:%s", item.type or "item", item.label or "unknown")
+end
+
+function ns.Data:GetLegacyItemConfigKey(item)
+	local id = item.id
+	if type(id) == "table" then
+		id = id[1]
+	elseif id == nil and item.ids then
+		id = item.ids[1]
+	end
+	return id
+end
+
 --- Register a new season dataset
 -- @param expansionID number: Expansion ID (e.g. 11 for TWW)
 -- @param seasonID number: Season ID (e.g. 3)
@@ -15,7 +70,7 @@ function ns.Data:Register(expansionID, seasonID, data)
 	self.Registry[expansionID][seasonID] = data
 end
 
---- Get the recommended expansion and season based on client version/date
+--- Get the recommended expansion and season based on client version
 function ns.Data:GetRecommendedSeason()
 	local _, _, _, tocversion = GetBuildInfo()
 
@@ -86,7 +141,12 @@ function ns:GetCurrentSeasonData()
 			exp = autoExp
 		end
 		if sea == "auto" then
-			sea = autoSea
+			if exp == autoExp then
+				sea = autoSea
+			else
+				local seasons = self.Data:GetSeasons(exp)
+				sea = seasons[#seasons]
+			end
 		end
 	end
 

@@ -11,6 +11,7 @@ ns.ConfigDefaults = {
 			partial = true,
 			nextReset = 0,
 			activeQuestID = 0,
+			lastActiveQuestID = 0,
 			lastTurnInQuestID = 0,
 			lastTurnInAt = 0,
 		},
@@ -42,6 +43,7 @@ ns.ConfigDefaults = {
 			enabled = true, -- Enable journal tracking
 			showNotifications = false, -- Show chat message when item logged
 			weekStart = 0, -- Unix timestamp of current week start (for reset detection)
+			nextReset = 0, -- Blizzard-provided weekly reset boundary
 			categories = {}, -- { [category] = { [id] = itemData, ... }, ... }
 			gathering = {}, -- { [itemID] = { name, icon, count, expansion, ... }, ... }
 			itemCount = 0, -- Total collectibles logged this week
@@ -85,6 +87,13 @@ function ns:LoadConfig()
 	self.db.RegisterCallback(self, "OnProfileChanged", "RefreshConfig")
 	self.db.RegisterCallback(self, "OnProfileCopied", "RefreshConfig")
 	self.db.RegisterCallback(self, "OnProfileReset", "RefreshConfig")
+	self.db.RegisterCallback(self, "OnProfileShutdown", "PrepareProfileChange")
+end
+
+function ns:PrepareProfileChange()
+	if self.Journal then
+		self.Journal:Shutdown()
+	end
 end
 
 function ns:RefreshConfig()
@@ -97,12 +106,21 @@ function ns:RefreshConfig()
 		self.UI:RestorePosition()
 	end
 	-- Refresh Journal if active
-	if self.Journal and self.Journal.tracker then
-		-- Re-initialize with new profile settings
+	if self.Journal then
+		-- Profile copy/reset callbacks do not fire OnProfileShutdown, so discard
+		-- any tracker still bound to the previous profile before reloading.
+		self.Journal:ReloadForProfile()
 		if self.Config.journal and self.Config.journal.enabled then
 			self.Journal:Initialize()
 		else
 			self.Journal:Shutdown()
 		end
+	end
+	if self.JournalUI and self.JournalUI.frame then
+		self.JournalUI:RestorePosition()
+		self.JournalUI:SelectTab(self.Config.journal.selectedTab or "dashboard")
+	end
+	if self.ConfigUI then
+		self.ConfigUI:RefreshTrackingOptions()
 	end
 end

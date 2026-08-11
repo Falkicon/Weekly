@@ -35,6 +35,7 @@ local function loadAddonFile(path)
 end
 
 -- Load journal actions
+loadAddonFile("Core/WeeklyReset.lua")
 loadAddonFile("Core/Actions/journal.lua")
 local Journal = _G.ns.Actions.Journal
 
@@ -89,6 +90,15 @@ describe("Journal.ParseLootMessage", function()
 
 		assert.is_true(result.success)
 		assert.equals(99999, result.data.itemID)
+	end)
+
+	it("does not read a quantity-like item name as the stack count", function()
+		local result = Journal.ParseLootMessage({
+			message = "You receive loot: |cff1eff00|Hitem:54321:0:0:0:0:0:0:0:0|h[Formula x20]|h|r.",
+		})
+
+		assert.is_true(result.success)
+		assert.equals(1, result.data.quantity)
 	end)
 end)
 
@@ -175,41 +185,37 @@ end)
 --------------------------------------------------------------------------------
 
 describe("Journal.ShouldResetJournal", function()
-	it("detects reset when week start is newer", function()
-		-- Simulate: savedWeekStart = last week, current = this week
+	it("detects a rolled reset boundary", function()
 		local result = Journal.ShouldResetJournal({
 			currentServerTime = 1700000000,
-			savedWeekStart = 1699300000, -- Older
-			resetDayOfWeek = 3, -- Tuesday
-			resetHour = 7,
-			currentDate = {
-				weekday = 4, -- Wednesday
-				hour = 10,
-				minute = 30,
-			},
+			savedNextReset = 1699900000,
+			observedNextReset = 1700500000,
 		})
 
 		assert.is_true(result.success)
 		assert.is_true(result.data.shouldReset)
 	end)
 
-	it("does not reset within same week", function()
-		-- Calculate a weekStart that would be current
-		local currentTime = 1700000000
+	it("does not reset while the boundary is unchanged", function()
 		local result = Journal.ShouldResetJournal({
-			currentServerTime = currentTime,
-			savedWeekStart = currentTime - 1000, -- Very recent
-			resetDayOfWeek = 3,
-			resetHour = 7,
-			currentDate = {
-				weekday = 3, -- Tuesday (reset day)
-				hour = 8, -- After reset
-				minute = 0,
-			},
+			currentServerTime = 1700000000,
+			savedNextReset = 1700500000,
+			observedNextReset = 1700500000,
 		})
 
 		assert.is_true(result.success)
-		-- The calculation is complex, but it should handle same-week properly
+		assert.is_false(result.data.shouldReset)
+	end)
+
+	it("establishes the first boundary without clearing", function()
+		local result = Journal.ShouldResetJournal({
+			currentServerTime = 1700000000,
+			savedNextReset = 0,
+			observedNextReset = 1700500000,
+		})
+
+		assert.is_true(result.success)
+		assert.is_false(result.data.shouldReset)
 	end)
 
 	it("returns error for missing context", function()
@@ -219,17 +225,15 @@ describe("Journal.ShouldResetJournal", function()
 		assert.equals("INVALID_CONTEXT", result.error.code)
 	end)
 
-	it("returns error for missing date info", function()
+	it("returns error when the reset boundary is unavailable", function()
 		local result = Journal.ShouldResetJournal({
 			currentServerTime = 1700000000,
-			savedWeekStart = 0,
-			resetDayOfWeek = 3,
-			resetHour = 7,
-			currentDate = nil,
+			savedNextReset = 0,
+			observedNextReset = 0,
 		})
 
 		assert.is_false(result.success)
-		assert.equals("MISSING_DATE", result.error.code)
+		assert.equals("MISSING_RESET_BOUNDARY", result.error.code)
 	end)
 end)
 

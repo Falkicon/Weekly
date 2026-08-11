@@ -210,6 +210,13 @@ function Context:BuildSortContext(items)
 			local result = Actions.GetCurrencyStatus(currencyContext)
 			return result.success and result.data or nil
 		end,
+		getPreyStatus = function(item)
+			if not ns.PreyTracker then
+				return nil
+			end
+			local isCompleted = ns.PreyTracker:GetStatus(item.maxCount, item.questId, item.cacheMax)
+			return { isCompleted = isCompleted }
+		end,
 	}
 end
 
@@ -219,19 +226,13 @@ end
 
 ---@return JournalResetContext
 function Context:BuildJournalResetContext()
-	local serverTime = C_DateAndTime.GetServerTimeLocal()
-	local date = C_DateAndTime.GetCurrentCalendarTime()
+	local serverTime = GetServerTime()
+	local secondsUntilReset = C_DateAndTime.GetSecondsUntilWeeklyReset()
 
 	return {
 		currentServerTime = serverTime,
-		savedWeekStart = ns.Config and ns.Config.journal and ns.Config.journal.weekStart or 0,
-		resetDayOfWeek = 3, -- Tuesday
-		resetHour = 7, -- 7 AM (varies by region, but close enough)
-		currentDate = {
-			weekday = date.weekday,
-			hour = date.hour,
-			minute = date.minute,
-		},
+		savedNextReset = ns.Config and ns.Config.journal and ns.Config.journal.nextReset or 0,
+		observedNextReset = secondsUntilReset and secondsUntilReset > 0 and (serverTime + secondsUntilReset) or 0,
 	}
 end
 

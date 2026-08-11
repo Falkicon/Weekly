@@ -11,7 +11,7 @@ local L = LibStub("AceLocale-3.0"):GetLocale("Weekly")
 local function GetLayout(name, fallback)
 	if FenUI and FenUI.GetLayout then
 		local value = FenUI:GetLayout(name)
-		if value > 0 then
+		if type(value) == "number" and value > 0 then
 			return value
 		end
 	end
@@ -30,7 +30,10 @@ local PANEL_PADDING = GetLayout("marginPanel", 24)
 -- Uses GetColorTableRGB which returns {r, g, b} for safe use with unpack()
 local function GetColor(token, fallback)
 	if FenUI and FenUI.GetColorTableRGB then
-		return FenUI:GetColorTableRGB(token)
+		local color = FenUI:GetColorTableRGB(token)
+		if type(color) == "table" then
+			return color
+		end
 	end
 	return fallback
 end
@@ -174,8 +177,10 @@ function JournalUI:CreateWindow()
 		frame.scrollFrame:SetScrollChild(frame.scrollChild)
 	end
 
-	-- Footer Layout (refactored to use a systematic layout component)
-	-- This handles the left-aligned buttons and right-aligned text in a single robust unit.
+	-- Footer layout. Both paths create the same controls so the no-FenUI
+	-- fallback remains fully functional.
+	local buttonParent
+	local labelParent
 	if FenUI and FenUI.CreateLayout then
 		local footerH = GetLayout("footerHeight", 32)
 
@@ -200,53 +205,37 @@ function JournalUI:CreateWindow()
 			self.footerLayout:SetHeight(footerH)
 		end
 
-		-- LEFT CELL: Buttons
-		local leftCell = self.footerLayout:GetCell(1)
-
-		-- Clear Tab button
-		frame.clearTabBtn = CreateFrame("Button", nil, leftCell, "UIPanelButtonTemplate")
-		frame.clearTabBtn:SetSize(90, 22)
-		frame.clearTabBtn:SetPoint("LEFT", 0, 0)
-		frame.clearTabBtn:SetText(L["Clear Tab"])
-		frame.clearTabBtn:SetScript("OnClick", function()
-			self:OnClearTabClicked()
-		end)
-
-		-- Clear All button
-		frame.clearAllBtn = CreateFrame("Button", nil, leftCell, "UIPanelButtonTemplate")
-		frame.clearAllBtn:SetSize(90, 22)
-		frame.clearAllBtn:SetPoint("LEFT", frame.clearTabBtn, "RIGHT", 10, 0)
-		frame.clearAllBtn:SetText(L["Clear All"])
-		frame.clearAllBtn:SetScript("OnClick", function()
-			self:OnClearAllClicked()
-		end)
-
-		-- RIGHT CELL: Week Label
-		local rightCell = self.footerLayout:GetCell(2)
-		frame.weekLabel = rightCell:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-		frame.weekLabel:SetPoint("RIGHT", 0, 0) -- Right-justified in the right cell
-		frame.weekLabel:SetTextColor(unpack(C_GRAY))
-	elseif FenUI and FenUI.CreateToolbar then
-		-- (Existing Toolbar fallback - kept just in case but we prefer the new layout)
-		self.footerToolbar = FenUI:CreateToolbar(frame, {
-			height = FOOTER_HEIGHT - 10,
-			padding = { left = 4, right = 12 },
-			gap = 8,
-		})
-		local footerX = PANEL_PADDING + 4
-		local footerY = 22
-		self.footerToolbar:SetPoint("BOTTOMLEFT", footerX, footerY)
-		self.footerToolbar:SetPoint("BOTTOMRIGHT", -footerX, footerY)
-		-- ... rest of toolbar code ...
+		buttonParent = self.footerLayout:GetCell(1)
+		labelParent = self.footerLayout:GetCell(2)
 	else
-		-- Manual fallback
-		local footerPadding = PANEL_PADDING + 4
+		local footerPadding = PANEL_PADDING
 		frame.footer = CreateFrame("Frame", nil, frame)
-		frame.footer:SetPoint("BOTTOMLEFT", footerPadding, footerPadding)
-		frame.footer:SetPoint("BOTTOMRIGHT", -footerPadding, footerPadding)
-		frame.footer:SetHeight(FOOTER_HEIGHT - 10)
-		-- ... rest of manual fallback ...
+		frame.footer:SetPoint("BOTTOMLEFT", footerPadding, 8)
+		frame.footer:SetPoint("BOTTOMRIGHT", -footerPadding, 8)
+		frame.footer:SetHeight(FOOTER_HEIGHT)
+		buttonParent = frame.footer
+		labelParent = frame.footer
 	end
+
+	frame.clearTabBtn = CreateFrame("Button", nil, buttonParent, "UIPanelButtonTemplate")
+	frame.clearTabBtn:SetSize(90, 22)
+	frame.clearTabBtn:SetPoint("LEFT", 0, 0)
+	frame.clearTabBtn:SetText(L["Clear Tab"])
+	frame.clearTabBtn:SetScript("OnClick", function()
+		self:OnClearTabClicked()
+	end)
+
+	frame.clearAllBtn = CreateFrame("Button", nil, buttonParent, "UIPanelButtonTemplate")
+	frame.clearAllBtn:SetSize(90, 22)
+	frame.clearAllBtn:SetPoint("LEFT", frame.clearTabBtn, "RIGHT", 10, 0)
+	frame.clearAllBtn:SetText(L["Clear All"])
+	frame.clearAllBtn:SetScript("OnClick", function()
+		self:OnClearAllClicked()
+	end)
+
+	frame.weekLabel = labelParent:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+	frame.weekLabel:SetPoint("RIGHT", 0, 0)
+	frame.weekLabel:SetTextColor(unpack(C_GRAY))
 
 	frame:Hide()
 	self.frame = frame
@@ -263,7 +252,7 @@ function JournalUI:CreateWindow()
 				row:GetCell(1):SetIcon(item.data and item.data.icon or "Interface\\Icons\\INV_Misc_QuestionMark")
 
 				-- Name
-				local name = item.data and item.data.name or ("ID: " .. (item.id or "unknown"))
+				local name = item.data and item.data.name or L["ID: %s"]:format(item.id or L["Unknown"])
 				row:GetCell(2):SetText(name)
 
 				-- Extra (timestamp)
@@ -275,7 +264,7 @@ function JournalUI:CreateWindow()
 				row.tooltipFunc = function()
 					GameTooltip:SetText(name, unpack(C_GOLD))
 					if item.category == "achievement" and item.data.points then
-						GameTooltip:AddLine(item.data.points .. " points", unpack(C_GOLD))
+						GameTooltip:AddLine(L["%d points"]:format(item.data.points), unpack(C_GOLD))
 					end
 					if item.data.zoneName then
 						GameTooltip:AddLine(L["Found in: %s"]:format(item.data.zoneName), unpack(C_GRAY))
@@ -642,12 +631,15 @@ function JournalUI:UpdateWeekLabel()
 		return
 	end
 
-	-- Get current week number (approximate)
-	local date = C_DateAndTime.GetCurrentCalendarTime()
-	local _weekNum = math.floor(date.monthDay / 7) + 1
-	local monthName = CALENDAR_FULLDATE_MONTH_NAMES[date.month] or date.month
-
-	self.frame.weekLabel:SetText(L["Week of %s %d"]:format(monthName, math.floor((date.monthDay - 1) / 7) * 7 + 1))
+	local weekStart = ns.Config.journal and ns.Config.journal.weekStart or 0
+	local calendar
+	if weekStart > 0 then
+		calendar = date("*t", weekStart)
+	else
+		calendar = C_DateAndTime.GetCurrentCalendarTime()
+	end
+	local monthName = CALENDAR_FULLDATE_MONTH_NAMES[calendar.month] or calendar.month
+	self.frame.weekLabel:SetText(L["Week of %s %d"]:format(monthName, calendar.day or calendar.monthDay))
 end
 
 --------------------------------------------------------------------------------
@@ -1106,8 +1098,8 @@ function JournalUI:Toggle()
 	if self.frame:IsShown() then
 		self.frame:Hide()
 	else
-		self:RefreshCurrentTab()
 		self.frame:Show()
+		self:RefreshCurrentTab()
 	end
 end
 
@@ -1116,8 +1108,8 @@ function JournalUI:Show()
 		self:CreateWindow()
 	end
 
-	self:RefreshCurrentTab()
 	self.frame:Show()
+	self:RefreshCurrentTab()
 end
 
 function JournalUI:Hide()

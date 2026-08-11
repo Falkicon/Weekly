@@ -33,7 +33,7 @@ local TRACKED_SUBCLASSES = {
 --------------------------------------------------------------------------------
 -- ShouldResetJournal
 -- Determines if the journal should be reset for a new week
--- Weekly reset is Tuesday at server reset time
+-- Uses Blizzard's observed regional reset boundary rather than a hardcoded day.
 --------------------------------------------------------------------------------
 
 ---@param context JournalResetContext
@@ -44,51 +44,26 @@ function Journal.ShouldResetJournal(context)
 	end
 
 	local currentServerTime = context.currentServerTime or 0
-	local savedWeekStart = context.savedWeekStart or 0
-	local resetDayOfWeek = context.resetDayOfWeek or 3 -- Tuesday
-	local resetHour = context.resetHour or 7 -- 7 AM (varies by region)
-
-	-- Calculate the timestamp for the start of the current reset week
-	-- This is a pure calculation based on the provided server time and date info
-	local date = context.currentDate
-	if not date then
-		return Result.error("MISSING_DATE", "Current date info is required")
+	local savedNextReset = context.savedNextReset or 0
+	local observedNextReset = context.observedNextReset or 0
+	if observedNextReset <= 0 then
+		return Result.error("MISSING_RESET_BOUNDARY", "Weekly reset boundary is unavailable")
+	end
+	if not ns.WeeklyReset then
+		return Result.error("MISSING_RESET_HELPER", "Weekly reset helper is unavailable")
 	end
 
-	-- Get current day of week (1=Sunday, 2=Monday, 3=Tuesday, etc.)
-	local weekday = date.weekday or 1
-
-	-- Calculate days since last Tuesday
-	local daysSinceReset
-	if weekday >= resetDayOfWeek then
-		daysSinceReset = weekday - resetDayOfWeek
-	else
-		daysSinceReset = weekday + (7 - resetDayOfWeek) -- Wrap around
-	end
-
-	-- Account for reset time (if we're before reset hour on reset day, go back a week)
-	local currentHour = date.hour or 0
-	if weekday == resetDayOfWeek and currentHour < resetHour then
-		daysSinceReset = 7
-	end
-
-	-- Calculate midnight of today
-	local secondsIntoDay = ((date.hour or 0) * 3600) + ((date.minute or 0) * 60)
-	local midnightToday = currentServerTime - secondsIntoDay
-
-	-- Go back to reset day midnight (plus reset hour offset)
-	local currentWeekStart = midnightToday - (daysSinceReset * 86400) + (resetHour * 3600)
-
-	-- Compare with saved week start
-	local shouldReset = currentWeekStart > savedWeekStart
+	local shouldReset = ns.WeeklyReset:HasBoundaryPassed(savedNextReset, currentServerTime, observedNextReset)
+	local currentWeekStart = observedNextReset - (7 * 24 * 60 * 60)
 
 	local reasoning = shouldReset and "Weekly reset occurred, journal should be cleared" or "Within same reset week"
 
 	return Result.success({
 		shouldReset = shouldReset,
 		newWeekStart = currentWeekStart,
+		newNextReset = observedNextReset,
 		reasoning = shouldReset
-				and string.format("New week detected (saved: %d, current: %d)", savedWeekStart, currentWeekStart)
+				and string.format("New reset boundary detected (saved: %d, observed: %d)", savedNextReset, observedNextReset)
 			or "Same week as previous session",
 	}, reasoning)
 end
@@ -159,8 +134,11 @@ function Journal.ParseLootMessage(context)
 		}, "No item link found in message")
 	end
 
-	-- Extract quantity (defaults to 1)
-	local quantity = message:match("x(%d+)") or 1
+	-- Extract quantity from the text after the item link so item names cannot
+	-- accidentally look like a stack suffix.
+	local _, linkEnd = message:find(itemLink, 1, true)
+	local suffix = linkEnd and message:sub(linkEnd + 1) or ""
+	local quantity = suffix:match("[xX](%d+)") or 1
 	quantity = tonumber(quantity) or 1
 
 	-- Extract item ID from link

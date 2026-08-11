@@ -1,4 +1,24 @@
 # Changelog
+
+## [1.3.9] - 2026-08-10
+
+### Added
+- Automated Lua linting and unit tests for pull requests and main-branch updates
+- Shared data factories and regional weekly-reset boundary handling
+
+### Changed
+- Tracked Items settings now rebuild immediately when the selected data source or time gates change
+- Tracker rendering now batches event refreshes and caches repeated API reads within a render
+- Journal gathering records only the current character's loot and retries uncached item data
+
+### Fixed
+- Journal data could cross profile boundaries or reset before the region's actual weekly reset
+- Reused HUD rows could retain vault slots, colors, values, or click targets from prior content
+- Journal windows could reopen with stale content, and the fallback footer omitted controls
+- Broker and minimap libraries were packaged but not loaded
+- Prey progress could retain an abandoned active hunt or truncate saved progress while viewing an older season
+- Placeholder and cross-type tracking entries could share configuration keys
+
 ## [1.3.4] - 2026-03-15
 
 ### Added

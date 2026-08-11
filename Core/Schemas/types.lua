@@ -36,6 +36,7 @@
 ---@class CurrencyStatusResult
 ---@field amount number Display amount (earned this week if weekly-capped, else total)
 ---@field max number Cap value (weekly max if available, else total max)
+---@field quantity number Total quantity held
 ---@field isCapped boolean Whether the cap has been reached
 ---@field displayText string Formatted display string (e.g., "500 / 500")
 ---@field name? string Currency name
@@ -102,6 +103,7 @@
 ---@field slots VaultSlot[] Individual slot details
 
 ---@class VaultSlot
+---@field index number Slot index
 ---@field threshold number Required count
 ---@field progress number Current progress
 ---@field level number Item level (0 if not unlocked)
@@ -121,13 +123,13 @@
 
 ---@class JournalResetContext
 ---@field currentServerTime number Current server time
----@field savedWeekStart? number Saved week start timestamp
----@field resetDayOfWeek number Day of week for reset (3 = Tuesday)
----@field resetHour number Hour of reset (typically 7 or 8 AM)
+---@field savedNextReset? number Previously observed reset boundary
+---@field observedNextReset number Current Blizzard-provided reset boundary
 
 ---@class JournalResetResult
 ---@field shouldReset boolean Whether journal should be reset
 ---@field newWeekStart number New week start timestamp
+---@field newNextReset number Current reset boundary
 ---@field reasoning string Explanation of decision
 
 ---@class LootClassifyContext
@@ -151,6 +153,7 @@
 ---@field getQuestStatus fun(id: number|number[]): QuestStatusResult Quest status lookup
 ---@field getQuestCountStatus fun(ids: number[], targetCount: number): QuestCountStatusResult Quest-count status lookup
 ---@field getCurrencyStatus fun(id: number): CurrencyStatusResult Currency status lookup
+---@field getPreyStatus? fun(item: TrackerItem): table Prey ledger status lookup
 
 ---@class TrackerItem
 ---@field type string Item type (header, quest, prey, currency, currency_cap, vault_visual)
