@@ -28,6 +28,7 @@ Core.lua
 Data\Loader.lua
 Data\TheWarWithin\Season3.lua
 Data\Midnight\Season1.lua
+Data\Midnight\Season2.lua
 
 # Configuration
 Config.lua

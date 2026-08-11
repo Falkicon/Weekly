@@ -19,6 +19,12 @@ end
 function ns.Data:GetRecommendedSeason()
 	local _, _, _, tocversion = GetBuildInfo()
 
+	-- Expansion 12.1.0+ (Curse of Ula'tek / Midnight Season 2)
+	-- Build-gating also makes the dataset available on PTR before the live launch.
+	if tocversion >= 120100 then
+		return 12, 2
+	end
+
 	-- Expansion 12.0.1+ (Midnight Launch)
 	if tocversion >= 120001 then
 		return 12, 1

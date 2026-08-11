@@ -33,6 +33,20 @@ end
 -- Quest Context Builder
 --------------------------------------------------------------------------------
 
+---@param questId number
+---@return boolean
+function Context:IsQuestCompleted(questId)
+	if
+		C_QuestLog.IsAccountQuest
+		and C_QuestLog.IsQuestFlaggedCompletedOnAccount
+		and C_QuestLog.IsAccountQuest(questId)
+	then
+		return C_QuestLog.IsQuestFlaggedCompletedOnAccount(questId)
+	end
+
+	return C_QuestLog.IsQuestFlaggedCompleted(questId)
+end
+
 ---@param questId number|number[] Single ID or table of IDs for rotating quests
 ---@return QuestContext
 function Context:BuildQuestContext(questId)
@@ -47,7 +61,7 @@ function Context:BuildQuestContext(questId)
 			return C_QuestLog.IsOnQuest(id) and C_QuestLog.GetLogIndexForQuestID(id) ~= nil
 		end,
 		isCompleted = function(id)
-			return C_QuestLog.IsQuestFlaggedCompleted(id)
+			return self:IsQuestCompleted(id)
 		end,
 		getObjectives = function(id)
 			return C_QuestLog.GetQuestObjectives(id)
@@ -67,10 +81,10 @@ function Context:BuildQuestCountContext(questIds, targetCount)
 		ids = questIds or {},
 		targetCount = targetCount or 0,
 		isOnQuest = function(id)
-			return C_QuestLog.IsOnQuest(id)
+			return C_QuestLog.IsOnQuest(id) and C_QuestLog.GetLogIndexForQuestID(id) ~= nil
 		end,
 		isCompleted = function(id)
-			return C_QuestLog.IsQuestFlaggedCompleted(id)
+			return self:IsQuestCompleted(id)
 		end,
 	}
 end
@@ -83,7 +97,7 @@ end
 ---@return ItemContext
 function Context:BuildItemContext(itemId)
 	-- Get item count from bags, bank, reagent bank, and warband bank
-	local count = C_Item.GetItemCount(itemId, true, true) or 0
+	local count = C_Item.GetItemCount(itemId, true, false, true, true) or 0
 
 	-- Get item info for name/icon
 	local itemName, _, _, _, _, _, _, _, _, itemIcon = C_Item.GetItemInfo(itemId)

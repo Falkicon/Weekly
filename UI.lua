@@ -345,7 +345,7 @@ function Utils.GetQuestCount(ids, targetCount)
 end
 
 function Utils.GetPrey(item)
-	local maxCount = item.maxCount or 0
+	local maxCount = item.resolvedMaxCount or item.maxCount or 0
 	local activeCount = 0
 	local completedCount = 0
 
@@ -361,14 +361,24 @@ function Utils.GetPrey(item)
 	-- If on quest, read its objectives for progress count.
 	local preyQuestID = item.questId
 	if C_QuestLog then
-		if C_QuestLog.IsQuestFlaggedCompleted(preyQuestID) then
+		if ns.Context:IsQuestCompleted(preyQuestID) then
 			return true, maxCount, maxCount, activeCount
 		end
 		if C_QuestLog.IsOnQuest(preyQuestID) then
 			local objs = C_QuestLog.GetQuestObjectives(preyQuestID)
 			if objs and #objs > 0 then
 				local obj = objs[1]
+				for _, candidate in ipairs(objs) do
+					if (candidate.numRequired or 0) > (obj.numRequired or 0) then
+						obj = candidate
+					end
+				end
 				completedCount = obj.numFulfilled or 0
+				local objectiveMax = obj.numRequired or 0
+				if objectiveMax > 0 then
+					maxCount = objectiveMax
+					item.resolvedMaxCount = objectiveMax
+				end
 				local done = maxCount > 0 and completedCount >= maxCount
 				local displayCount = maxCount > 0 and math.min(completedCount, maxCount) or completedCount
 				return done, displayCount, maxCount, activeCount
@@ -379,7 +389,7 @@ function Utils.GetPrey(item)
 	-- Strategy 2: Fall back to quest completion flags
 	if item.ids and C_QuestLog and C_QuestLog.IsQuestFlaggedCompleted then
 		for _, questID in ipairs(item.ids) do
-			if questID ~= 0 and C_QuestLog.IsQuestFlaggedCompleted(questID) then
+			if questID ~= 0 and ns.Context:IsQuestCompleted(questID) then
 				completedCount = completedCount + 1
 			end
 		end

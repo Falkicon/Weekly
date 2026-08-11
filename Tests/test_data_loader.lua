@@ -46,26 +46,44 @@ describe("Weekly Data Loader", function()
 		assert.are.equal(3, sea)
 	end)
 
-	it("should return recommended season for Midnight Pre-patch", function()
-		-- Mock Midnight Pre-patch build
+	it("should keep TWW Season 3 selected before the Midnight pre-patch", function()
 		GetBuildInfo = function()
 			return "11.2.8", "12345", "Dec 2025", 110208
 		end
 
 		local exp, sea = ns.Data:GetRecommendedSeason()
 		assert.are.equal(11, exp)
-		assert.are.equal(3.5, sea)
+		assert.are.equal(3, sea)
 	end)
 
-	it("should return recommended season for Midnight", function()
-		-- Mock Midnight build
+	it("should keep TWW Season 3 selected during the Midnight pre-patch", function()
 		GetBuildInfo = function()
 			return "12.0.0", "12345", "Jan 2026", 120000
 		end
 
 		local exp, sea = ns.Data:GetRecommendedSeason()
+		assert.are.equal(11, exp)
+		assert.are.equal(3, sea)
+	end)
+
+	it("should select Midnight Season 1 on 12.0.1 clients", function()
+		GetBuildInfo = function()
+			return "12.0.1", "12345", "Mar 2026", 120001
+		end
+
+		local exp, sea = ns.Data:GetRecommendedSeason()
 		assert.are.equal(12, exp)
 		assert.are.equal(1, sea)
+	end)
+
+	it("should select Midnight Season 2 on 12.1.0 clients", function()
+		GetBuildInfo = function()
+			return "12.1.0", "12345", "Aug 2026", 120100
+		end
+
+		local exp, sea = ns.Data:GetRecommendedSeason()
+		assert.are.equal(12, exp)
+		assert.are.equal(2, sea)
 	end)
 
 	it("should list registered expansions correctly", function()
@@ -80,12 +98,12 @@ describe("Weekly Data Loader", function()
 
 	it("should list seasons for a specific expansion correctly", function()
 		ns.Data:Register(11, 3, {})
-		ns.Data:Register(11, 3.5, {})
+		ns.Data:Register(11, 4, {})
 
 		local seasons = ns.Data:GetSeasons(11)
 		assert.are.equal(2, #seasons)
 		assert.are.equal(3, seasons[1])
-		assert.are.equal(3.5, seasons[2])
+		assert.are.equal(4, seasons[2])
 	end)
 
 	it("should handle automatic season selection based on config", function()

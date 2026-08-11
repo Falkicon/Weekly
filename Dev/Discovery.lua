@@ -268,7 +268,7 @@ function Discovery:Initialize()
 
 	-- Filter settings
 	self.filters = {
-		showOnlyNew = true, -- Hide already-tracked items
+		showOnlyNew = false, -- Include candidate rows so PTR data can validate them
 		showCurrencies = true,
 		showQuests = true,
 		expansionFilter = nil, -- nil = all, number = specific expansion
@@ -378,6 +378,8 @@ function Discovery:OnQuestEvent(questID, eventType)
 
 	-- Get quest info
 	local questName = C_QuestLog.GetTitleForQuestID(questID) or ("Quest " .. questID)
+	local questLogIndex = C_QuestLog.GetLogIndexForQuestID(questID)
+	local questInfo = questLogIndex and C_QuestLog.GetInfo(questLogIndex)
 
 	-- Get expansion (try API first, then zone-based detection)
 	local expansion = C_QuestLog.GetQuestExpansion and C_QuestLog.GetQuestExpansion(questID)
@@ -390,9 +392,24 @@ function Discovery:OnQuestEvent(questID, eventType)
 		expansion = zoneInfo.expansion
 	end
 
-	-- Check if it's a weekly quest
-	local isWeekly = C_QuestLog.IsWeekly and C_QuestLog.IsWeekly(questID)
-	local isDaily = C_QuestLog.IsDaily and C_QuestLog.IsDaily(questID)
+	-- Quest frequency is part of QuestInfo on 12.1; the old IsWeekly/IsDaily
+	-- helpers are not present in the generated PTR API documentation.
+	local questFrequency = Enum and Enum.QuestFrequency
+	local frequency = questInfo and questInfo.frequency
+	local isWeekly = questFrequency and frequency == questFrequency.Weekly
+	local isDaily = questFrequency and frequency == questFrequency.Daily
+	local isAccountQuest = C_QuestLog.IsAccountQuest and C_QuestLog.IsAccountQuest(questID)
+
+	-- Capture objective counts so PTR exports reveal wrapper targets such as Prey.
+	local objectiveTargets = {}
+	local objectives = C_QuestLog.GetQuestObjectives and C_QuestLog.GetQuestObjectives(questID)
+	for _, objective in ipairs(objectives or {}) do
+		table.insert(objectiveTargets, {
+			text = objective.text,
+			fulfilled = objective.numFulfilled or 0,
+			required = objective.numRequired or 0,
+		})
+	end
 
 	-- Log it
 	self.tracker:LogItem("quest", questID, {
@@ -402,6 +419,9 @@ function Discovery:OnQuestEvent(questID, eventType)
 		eventType = eventType,
 		isWeekly = isWeekly,
 		isDaily = isDaily,
+		isAccountQuest = isAccountQuest,
+		frequency = frequency,
+		objectiveTargets = objectiveTargets,
 		-- Zone info for additional context
 		zoneName = zoneInfo.zoneName,
 		zoneMapID = zoneInfo.mapID,
@@ -744,6 +764,17 @@ function Discovery:ExportData()
 		if data.zoneName then
 			table.insert(metadata, data.zoneName)
 		end
+		if data.objectiveTargets then
+			local targets = {}
+			for _, objective in ipairs(data.objectiveTargets) do
+				if objective.required and objective.required > 0 then
+					table.insert(targets, string.format("%d/%d", objective.fulfilled or 0, objective.required))
+				end
+			end
+			if #targets > 0 then
+				table.insert(metadata, "targets: " .. table.concat(targets, "; "))
+			end
+		end
 		if data.x and data.y and data.x > 0 then
 			table.insert(
 				metadata,
@@ -765,6 +796,9 @@ function Discovery:ExportData()
 			end
 			if data.isDaily then
 				table.insert(types, "Daily")
+			end
+			if data.isAccountQuest then
+				table.insert(types, "Account-wide")
 			end
 			if data.expansionName then
 				table.insert(types, data.expansionName)
