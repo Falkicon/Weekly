@@ -145,9 +145,21 @@ function TrackerCore:GetItems(filterFunc)
 		end
 	end
 
-	-- Sort by firstSeen (newest first)
+	-- Sort by firstSeen (newest first), with stable tie-breakers so exports do
+	-- not change between otherwise identical runs.
 	table.sort(results, function(a, b)
-		return (a.data.firstSeen or 0) > (b.data.firstSeen or 0)
+		local aFirstSeen = a.data.firstSeen or 0
+		local bFirstSeen = b.data.firstSeen or 0
+		if aFirstSeen ~= bFirstSeen then
+			return aFirstSeen > bFirstSeen
+		end
+		if a.category ~= b.category then
+			return tostring(a.category) < tostring(b.category)
+		end
+		if type(a.id) == "number" and type(b.id) == "number" then
+			return a.id < b.id
+		end
+		return tostring(a.id) < tostring(b.id)
 	end)
 
 	return results
@@ -206,8 +218,17 @@ function TrackerCore:ExportToString(formatter, filterFunc)
 		table.insert(byCategory[item.category], item)
 	end
 
-	-- Format each category
-	for category, categoryItems in pairs(byCategory) do
+	local categories = {}
+	for category in pairs(byCategory) do
+		table.insert(categories, category)
+	end
+	table.sort(categories, function(a, b)
+		return tostring(a) < tostring(b)
+	end)
+
+	-- Format each category in a stable order.
+	for _, category in ipairs(categories) do
+		local categoryItems = byCategory[category]
 		table.insert(lines, "-- === " .. category:upper() .. " ===")
 		for _, item in ipairs(categoryItems) do
 			local line = formatter(item.category, item.id, item.data)
@@ -320,6 +341,9 @@ function TrackerCore:ShowExportPopup(text)
 
 	if AceGUI then
 		local popup = AceGUI:Create("Frame")
+		popup:SetCallback("OnClose", function(widget)
+			AceGUI:Release(widget)
+		end)
 		popup:SetTitle("Export - " .. self.name)
 		popup:SetWidth(500)
 		popup:SetHeight(400)

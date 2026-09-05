@@ -5,8 +5,13 @@ local _, ns = ...
 --------------------------------------------------------------------------------
 
 local Factory = ns.DataFactory
-local Vault, Quest, Currency, Cap, Item, Prey =
-	Factory.Vault, Factory.Quest, Factory.Currency, Factory.Cap, Factory.Item, Factory.Prey
+local Vault, Quest, PlaceholderQuest, Currency, Cap, Item, Prey = Factory.Vault,
+	Factory.Quest,
+	Factory.PlaceholderQuest,
+	Factory.Currency,
+	Factory.Cap,
+	Factory.Item,
+	Factory.Prey
 
 local data = {
 	{
@@ -49,11 +54,11 @@ local data = {
 	{
 		title = "Ongoing Events",
 		items = {
-			Quest(0, "Abundant Offerings", "Interface\\Icons\\INV_Misc_Bag_17"),
-			Quest(0, "Fortify the Runestones", "Interface\\Icons\\INV_Misc_Gem_01"),
-			Quest(0, "Favor of the Court", "Interface\\Icons\\INV_Misc_Gem_01"),
+			PlaceholderQuest("Abundant Offerings", "Interface\\Icons\\INV_Misc_Bag_17"),
+			PlaceholderQuest("Fortify the Runestones", "Interface\\Icons\\INV_Misc_Gem_01"),
+			PlaceholderQuest("Favor of the Court", "Interface\\Icons\\INV_Misc_Gem_01"),
 			Quest(89268, "Lost Legends", "Interface\\Icons\\INV_Misc_Book_09"),
-			Quest(0, "Stand Your Ground", "Interface\\Icons\\Ability_Warrior_ShieldWall"),
+			PlaceholderQuest("Stand Your Ground", "Interface\\Icons\\Ability_Warrior_ShieldWall"),
 		},
 	},
 	{
@@ -84,7 +89,7 @@ local data = {
 		title = "Neighborhood",
 		noSort = true,
 		items = {
-			Quest(0, "Neighborhood Endeavors", "Interface\\Icons\\inv_misc_key_14"),
+			PlaceholderQuest("Neighborhood Endeavors", "Interface\\Icons\\inv_misc_key_14"),
 			Quest(95413, "Community Engagement"),
 			Item(251764, "Ashwood Lumber"),
 			Item(242691, "Olemba Lumber"),
@@ -138,4 +143,4 @@ local data = {
 }
 
 -- Register as Midnight (Expansion 12), Season 1
-ns.Data:Register(12, 1, data)
+ns.Data:Register(12, 1, data, "Data/Midnight/Season1.lua")

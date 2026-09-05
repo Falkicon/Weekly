@@ -8,12 +8,8 @@ function Weekly:OnInitialize()
 
 	-- Load Config (AceDB)
 	ns:LoadConfig()
-	if ns.PreyTracker then
-		ns.PreyTracker:Initialize()
-	end
 
-	-- Initialize Modules
-	-- Note: We can make these real AceAddon modules later, for now just init headers
+	-- Create settings and frames before activation.
 	ns.ConfigUI:Initialize()
 	ns.UI:Initialize()
 
@@ -100,20 +96,8 @@ function Weekly:SlashHandler(msg)
 	end
 
 	if cmd == "debug" then
-		-- Ensure debug is a table
-		if type(ns.Config.debug) ~= "table" then
-			ns.Config.debug = { ignoreTimeGates = false }
-		end
-		-- Toggle debug mode using a dedicated field
-		ns.Config.debug.enabled = not ns.Config.debug.enabled
+		self:SetDebugEnabled(not (type(ns.Config.debug) == "table" and ns.Config.debug.enabled))
 		self:Printf(L["Debug Mode: %s"]:format(ns.Config.debug.enabled and "|cff00ff00ON|r" or "|cffff0000OFF|r"))
-		if ns.Config.debug.enabled then
-			self:RegisterEvent("QUEST_TURNED_IN")
-			self:RegisterEvent("QUEST_ACCEPTED")
-		else
-			self:UnregisterEvent("QUEST_TURNED_IN")
-			self:UnregisterEvent("QUEST_ACCEPTED")
-		end
 
 		-- Dump Vault Info
 		self:Printf(L["--- DEBUG VAULT (Raid) ---"])
@@ -197,19 +181,68 @@ function Weekly:QUEST_TURNED_IN(_event, questID, _xp, _money)
 	end
 end
 
-function Weekly:QUEST_ACCEPTED(_event, _questLogIndex, questID)
+function Weekly:QUEST_ACCEPTED(_event, questID)
 	if type(ns.Config.debug) == "table" and ns.Config.debug.enabled then
 		self:Printf(L["Quest Accepted: ID %s"]:format(questID))
 	end
 end
 
--- Auto-Show on Login (respects config)
+function Weekly:SetDebugEnabled(enabled)
+	if type(ns.Config.debug) ~= "table" then
+		ns.Config.debug = { ignoreTimeGates = false }
+	end
+	ns.Config.debug.enabled = enabled == true
+	local method = self.active and enabled and "RegisterEvent" or "UnregisterEvent"
+	self[method](self, "QUEST_TURNED_IN")
+	self[method](self, "QUEST_ACCEPTED")
+end
+
+-- One ordered path for startup, profile changes, and settings application.
+function Weekly:ApplyConfig(reason)
+	if not self.active then
+		return
+	end
+	self:SetDebugEnabled(type(ns.Config.debug) == "table" and ns.Config.debug.enabled)
+	if ns.PreyTracker then
+		ns.PreyTracker:Initialize()
+	end
+	if ns.Journal then
+		ns.Journal:ApplyConfig(reason)
+	end
+	if ns.JournalBroker then
+		ns.JournalBroker:ApplyConfig()
+	end
+	if ns.Discovery then
+		ns.Discovery:Initialize()
+	end
+	if ns.UI then
+		ns.UI:ApplyConfig(reason)
+	end
+	if ns.JournalUI and ns.JournalUI.frame then
+		ns.JournalUI:RestorePosition()
+		ns.JournalUI:SelectTab(ns.Config.journal.selectedTab or "dashboard")
+	end
+	if ns.ConfigUI then
+		ns.ConfigUI:RefreshTrackingOptions()
+	end
+end
+
 function Weekly:OnEnable()
-	-- If autoShow is enabled, always show on login
-	-- Otherwise, restore the last saved visibility state
-	local shouldShow = ns.Config.autoShow or ns.Config.visible
-	if shouldShow and ns.UI and ns.UI.frame then
-		ns.UI.frame:Show()
-		ns.Config.visible = true
+	self.active = true
+	self:ApplyConfig(self.hasEnabled and "enable" or "login")
+	self.hasEnabled = true
+end
+
+function Weekly:OnDisable()
+	self.active = false
+	self:UnregisterAllEvents()
+	for _, name in ipairs({ "Journal", "Discovery", "PreyTracker", "JournalBroker", "UI" }) do
+		local module = ns[name]
+		if module and module.Shutdown then
+			module:Shutdown()
+		end
+	end
+	if ns.JournalUI and ns.JournalUI.frame then
+		ns.JournalUI.frame:Hide()
 	end
 end

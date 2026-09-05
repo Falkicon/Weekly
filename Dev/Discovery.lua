@@ -236,6 +236,10 @@ end
 
 function Discovery:Initialize()
 	if self.tracker then
+		if self.suspendedEvents then
+			self.tracker:RegisterEvents(self.suspendedEvents)
+			self.suspendedEvents = nil
+		end
 		return
 	end
 
@@ -290,7 +294,7 @@ function Discovery:Initialize()
 		end,
 
 		-- Quest events
-		QUEST_ACCEPTED = function(_t, _event, _questLogIndex, questID)
+		QUEST_ACCEPTED = function(_t, _event, questID)
 			self:OnQuestEvent(questID, "accepted")
 		end,
 		QUEST_TURNED_IN = function(_t, _event, questID, _xpReward, _moneyReward)
@@ -857,19 +861,13 @@ function Discovery:Toggle()
 	end
 end
 
---------------------------------------------------------------------------------
--- Auto-Initialize on Load
---------------------------------------------------------------------------------
-
--- Initialize when Weekly loads
-local initFrame = CreateFrame("Frame")
-initFrame:RegisterEvent("PLAYER_LOGIN")
-initFrame:SetScript("OnEvent", function(self, _event)
-	-- Delay slightly to ensure Weekly is fully loaded
-	C_Timer.After(1, function()
-		if ns.TrackerCore then
-			Discovery:Initialize()
+function Discovery:Shutdown()
+	if self.tracker and not self.suspendedEvents then
+		self:Save()
+		self.suspendedEvents = self.tracker.events
+		self.tracker:UnregisterEvents()
+		if self.tracker.frame then
+			self.tracker.frame:Hide()
 		end
-	end)
-	self:UnregisterAllEvents()
-end)
+	end
+end

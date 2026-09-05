@@ -3,6 +3,7 @@ local _, ns = ...
 -- Data Loader & Registry
 ns.Data = ns.Data or {}
 ns.Data.Registry = {}
+ns.Data.Sources = {}
 
 local parsedDates = {}
 
@@ -63,11 +64,19 @@ end
 -- @param expansionID number: Expansion ID (e.g. 11 for TWW)
 -- @param seasonID number: Season ID (e.g. 3)
 -- @param data table: The data table for this season
-function ns.Data:Register(expansionID, seasonID, data)
+-- @param source string|nil: Repository-relative source path for validation errors
+function ns.Data:Register(expansionID, seasonID, data, source)
 	if not self.Registry[expansionID] then
 		self.Registry[expansionID] = {}
 	end
 	self.Registry[expansionID][seasonID] = data
+
+	if source then
+		if not self.Sources[expansionID] then
+			self.Sources[expansionID] = {}
+		end
+		self.Sources[expansionID][seasonID] = source
+	end
 end
 
 --- Get the recommended expansion and season based on client version

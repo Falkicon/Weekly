@@ -8,22 +8,15 @@ on:
 
 jobs:
   lua:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v5
 
       - name: Install Lua tooling
         run: |
           sudo apt-get update
-          sudo apt-get install --yes lua5.1 luarocks
-          sudo luarocks --lua-version=5.1 install busted
-          sudo luarocks --lua-version=5.1 install luacheck
+          sudo apt-get install --yes lua5.1 luarocks python3
+          sudo python3 Tools/install_lua_tools.py
 
-      - name: Lint
-        run: luacheck .
-
-      - name: Test addon modules
-        run: busted --pattern='test_.*%.lua' Tests
-
-      - name: Test pure actions
-        run: busted Tests/Core
+      - name: Validate repository
+        run: python3 Tools/validate.py --lua lua5.1

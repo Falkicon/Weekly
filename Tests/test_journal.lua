@@ -3,12 +3,14 @@
 
 local addonName = "Weekly"
 local ns = {}
+local currentServerTime = 1734566400
+local secondsUntilWeeklyReset = 604800
 
 -- Mock WoW APIs
 _G = _G or {}
 _G.C_DateAndTime = {
 	GetServerTimeLocal = function()
-		return 1734566400
+		return currentServerTime
 	end, -- A Tuesday
 	GetCurrentCalendarTime = function()
 		return {
@@ -20,14 +22,14 @@ _G.C_DateAndTime = {
 		}
 	end,
 	GetSecondsUntilWeeklyReset = function()
-		return 604800
+		return secondsUntilWeeklyReset
 	end,
 }
 _G.time = function()
-	return 1734566400
+	return currentServerTime
 end
 _G.GetServerTime = function()
-	return 1734566400
+	return currentServerTime
 end
 _G.debugprofilestop = function()
 	return 0
@@ -120,6 +122,8 @@ LoadFile("Core/WeeklyReset.lua")
 
 describe("Weekly Journal", function()
 	before_each(function()
+		currentServerTime = 1734566400
+		secondsUntilWeeklyReset = 604800
 		_G.LOOT_ITEM_SELF = "You receive loot: %s."
 		_G.LOOT_ITEM_SELF_MULTIPLE = "You receive loot: %s x%d."
 		local itemCached = true
@@ -179,6 +183,12 @@ describe("Weekly Journal", function()
 			end,
 			getRequestedItemID = function()
 				return requestedItemID
+			end,
+			setServerTime = function(value)
+				currentServerTime = value
+			end,
+			setSecondsUntilWeeklyReset = function(value)
+				secondsUntilWeeklyReset = value
 			end,
 		}
 	end)
@@ -269,4 +279,76 @@ describe("Weekly Journal", function()
 		ns.Journal.tracker.events.GET_ITEM_INFO_RECEIVED(ns.Journal.tracker, "GET_ITEM_INFO_RECEIVED", 12345, true)
 		assert.are.equal(3, ns.Journal:GetGatheringTotalCount())
 	end)
+
+	it("resets at the boundary even inside the check throttle", function()
+		local newLink = "|cffffffff|Hitem:67890::::::::|h[Test Herb]|h|r"
+		local resetAt = currentServerTime + 30
+		ns.Config.journal.nextReset = resetAt
+		ns._journalTest.setSecondsUntilWeeklyReset(30)
+		ns.Journal.gathering[12345] = { count = 3 }
+
+		-- The first event after the boundary must reset immediately, even though
+		-- the previous reset check was less than a minute ago.
+		ns._journalTest.setServerTime(resetAt)
+		ns._journalTest.setSecondsUntilWeeklyReset(604800)
+		ns._journalTest.setItemCached(true)
+		ns.Journal.tracker.events.CHAT_MSG_LOOT(
+			ns.Journal.tracker,
+			"CHAT_MSG_LOOT",
+			(_G.LOOT_ITEM_SELF_MULTIPLE):format(newLink, 2)
+		)
+
+		assert.are.equal(resetAt, ns.Config.journal.weekStart)
+		assert.are.equal(2, ns.Journal:GetGatheringTotalCount())
+		assert.is_nil(ns.Journal.gathering[12345])
+		assert.are.equal(2, ns.Journal.gathering[67890].count)
+	end)
+
+	it("drops pending gathering loot when its item data arrives after reset", function()
+		local oldLink = "|cffffffff|Hitem:12345::::::::|h[Test Herb]|h|r"
+		local resetAt = currentServerTime + 30
+		ns.Config.journal.nextReset = resetAt
+		ns._journalTest.setSecondsUntilWeeklyReset(30)
+		ns._journalTest.setItemCached(false)
+		ns.Journal.tracker.events.CHAT_MSG_LOOT(
+			ns.Journal.tracker,
+			"CHAT_MSG_LOOT",
+			(_G.LOOT_ITEM_SELF_MULTIPLE):format(oldLink, 3)
+		)
+
+		ns._journalTest.setServerTime(resetAt)
+		ns._journalTest.setSecondsUntilWeeklyReset(604800)
+		ns._journalTest.setItemCached(true)
+		ns.Journal.tracker.events.GET_ITEM_INFO_RECEIVED(ns.Journal.tracker, "GET_ITEM_INFO_RECEIVED", 12345, true)
+
+		assert.are.equal(resetAt, ns.Config.journal.weekStart)
+		assert.are.equal(0, ns.Journal:GetGatheringTotalCount())
+		assert.is_nil(ns.Journal.gathering[12345])
+	end)
+
+	for _, clearCase in ipairs({
+		{ name = "clearing gathering", clear = function()
+			ns.Journal:ClearCategory("gathering")
+		end },
+		{ name = "clearing all", clear = function()
+			ns.Journal:ClearAll()
+		end },
+	}) do
+		it(clearCase.name .. " discards pending loot", function()
+			local link = "|cffffffff|Hitem:12345::::::::|h[Test Herb]|h|r"
+			ns._journalTest.setItemCached(false)
+			ns.Journal.tracker.events.CHAT_MSG_LOOT(
+				ns.Journal.tracker,
+				"CHAT_MSG_LOOT",
+				(_G.LOOT_ITEM_SELF_MULTIPLE):format(link, 3)
+			)
+
+			clearCase.clear()
+			ns._journalTest.setItemCached(true)
+			ns.Journal.tracker.events.GET_ITEM_INFO_RECEIVED(ns.Journal.tracker, "GET_ITEM_INFO_RECEIVED", 12345, true)
+
+			assert.are.equal(0, ns.Journal:GetGatheringTotalCount())
+			assert.is_nil(ns.Journal.gathering[12345])
+		end)
+	end
 end)

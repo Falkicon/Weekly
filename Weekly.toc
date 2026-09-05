@@ -27,12 +27,14 @@ Core.lua
 
 # Data Layer
 Data\Loader.lua
+Data\Validation.lua
 Data\Factories.lua
 Data\TheWarWithin\Season3.lua
 Data\Midnight\Season1.lua
 Data\Midnight\Season2.lua
 
 # Configuration
+Core\ConfigMigrations.lua
 Config.lua
 ConfigUI.lua
 

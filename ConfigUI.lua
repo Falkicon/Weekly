@@ -140,13 +140,13 @@ function ConfigUI:Initialize()
 										ns.Config.selectedSeason = "auto"
 									else
 										-- Reset Season to latest available for this expansion
-									local seasons = ns.Data:GetSeasons(val)
-									if seasons and #seasons > 0 then
-										ns.Config.selectedSeason = seasons[#seasons]
+										local seasons = ns.Data:GetSeasons(val)
+										if seasons and #seasons > 0 then
+											ns.Config.selectedSeason = seasons[#seasons]
+										end
 									end
-								end
-								ConfigUI:RefreshTrackingOptions()
-								ns.UI:RefreshRows()
+									ConfigUI:RefreshTrackingOptions()
+									ns.UI:RefreshRows()
 								end,
 							},
 							season = {
@@ -196,9 +196,9 @@ function ConfigUI:Initialize()
 
 									local currentStatus = ""
 									if ns.Config.selectedExpansion == "auto" or ns.Config.selectedSeason == "auto" then
-									currentStatus = "\n|cff888888"
-										.. L["Currently detecting: %s, %s"]:format(expName, seaName)
-										.. "|r"
+										currentStatus = "\n|cff888888"
+											.. L["Currently detecting: %s, %s"]:format(expName, seaName)
+											.. "|r"
 									end
 									return currentStatus
 								end,
@@ -419,11 +419,7 @@ function ConfigUI:Initialize()
 				set = function(_, val)
 					if ns.Config.journal then
 						ns.Config.journal.enabled = val
-						if val then
-							ns.Journal:Initialize()
-						else
-							ns.Journal:Shutdown()
-						end
+						ns.Weekly:ApplyConfig("settings")
 					end
 				end,
 			},
@@ -455,7 +451,11 @@ function ConfigUI:Initialize()
 					return not ns.Config.journal or not ns.Config.journal.enabled
 				end,
 				get = function()
-					return WeeklyDB and WeeklyDB.journalMinimapIcon and not WeeklyDB.journalMinimapIcon.hide
+					if ns.JournalBroker and ns.JournalBroker.IsMinimapIconShown then
+						return ns.JournalBroker:IsMinimapIconShown()
+					end
+					-- LibDBIcon defaults to visible when it has no saved settings yet.
+					return not (WeeklyDB and WeeklyDB.journalMinimapIcon and WeeklyDB.journalMinimapIcon.hide)
 				end,
 				set = function(_, val)
 					if ns.JournalBroker then

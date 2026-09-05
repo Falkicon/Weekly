@@ -26,13 +26,14 @@ What actually happened.
 
 ## Environment
 
-- **WoW Version**: (e.g., 11.2.7 Retail, Midnight Beta)
-- **Interface Version**: (from `/weekly debug` or TOC)
+- **Weekly Version**: (from the AddOns list or `Weekly.toc`)
+- **WoW Version/Build**: (include Retail, PTR, or Beta)
+- **Selected Expansion/Season**: (from Weekly settings, including Auto if selected)
 - **Other Addons**: (list any that might interact, or "none")
 
 ## Debug Output
 
-Paste output from `/weekly debug`:
+Paste relevant output from `/weekly debug`. This command also toggles quest-event logging; run it again after reproducing to turn logging off if you enabled it:
 
 ```
 (paste here)

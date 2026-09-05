@@ -48,6 +48,63 @@ local C_HIGHLIGHT = { 0.3, 0.3, 0.4, 0.5 }
 -- Window Creation
 --------------------------------------------------------------------------------
 
+function JournalUI:BindItemInteraction(row, item, name)
+	local itemData = item.data or {}
+	row.tooltipFunc = function()
+		GameTooltip:SetText(name, unpack(C_GOLD))
+		if item.category == "achievement" and itemData.points then
+			GameTooltip:AddLine(L["%d points"]:format(itemData.points), unpack(C_GOLD))
+		end
+		if itemData.zoneName then
+			GameTooltip:AddLine(L["Found in: %s"]:format(itemData.zoneName), unpack(C_GRAY))
+		end
+		GameTooltip:AddLine(" ")
+		GameTooltip:AddLine(L["Click to view in Collections"], 0.5, 0.5, 0.5)
+		GameTooltip:Show()
+	end
+
+	row.clickFunc = function()
+		ns.Journal:OpenOfficialUI(item.category, item.id, itemData)
+	end
+end
+
+function JournalUI:CreateItemGrid(parent)
+	if not FenUI or not FenUI.CreateGrid then
+		return nil
+	end
+
+	local grid = FenUI:CreateGrid(parent, {
+		columns = { "auto", "1fr", "auto" }, -- icon | name | extra
+		rowHeight = ROW_HEIGHT,
+		onRowEnter = function(row)
+			GameTooltip:SetOwner(row, "ANCHOR_RIGHT")
+			if row.tooltipFunc then
+				row.tooltipFunc(row)
+			end
+		end,
+		onRowLeave = function()
+			GameTooltip:Hide()
+		end,
+		onRowClick = function(row)
+			if row.clickFunc then
+				row.clickFunc(row)
+			end
+		end,
+		onRowBind = function(row, item, _index)
+			row:GetCell(1):SetIcon(item.data and item.data.icon or "Interface\\Icons\\INV_Misc_QuestionMark")
+			local name = item.data and item.data.name or L["ID: %s"]:format(item.id or L["Unknown"])
+			row:GetCell(2):SetText(name)
+			local timeStr = self:FormatTimestamp(item.data and item.data.firstSeen)
+			row:GetCell(3):SetText(timeStr, "fontSmall")
+			row:GetCell(3).fontString:SetTextColor(unpack(C_GRAY))
+			self:BindItemInteraction(row, item, name)
+		end,
+	})
+	grid:SetPoint("TOPLEFT")
+	grid:SetPoint("TOPRIGHT")
+	return grid
+end
+
 function JournalUI:CreateWindow()
 	if self.frame then
 		return self.frame
@@ -243,45 +300,7 @@ function JournalUI:CreateWindow()
 	self.currentTab = nil
 
 	-- Initialize Grid for items
-	if FenUI and FenUI.CreateGrid then
-		self.itemGrid = FenUI:CreateGrid(frame.scrollChild, {
-			columns = { "auto", "1fr", "auto" }, -- icon | name | extra
-			rowHeight = ROW_HEIGHT,
-			onRowBind = function(row, item, _index)
-				-- Icon
-				row:GetCell(1):SetIcon(item.data and item.data.icon or "Interface\\Icons\\INV_Misc_QuestionMark")
-
-				-- Name
-				local name = item.data and item.data.name or L["ID: %s"]:format(item.id or L["Unknown"])
-				row:GetCell(2):SetText(name)
-
-				-- Extra (timestamp)
-				local timeStr = self:FormatTimestamp(item.data and item.data.firstSeen)
-				row:GetCell(3):SetText(timeStr, "fontSmall")
-				row:GetCell(3).fontString:SetTextColor(unpack(C_GRAY))
-
-				-- Tooltip and Click
-				row.tooltipFunc = function()
-					GameTooltip:SetText(name, unpack(C_GOLD))
-					if item.category == "achievement" and item.data.points then
-						GameTooltip:AddLine(L["%d points"]:format(item.data.points), unpack(C_GOLD))
-					end
-					if item.data.zoneName then
-						GameTooltip:AddLine(L["Found in: %s"]:format(item.data.zoneName), unpack(C_GRAY))
-					end
-					GameTooltip:AddLine(" ")
-					GameTooltip:AddLine(L["Click to view in Collections"], 0.5, 0.5, 0.5)
-					GameTooltip:Show()
-				end
-
-				row.clickFunc = function()
-					ns.Journal:OpenOfficialUI(item.category, item.id, item.data)
-				end
-			end,
-		})
-		self.itemGrid:SetPoint("TOPLEFT")
-		self.itemGrid:SetPoint("TOPRIGHT")
-	end
+	self.itemGrid = self:CreateItemGrid(frame.scrollChild)
 
 	-- Initialize EmptyState (use FenUI if available)
 	if FenUI and FenUI.CreateEmptyState then
@@ -857,6 +876,27 @@ function JournalUI:RenderCategoryTab(category)
 		self.itemGrid:Show()
 		self.itemGrid:SetData(items)
 		self.frame.scrollChild:SetHeight(self.itemGrid:GetHeight() + 10)
+	else
+		local yOffset = 5
+		for index, item in ipairs(items) do
+			local row = self:GetRow(index)
+			row:SetPoint("TOPLEFT", self.frame.scrollChild, "TOPLEFT", 0, -yOffset)
+			row:SetPoint("RIGHT", self.frame.scrollChild, "RIGHT", 0, 0)
+			row.icon:SetTexture(item.data and item.data.icon or "Interface\\Icons\\INV_Misc_QuestionMark")
+			row.icon:Show()
+			row.name:SetPoint("LEFT", row.icon, "RIGHT", 6, 0)
+			local name = item.data and item.data.name or L["ID: %s"]:format(item.id or L["Unknown"])
+			row.name:SetText(name)
+			row.name:SetFontObject("GameFontNormal")
+			row.name:SetTextColor(unpack(C_WHITE))
+			row.extra:SetText(self:FormatTimestamp(item.data and item.data.firstSeen))
+			row.extra:SetTextColor(unpack(C_GRAY))
+
+			self:BindItemInteraction(row, item, name)
+			row:Show()
+			yOffset = yOffset + ROW_HEIGHT
+		end
+		self.frame.scrollChild:SetHeight(yOffset + 10)
 	end
 end
 
@@ -950,7 +990,7 @@ function JournalUI:RenderGatheringTab()
 		yOffset = yOffset + ROW_HEIGHT + 2
 
 		-- Items for this expansion
-		local items = ns.Journal:GetGatheringForExpansion(expData.id)
+		local items = expData.items
 		for _, item in ipairs(items) do
 			local row = self:GetRow(rowIndex)
 			row:SetPoint("TOPLEFT", scrollChild, "TOPLEFT", 0, -yOffset)

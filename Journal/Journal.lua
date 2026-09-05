@@ -79,7 +79,13 @@ local function CheckWeeklyReset(force)
 	end
 
 	local now = ns.WeeklyReset:GetNow()
-	if not force and Journal.lastResetCheckAt and now - Journal.lastResetCheckAt < 60 then
+	local nextReset = tonumber(journalConfig.nextReset) or 0
+	if
+		not force
+		and Journal.lastResetCheckAt
+		and now - Journal.lastResetCheckAt < 60
+		and (nextReset <= 0 or now < nextReset)
+	then
 		return false
 	end
 	Journal.lastResetCheckAt = now
@@ -96,12 +102,16 @@ local function CheckWeeklyReset(force)
 		end
 
 		Journal.gathering = {}
-		journalConfig.weekStart = journalConfig.nextReset > 0
-			and (journalConfig.nextReset - (7 * 24 * 60 * 60))
-			or now
+		-- Item-data callbacks can arrive after the reset. Discard quantities
+		-- queued in the previous week so they cannot leak into the new one.
+		Journal.pendingGathering = nil
+		journalConfig.weekStart = journalConfig.nextReset > 0 and (journalConfig.nextReset - (7 * 24 * 60 * 60)) or now
 		journalConfig.categories = {}
 		journalConfig.gathering = Journal.gathering
 		journalConfig.itemCount = 0
+		if ns.JournalUI and ns.JournalUI.frame and ns.JournalUI.frame:IsShown() then
+			ns.JournalUI:RefreshCurrentTab()
+		end
 		if ns.JournalBroker then
 			ns.JournalBroker:UpdateText()
 		end
@@ -436,6 +446,7 @@ local function OnChatMsgLoot(_tracker, _event, message, ...)
 end
 
 local function OnItemInfoReceived(_tracker, _event, itemID, success)
+	CheckWeeklyReset(false)
 	if not Journal.pendingGathering or not Journal.pendingGathering[itemID] then
 		return
 	end
@@ -506,6 +517,17 @@ function Journal:Initialize()
 	local gatheringCount = self:GetGatheringTotalCount()
 	if itemCount > 0 or gatheringCount > 0 then
 		ns.Weekly:Printf(L["Journal loaded: %d collectibles, %d materials gathered"], itemCount, gatheringCount)
+	end
+end
+
+function Journal:ApplyConfig(reason)
+	if reason == "profile" then
+		self:ReloadForProfile()
+	end
+	if ns.Config.journal and ns.Config.journal.enabled then
+		self:Initialize()
+	else
+		self:Shutdown()
 	end
 end
 
@@ -616,6 +638,7 @@ end
 function Journal:ClearCategory(category)
 	if category == "gathering" then
 		self.gathering = {}
+		self.pendingGathering = nil
 		SaveJournalData()
 		if ns.JournalBroker then
 			ns.JournalBroker:UpdateText()
@@ -640,6 +663,7 @@ function Journal:ClearAll()
 	end
 	self.tracker:Clear()
 	self.gathering = {}
+	self.pendingGathering = nil
 	SaveJournalData()
 	if ns.JournalBroker then
 		ns.JournalBroker:UpdateText()
@@ -813,6 +837,7 @@ function Journal:GetGatheringExpansions()
 				name = self.EXPANSION_NAMES[expID] or ("Expansion " .. expID),
 				itemCount = #items,
 				totalCount = 0,
+				items = items,
 			})
 			-- Sum total count for this expansion
 			for _, item in ipairs(items) do
@@ -834,19 +859,3 @@ function Journal:GetGatheringForExpansion(expansionID)
 	local byExpansion = self:GetGatheringByExpansion()
 	return byExpansion[expansionID] or {}
 end
-
---------------------------------------------------------------------------------
--- Auto-Initialize
---------------------------------------------------------------------------------
-
-local initFrame = CreateFrame("Frame")
-initFrame:RegisterEvent("PLAYER_LOGIN")
-initFrame:SetScript("OnEvent", function(self, _event)
-	-- Delay slightly to ensure Weekly is fully loaded
-	C_Timer.After(0.5, function()
-		if ns.Config and ns.Config.journal and ns.Config.journal.enabled then
-			Journal:Initialize()
-		end
-	end)
-	self:UnregisterAllEvents()
-end)

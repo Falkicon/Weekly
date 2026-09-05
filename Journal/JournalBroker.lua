@@ -38,6 +38,9 @@ function JournalBroker:Initialize()
 		text = L["Journal"],
 
 		OnClick = function(_, button)
+			if self.active == false then
+				return
+			end
 			if button == "LeftButton" then
 				-- Left click: Toggle journal window
 				if ns.JournalUI then
@@ -230,16 +233,22 @@ function JournalBroker:UpdateText()
 	end
 end
 
---------------------------------------------------------------------------------
--- Auto-Initialize
---------------------------------------------------------------------------------
+function JournalBroker:ApplyConfig()
+	self.active = true
+	self:Initialize()
+	if self.initialized and LDBIcon then
+		if GetMinimapSettings().hide then
+			LDBIcon:Hide("WeeklyJournal")
+		else
+			LDBIcon:Show("WeeklyJournal")
+		end
+	end
+	self:UpdateText()
+end
 
-local initFrame = CreateFrame("Frame")
-initFrame:RegisterEvent("PLAYER_LOGIN")
-initFrame:SetScript("OnEvent", function(self, _event)
-	-- Delay to ensure libs are loaded
-	C_Timer.After(1, function()
-		JournalBroker:Initialize()
-	end)
-	self:UnregisterAllEvents()
-end)
+function JournalBroker:Shutdown()
+	self.active = false
+	if self.initialized and LDBIcon then
+		LDBIcon:Hide("WeeklyJournal")
+	end
+end

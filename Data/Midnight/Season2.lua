@@ -118,4 +118,4 @@ local data = {
 }
 
 -- Register as Midnight (Expansion 12), Season 2
-ns.Data:Register(12, 2, data)
+ns.Data:Register(12, 2, data, "Data/Midnight/Season2.lua")
