@@ -25,7 +25,7 @@ The manifest targets **Interface 120100**. Bundled datasets cover The War Within
 
 ## Installation
 
-1. Download a packaged release from [CurseForge](https://www.curseforge.com/wow/addons/weekly)
+1. Download a packaged release from [CurseForge](https://www.curseforge.com/wow/addons/weekly-to-do-tracker)
 2. Extract the `Weekly` folder into your WoW addons directory, with `Weekly.toc` directly inside it:
    ```
    World of Warcraft\_retail_\Interface\AddOns\

@@ -11,7 +11,7 @@ Start with this guide and [Lifecycle, Migrations, and Validation](Docs/developme
 | Item | Value |
 |------|-------|
 | **Project ID** | 1405635 |
-| **Project URL** | https://www.curseforge.com/wow/addons/weekly |
+| **Project URL** | https://www.curseforge.com/wow/addons/weekly-to-do-tracker |
 | **Files** | https://authors.curseforge.com/#/projects/1405635/files |
 
 ---
