@@ -241,7 +241,7 @@ function PreyTracker:Initialize()
 	if not CreateFrame then
 		return
 	end
-	self.eventFrame = CreateFrame("Frame")
+	self.eventFrame = self.eventFrame or CreateFrame("Frame")
 	self.eventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
 	self.eventFrame:RegisterEvent("QUEST_ACCEPTED")
 	self.eventFrame:RegisterEvent("QUEST_LOG_UPDATE")
@@ -254,4 +254,12 @@ function PreyTracker:Initialize()
 			self:RefreshActiveQuest()
 		end
 	end)
+end
+
+function PreyTracker:Shutdown()
+	if self.eventFrame then
+		self.eventFrame:UnregisterAllEvents()
+		self.eventFrame:SetScript("OnEvent", nil)
+	end
+	self.initialized = false
 end

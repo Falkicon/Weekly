@@ -62,6 +62,10 @@ ns.ConfigDefaults = {
 	},
 }
 
+function ns:MigrateConfig()
+	return self.ConfigMigrations:Migrate(self.Config, self.CharConfig, self.ConfigDefaults)
+end
+
 function ns:LoadConfig()
 	-- Initialize AceDB with defaults
 	self.db = AceDB:New("WeeklyDB", self.ConfigDefaults, "Default")
@@ -69,19 +73,7 @@ function ns:LoadConfig()
 	-- Set easy alias. Updates to ns.Config will now update the DB profile directly.
 	self.Config = self.db.profile
 	self.CharConfig = self.db.char
-
-	-- One-time migration: Fix old autoShow default (was true, now false)
-	-- If autoShow was never explicitly set by user, update to new default
-	if self.Config.autoShow == true and self.Config._autoShowMigrated == nil then
-		self.Config.autoShow = false
-		self.Config._autoShowMigrated = true
-	end
-
-	-- One-time migration: Reset anchor to TOP (setting was removed)
-	if self.Config._anchorMigrated == nil then
-		self.Config.anchor = "TOP"
-		self.Config._anchorMigrated = true
-	end
+	self:MigrateConfig()
 
 	-- Callbacks
 	self.db.RegisterCallback(self, "OnProfileChanged", "RefreshConfig")
@@ -97,30 +89,15 @@ function ns:PrepareProfileChange()
 end
 
 function ns:RefreshConfig()
+	-- Copy/reset mutate the profile without OnProfileShutdown. Discard runtime
+	-- records before rebinding; saving here could overwrite the copied data.
+	if self.Journal then
+		self.Journal:ReloadForProfile()
+	end
 	self.Config = self.db.profile
 	self.CharConfig = self.db.char
-	if self.UI then
-		self.UI:ApplyFrameStyle()
-		self.UI:RenderRows()
-		-- Restore position if it exists in the new profile
-		self.UI:RestorePosition()
-	end
-	-- Refresh Journal if active
-	if self.Journal then
-		-- Profile copy/reset callbacks do not fire OnProfileShutdown, so discard
-		-- any tracker still bound to the previous profile before reloading.
-		self.Journal:ReloadForProfile()
-		if self.Config.journal and self.Config.journal.enabled then
-			self.Journal:Initialize()
-		else
-			self.Journal:Shutdown()
-		end
-	end
-	if self.JournalUI and self.JournalUI.frame then
-		self.JournalUI:RestorePosition()
-		self.JournalUI:SelectTab(self.Config.journal.selectedTab or "dashboard")
-	end
-	if self.ConfigUI then
-		self.ConfigUI:RefreshTrackingOptions()
+	self:MigrateConfig()
+	if self.Weekly then
+		self.Weekly:ApplyConfig("profile")
 	end
 end

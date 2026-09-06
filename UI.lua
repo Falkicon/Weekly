@@ -7,8 +7,6 @@ local L = LibStub("AceLocale-3.0"):GetLocale("Weekly")
 local C_HEADER = { 1, 0.8, 0 } -- Gold
 
 function UI:Initialize()
-	local _cfg = ns.Config
-
 	-- Create Main Frame (Only once)
 	if not self.frame then
 		-- We use a plain frame (no default template) for maximum control
@@ -73,9 +71,6 @@ function UI:Initialize()
 		self.titleText:SetTextColor(0.6, 0.6, 0.6)
 
 		-- Events
-		self.frame:RegisterEvent("CURRENCY_DISPLAY_UPDATE")
-		self.frame:RegisterEvent("QUEST_LOG_UPDATE")
-		self.frame:RegisterEvent("WEEKLY_REWARDS_UPDATE")
 		self.frame:SetScript("OnEvent", function()
 			self:QueueRefresh()
 		end)
@@ -91,6 +86,36 @@ function UI:Initialize()
 	self:RenderRows()
 end
 
+function UI:ApplyConfig(reason)
+	self.active = true
+	self:Initialize()
+	for _, event in ipairs({
+		"CURRENCY_DISPLAY_UPDATE",
+		"BAG_UPDATE_DELAYED",
+		"GET_ITEM_INFO_RECEIVED",
+		"QUEST_LOG_UPDATE",
+		"WEEKLY_REWARDS_UPDATE",
+	}) do
+		self.frame:RegisterEvent(event)
+	end
+	self:RestorePosition()
+	local shown = ns.Config.visible or (reason == "login" and ns.Config.autoShow)
+	self.frame:SetShown(shown == true)
+	if shown then
+		ns.Config.visible = true
+	end
+end
+
+function UI:Shutdown()
+	self.active = false
+	self.refreshGeneration = (self.refreshGeneration or 0) + 1
+	self.refreshPending = false
+	if self.frame then
+		self.frame:UnregisterAllEvents()
+		self.frame:Hide()
+	end
+end
+
 function UI:SavePosition()
 	if not self.frame then
 		return
@@ -98,9 +123,6 @@ function UI:SavePosition()
 
 	-- When saving, convert the current position to our desired anchor point
 	local anchor = ns.Config.anchor or "TOP"
-	local _scale = self.frame:GetEffectiveScale()
-	local _uiScale = UIParent:GetEffectiveScale()
-
 	local left = self.frame:GetLeft()
 	local top = self.frame:GetTop()
 	local bottom = self.frame:GetBottom()
@@ -221,7 +243,6 @@ function UI:ApplyFrameStyle()
 	self.content:ClearAllPoints()
 	self.content:SetPoint("TOPLEFT", self.frame, "TOPLEFT", 10, -24) -- Below [-] WEEKLY title
 	self.content:SetPoint("BOTTOMRIGHT", self.frame, "BOTTOMRIGHT", -10, 10)
-
 end
 
 -- Helpers (Bridge wrappers for backward compatibility)
@@ -268,7 +289,11 @@ function Utils.GetCurrency(id)
 		if not status then
 			return "---", 0, 0, nil, nil
 		end
-		return FormatLargeNumber(status.quantity or status.amount), status.amount, status.max, status.name, status.iconFileID
+		return FormatLargeNumber(status.quantity or status.amount),
+			status.amount,
+			status.max,
+			status.name,
+			status.iconFileID
 	end)
 end
 
@@ -403,27 +428,24 @@ ns.Utils = Utils
 function UI:RefreshRows()
 	local blockStart = debugprofilestop()
 
-	-- Reset perf counters for this refresh cycle
-	if ns.PerfBlocks then
-		ns.PerfBlocks.uiRefresh = 0
-		ns.PerfBlocks.dataQuery = 0
-		ns.PerfBlocks.vaultLookup = 0
-	end
-
 	self:RenderRows()
 
 	-- Record total UI refresh time
 	if ns.PerfBlocks then
-		ns.PerfBlocks.uiRefresh = debugprofilestop() - blockStart
+		ns.PerfBlocks.uiRefresh = ns.PerfBlocks.uiRefresh + (debugprofilestop() - blockStart)
 	end
 end
 
 function UI:QueueRefresh()
-	if self.refreshPending then
+	if self.active == false or self.refreshPending then
 		return
 	end
 	self.refreshPending = true
+	local generation = self.refreshGeneration
 	local function Refresh()
+		if self.active == false or generation ~= self.refreshGeneration then
+			return
+		end
 		self.refreshPending = false
 		if self.frame and self.frame:IsShown() then
 			self:RefreshRows()
@@ -508,8 +530,7 @@ function UI:RenderRows()
 					self.measureFS:SetFont(fontPath, cfg.itemFontSize)
 
 					for _, item in ipairs(items) do
-						local renderItem = setmetatable({ section = section.title }, { __index = item })
-						table.insert(visibleRows, renderItem)
+						table.insert(visibleRows, item)
 
 						local textWidth = 0
 						local valueWidth = 0
@@ -608,8 +629,7 @@ function UI:RenderRows()
 		row:SetWidth(contentWidth)
 		row:SetPoint("TOPLEFT", self.content, "TOPLEFT", 0, yOffset)
 
-		local context = { width = contentWidth }
-		self:UpdateRow(row, rowData, context)
+		self:UpdateRow(row, rowData, fontPath)
 
 		yOffset = yOffset - (row:GetHeight() + cfg.itemSpacing)
 	end
@@ -679,6 +699,8 @@ function UI:CreateRowFrame()
 		GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
 		if self.type == "currency" and self.id then
 			GameTooltip:SetCurrencyByID(self.id)
+		elseif self.type == "item" and self.id then
+			GameTooltip:SetItemByID(self.id)
 		elseif self.type == "vault" and self.details then
 			GameTooltip:SetText(self.label or L["Vault"], 1, 1, 1)
 			if self.details and self.details.slots then
@@ -698,7 +720,6 @@ function UI:CreateRowFrame()
 				GameTooltip:AddLine(header, 1, 0.82, 0)
 				for _, run in ipairs(self.details.history) do
 					-- Format: [Name] - [Level]
-					local _color = run.completed and { 0, 1, 0 } or { 0.5, 0.5, 0.5 }
 					local rightText = run.level
 					if not run.completed then
 						rightText = rightText .. L[" (Failed)"]
@@ -763,8 +784,9 @@ function UI:CreateRowFrame()
 	return row
 end
 
-function UI:UpdateRow(row, data, _ctx)
+function UI:UpdateRow(row, data, fontPath)
 	local cfg = ns.Config
+	fontPath = fontPath or LibStub("LibSharedMedia-3.0"):Fetch("font", cfg.font or "Friz Quadrata TT")
 	row.label:ClearAllPoints()
 	row.value:ClearAllPoints()
 	row.check:ClearAllPoints()
@@ -806,7 +828,6 @@ function UI:UpdateRow(row, data, _ctx)
 
 	if data.type == "header" then
 		row:SetHeight(cfg.headerFontSize + 6)
-		local fontPath = LibStub("LibSharedMedia-3.0"):Fetch("font", cfg.font or "Friz Quadrata TT")
 		row.label:SetFont(fontPath, cfg.headerFontSize, "OUTLINE")
 		row.label:SetTextColor(unpack(C_HEADER))
 		row.label:SetPoint("LEFT", 0, -2)
@@ -829,7 +850,6 @@ function UI:UpdateRow(row, data, _ctx)
 	elseif data.type == "currency_cap" or data.type == "currency" then
 		local height = cfg.itemFontSize + 6
 		row:SetHeight(height)
-		local fontPath = LibStub("LibSharedMedia-3.0"):Fetch("font", cfg.font or "Friz Quadrata TT")
 		row.label:SetFont(fontPath, cfg.itemFontSize)
 		row.value:SetFont(fontPath, cfg.itemFontSize)
 
@@ -885,7 +905,6 @@ function UI:UpdateRow(row, data, _ctx)
 		-- Item count (pseudo-currency like Lumber)
 		local height = cfg.itemFontSize + 6
 		row:SetHeight(height)
-		local fontPath = LibStub("LibSharedMedia-3.0"):Fetch("font", cfg.font or "Friz Quadrata TT")
 		row.label:SetFont(fontPath, cfg.itemFontSize)
 		row.value:SetFont(fontPath, cfg.itemFontSize)
 
@@ -915,7 +934,6 @@ function UI:UpdateRow(row, data, _ctx)
 	elseif data.type == "vault_visual" then
 		local height = cfg.itemFontSize + 6
 		row:SetHeight(height)
-		local fontPath = LibStub("LibSharedMedia-3.0"):Fetch("font", cfg.font or "Friz Quadrata TT")
 		row.label:SetFont(fontPath, cfg.itemFontSize)
 
 		-- Icon
@@ -954,12 +972,10 @@ function UI:UpdateRow(row, data, _ctx)
 		row.value:Hide()
 		row.check:Hide() -- Hide main check, we use individual slot checks
 
-		local _prevSlot = nil
 		-- Iterate backwards to align right? Or forward?
 		-- Let's align them to the RIGHT of the row, like the Value would be.
 		-- Slot 3 (Rightmost) -> Slot 2 -> Slot 1
 
-		local _startX = -10
 		local spacing = 2
 		local size = 16
 
@@ -996,7 +1012,6 @@ function UI:UpdateRow(row, data, _ctx)
 	elseif data.type == "prey" then
 		local height = cfg.itemFontSize + 6
 		row:SetHeight(height)
-		local fontPath = LibStub("LibSharedMedia-3.0"):Fetch("font", cfg.font or "Friz Quadrata TT")
 		row.label:SetFont(fontPath, cfg.itemFontSize)
 		row.value:SetFont(fontPath, cfg.itemFontSize)
 
@@ -1037,7 +1052,6 @@ function UI:UpdateRow(row, data, _ctx)
 	elseif data.type == "quest" then
 		local height = cfg.itemFontSize + 6
 		row:SetHeight(height)
-		local fontPath = LibStub("LibSharedMedia-3.0"):Fetch("font", cfg.font or "Friz Quadrata TT")
 		row.label:SetFont(fontPath, cfg.itemFontSize)
 		row.value:SetFont(fontPath, cfg.itemFontSize)
 

@@ -1,5 +1,34 @@
 # Changelog
 
+All notable changes to Weekly will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [1.3.10] - 2026-09-06
+
+### Added
+
+- Versioned profile and character migrations with regression coverage for existing saved data and AceDB profile operations
+- Dataset validation for all season files loaded by the manifest, including explicit placeholder quests
+- A shared local/CI validation command with pinned Lua tools, lifecycle tests, localization checks, and release dependency checks
+
+### Changed
+
+- Centralized module activation and shutdown for startup, profile changes, and settings updates
+- Deferred expensive Vault history queries until detailed data is requested and reduced repeated rendering allocations
+- Refreshed setup, architecture, storage, testing, and contributor documentation
+
+### Fixed
+
+- Journal reset throttling and pending item callbacks could carry loot across weekly reset boundaries
+- Journal FenUI callbacks and fallback category rendering could leave views empty or stale
+- Profile visibility migration, minimap defaults, and debug toggles could lose or misapply saved preferences
+- Bag and item-data events could leave item rows stale; item icons now show item tooltips
+- Tracker exports could vary in order, and export windows retained widgets after closing
+- Performance counters could reset inconsistently or report stale activity while idle
+- Quest acceptance handlers now use the event's single quest-ID payload
+
 ## [1.3.9] - 2026-08-10
 
 ### Added
@@ -57,11 +86,6 @@
 - Fix crash when saved debug config was boolean instead of table (WoW 12.0 compatibility)
 
 
-All notable changes to Weekly will be documented in this file.
-
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-
 ## [1.3.0] - 2026-01-17
 
 ### Added
@@ -99,8 +123,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.4.0] - 2025-12-23
 
-### Changed
-- ### Added
+### Added
+
 - **System Upgrade**: Modernized the Weekly tracker with StyLua formatting.
 - **Localization**: Integrated AceLocale-3.0 for full localization support (114 strings extracted).
 - **Automated Testing**: Added unit tests for seasonal data loader and weekly journal reset logic.

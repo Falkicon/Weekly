@@ -26,8 +26,8 @@ local _, ns = ...
 --------------------------------------------------------------------------------
 
 local Factory = ns.DataFactory
-local Vault, Quest, Currency, Cap, Item =
-	Factory.Vault, Factory.Quest, Factory.Currency, Factory.Cap, Factory.Item
+local Vault, Quest, PlaceholderQuest, Currency, Cap, Item =
+	Factory.Vault, Factory.Quest, Factory.PlaceholderQuest, Factory.Currency, Factory.Cap, Factory.Item
 
 local data = {
 	{
@@ -75,7 +75,7 @@ local data = {
 		showAfter = "2026-01-20",
 		noSort = true,
 		items = {
-			Quest(0, "Neighborhood Endeavors", "Interface\\Icons\\inv_misc_key_14"),
+			PlaceholderQuest("Neighborhood Endeavors", "Interface\\Icons\\inv_misc_key_14"),
 			Item(251764, "Ashwood Lumber"),
 			Item(242691, "Olemba Lumber"),
 			Item(245586, "Ironwood Lumber"),
@@ -148,4 +148,4 @@ local data = {
 }
 
 -- Register as Expansion 11, Season 3
-ns.Data:Register(11, 3, data)
+ns.Data:Register(11, 3, data, "Data/TheWarWithin/Season3.lua")

@@ -29,8 +29,31 @@ local perfBlocks = {
 	journalTrack = 0, -- Loot message processing
 }
 
--- Expose for UI to update
+-- Cumulative milliseconds; consumers sample deltas over a shared interval.
 ns.PerfBlocks = perfBlocks
+
+local lastPerfSample
+local previousPerfBlocks = {}
+local perfRates = {}
+
+local function GetPerformanceRates()
+	local now = GetTime()
+	local elapsed = lastPerfSample and (now - lastPerfSample)
+	if not elapsed or elapsed < 0 then
+		for key, total in pairs(perfBlocks) do
+			previousPerfBlocks[key] = total
+			perfRates[key] = 0
+		end
+		lastPerfSample = now
+	elseif elapsed >= 1 then
+		for key, total in pairs(perfBlocks) do
+			perfRates[key] = math.max(0, total - previousPerfBlocks[key]) / elapsed
+			previousPerfBlocks[key] = total
+		end
+		lastPerfSample = now
+	end
+	return perfRates
+end
 
 local function AddToDebugBuffer(message, category)
 	table.insert(debugBuffer, {
@@ -42,6 +65,12 @@ local function AddToDebugBuffer(message, category)
 	-- Trim buffer if too large
 	while #debugBuffer > MAX_BUFFER_SIZE do
 		table.remove(debugBuffer, 1)
+	end
+end
+
+local function SetDebugEnabled(enabled)
+	if ns.Weekly and ns.Weekly.SetDebugEnabled then
+		ns.Weekly:SetDebugEnabled(enabled)
 	end
 end
 
@@ -533,25 +562,26 @@ MechanicLib:Register(ADDON_NAME, {
 	-- Performance Integration (Sub-metrics)
 	performance = {
 		getSubMetrics = function()
+			local rates = GetPerformanceRates()
 			return {
 				{
 					name = "UI Refresh",
-					msPerSec = perfBlocks.uiRefresh,
+					msPerSec = rates.uiRefresh,
 					description = "Tracker row rendering and updates",
 				},
 				{
 					name = "Data Query",
-					msPerSec = perfBlocks.dataQuery,
+					msPerSec = rates.dataQuery,
 					description = "Currency and quest API polling",
 				},
 				{
 					name = "Vault Lookup",
-					msPerSec = perfBlocks.vaultLookup,
+					msPerSec = rates.vaultLookup,
 					description = "Weekly vault activities API",
 				},
 				{
 					name = "Journal",
-					msPerSec = perfBlocks.journalTrack,
+					msPerSec = rates.journalTrack,
 					description = "Loot message parsing and tracking",
 				},
 			}
@@ -586,13 +616,12 @@ MechanicLib:Register(ADDON_NAME, {
 			row1Label:SetText("Windows:")
 
 			CreateToolButton(container, 80, -60, 100, "Toggle Tracker", function()
-				if ns.UI and ns.UI.frame then
-					if ns.UI.frame:IsShown() then
-						ns.UI.frame:Hide()
-						print("|cff00ff00Weekly:|r Tracker hidden.")
-					else
-						ns.UI.frame:Show()
+				if ns.UI and type(ns.UI.Toggle) == "function" then
+					ns.UI:Toggle()
+					if ns.UI.frame and ns.UI.frame:IsShown() then
 						print("|cff00ff00Weekly:|r Tracker shown.")
+					else
+						print("|cff00ff00Weekly:|r Tracker hidden.")
 					end
 				else
 					print("|cffff0000Weekly:|r Tracker not available.")
@@ -600,13 +629,12 @@ MechanicLib:Register(ADDON_NAME, {
 			end)
 
 			CreateToolButton(container, 185, -60, 100, "Toggle Journal", function()
-				if ns.JournalUI and ns.JournalUI.frame then
-					if ns.JournalUI.frame:IsShown() then
-						ns.JournalUI.frame:Hide()
-						print("|cff00ff00Weekly:|r Journal hidden.")
-					else
-						ns.JournalUI.frame:Show()
+				if ns.JournalUI and type(ns.JournalUI.Toggle) == "function" then
+					ns.JournalUI:Toggle()
+					if ns.JournalUI.frame and ns.JournalUI.frame:IsShown() then
 						print("|cff00ff00Weekly:|r Journal shown.")
+					else
+						print("|cff00ff00Weekly:|r Journal hidden.")
 					end
 				else
 					print("|cffff0000Weekly:|r Journal not available.")
@@ -631,6 +659,9 @@ MechanicLib:Register(ADDON_NAME, {
 				if ns.UI and ns.UI.frame then
 					ns.UI.frame:ClearAllPoints()
 					ns.UI.frame:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
+					if type(ns.UI.SavePosition) == "function" then
+						ns.UI:SavePosition()
+					end
 					print("|cff00ff00Weekly:|r Position reset to center.")
 				end
 			end)
@@ -732,12 +763,16 @@ MechanicLib:Register(ADDON_NAME, {
 			type = "toggle",
 			name = "Debug Mode",
 			get = function()
-				return ns.Config and ns.Config.debug or false
+				if not ns.Config then
+					return false
+				end
+				if type(ns.Config.debug) == "table" then
+					return ns.Config.debug.enabled == true
+				end
+				return ns.Config.debug == true
 			end,
 			set = function(v)
-				if ns.Config then
-					ns.Config.debug = v
-				end
+				SetDebugEnabled(v)
 			end,
 		},
 		sortCompletedBottom = {

@@ -3,12 +3,20 @@ package-as: Weekly
 ignore:
   - .github
   - .gitignore
+  - .gitattributes
+  - .luacheckrc
+  - .cursorignore
   - .cursor
   - DevMarker.lua
   - Dev
+  - Tests
+  - Tools
+  - Docs
   - AGENTS.md
+  - Data/AGENTS.md
   - CONTRIBUTING.md
   - CHANGELOG.md
+  - TODO.md
 
 externals:
   Libs/LibStub: https://repos.curseforge.com/wow/libstub/trunk

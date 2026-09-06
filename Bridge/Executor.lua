@@ -40,7 +40,7 @@ local actionRegistry = {
 	end,
 
 	["tracker.getVaultDetails"] = function(params)
-		local context = ns.Context:BuildVaultContext(params.categoryID)
+		local context = ns.Context:BuildVaultContext(params.categoryID, true)
 		return ns.Actions.Tracker.GetVaultDetails(context)
 	end,
 

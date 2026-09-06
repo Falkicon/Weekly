@@ -10,6 +10,7 @@ quiet = 1
 exclude_files = {
     "**/Libs/**",       -- External libraries
     "**/Tests/**",      -- Test files
+    ".release/**",      -- Local packaging/tool downloads
 }
 
 -- Globals that Weekly can write to

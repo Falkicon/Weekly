@@ -121,8 +121,9 @@ end
 --------------------------------------------------------------------------------
 
 ---@param categoryID number Vault category (1=Dungeon, 3=Raid, 6=World)
+---@param includeDetails boolean|nil Load run history and raid lockouts for tooltips
 ---@return VaultContext
-function Context:BuildVaultContext(categoryID)
+function Context:BuildVaultContext(categoryID, includeDetails)
 	local activities = C_WeeklyRewards.GetActivities(categoryID) or {}
 
 	-- Sort by index for consistent ordering
@@ -138,7 +139,7 @@ function Context:BuildVaultContext(categoryID)
 	}
 
 	-- Get M+ run history for dungeons
-	if categoryID == 1 then
+	if includeDetails and categoryID == 1 then
 		local runs = C_MythicPlus.GetRunHistory(false, false)
 		if runs then
 			-- Add map names
@@ -150,7 +151,7 @@ function Context:BuildVaultContext(categoryID)
 	end
 
 	-- Get raid lockouts for raids
-	if categoryID == 3 then
+	if includeDetails and categoryID == 3 then
 		context.savedInstances = self:GetRaidLockouts()
 	end
 
@@ -200,11 +201,11 @@ function Context:BuildSortContext(items)
 			local result = Actions.GetQuestStatus(questContext)
 			return result.success and result.data or nil
 		end,
-			getQuestCountStatus = function(ids, targetCount)
-				local questCountContext = self:BuildQuestCountContext(ids, targetCount)
-				local result = Actions.GetQuestCountStatus(questCountContext)
-				return result.success and result.data or nil
-			end,
+		getQuestCountStatus = function(ids, targetCount)
+			local questCountContext = self:BuildQuestCountContext(ids, targetCount)
+			local result = Actions.GetQuestCountStatus(questCountContext)
+			return result.success and result.data or nil
+		end,
 		getCurrencyStatus = function(id)
 			local currencyContext = self:BuildCurrencyContext(id)
 			local result = Actions.GetCurrencyStatus(currencyContext)
