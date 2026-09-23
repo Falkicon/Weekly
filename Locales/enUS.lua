@@ -30,6 +30,7 @@ L["Saved Instances: %d"] = true
 L["Raid %d: %s (%s) - Locked: %s"] = true
 L["  - %s (Killed)"] = true
 L["--- END DEBUG LOCKOUTS ---"] = true
+L["Great Vault API unavailable on this client."] = true
 
 -- ConfigUI - General
 L["General"] = true
@@ -42,6 +43,9 @@ L["Expansion %d"] = true
 L["Season"] = true
 L["Season 3 (Midnight Pre-Patch)"] = true
 L["Season %s"] = true
+L["World of Warcraft: Forever"] = true
+L["Content Update"] = true
+L["Content Update %s"] = true
 L["Currently detecting: %s, %s"] = true
 L["Sort Completed to Bottom"] = true
 L["Move completed quests and capped currencies to the bottom of their list."] = true

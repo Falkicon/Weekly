@@ -40,6 +40,8 @@ The migration helper returns false without running steps for unknown or future s
 
 The dataset tests read ordered `Data/*.lua` entries from `Weekly.toc`, then validate the entire registry. Adding a new season to the TOC automatically includes it in these tests. The static validator also rejects a `Data/*/Season*.lua` file omitted from the TOC.
 
+One manifest serves both Retail and World of Warcraft: Forever (`## Interface: 120100, 16001`). All datasets load on both clients; `Data:GetClientFlavor()` decides which flavor is running (a Forever project constant if the client exposes one, otherwise the 1.60+ build line), `Data:GetRecommendedSeason()` resolves the flavor before any Retail build threshold, and settings list only the running flavor's expansions. Game APIs that a flavor lacks, such as the Great Vault, Mythic+, battle pets, toys, and housing, are checked for presence rather than assumed.
+
 Use `Factory.PlaceholderQuest` for unconfirmed IDs rather than `Quest(0, ...)`. The validator checks data structure, required tracker fields, dates, coordinates, and conflicting settings keys without querying the game API. It reports source and row paths and rejects malformed arrays without scanning arbitrary numeric ranges. Validation is invoked by tooling/tests, not by the UI refresh loop. See [Data Management](../Data/AGENTS.md) for the full format.
 
 Run `python Tools/validate.py` before submitting changes. CI uses the same command and the tool versions from `Tools/toolchain.json`. It includes both Lua suites, validation-tool tests, localization references, TOC/XML dependencies, release exclusions, orphan seasons, lint, and whitespace checks. See [Contributing](../CONTRIBUTING.md) for installation and executable overrides.

@@ -99,12 +99,14 @@ function Weekly:SlashHandler(msg)
 		self:SetDebugEnabled(not (type(ns.Config.debug) == "table" and ns.Config.debug.enabled))
 		self:Printf(L["Debug Mode: %s"]:format(ns.Config.debug.enabled and "|cff00ff00ON|r" or "|cffff0000OFF|r"))
 
-		-- Dump Vault Info
+		-- Dump Vault Info (the Great Vault does not exist on every client flavor)
 		self:Printf(L["--- DEBUG VAULT (Raid) ---"])
-		local acts = C_WeeklyRewards.GetActivities(3) -- Raid
+		local acts = C_WeeklyRewards and C_WeeklyRewards.GetActivities(3) -- Raid
 		local tierID = nil
 
-		if acts then
+		if not C_WeeklyRewards then
+			self:Printf(L["Great Vault API unavailable on this client."])
+		elseif acts then
 			self:Printf(L["Activities Found: %d"], #acts)
 			for i, act in ipairs(acts) do
 				self:Printf(

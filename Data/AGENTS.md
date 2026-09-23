@@ -27,7 +27,7 @@ ns.Data:Register(11, 4, data, "Data/ExpansionName/Season4.lua") -- Example: Exp 
 ```
 
 3.  Add the new file to `Weekly.toc` after `Data/Loader.lua` and `Data/Factories.lua`.
-4.  Update `Data:GetRecommendedSeason()` in `Loader.lua` if the new season should be selected automatically, and cover its build boundary in `Tests/test_data_loader.lua`.
+4.  Update `Data:GetRecommendedSeason()` in `Loader.lua` if the new season should be selected automatically, and cover its build boundary in `Tests/test_data_loader.lua`. Forever datasets are selected by client flavor rather than by build threshold.
 
 ## Sections and Settings
 
@@ -37,7 +37,8 @@ Each dataset is an ordered array of sections with a `title` and an `items` array
 - `showAfter` and `hideAfter` optionally gate a section using `YYYY-MM-DD` dates at local midnight. Use `Data:IsSectionVisible()` so settings and rendering agree.
 - Use `Data:GetItemConfigKey(item)` for visibility settings. Keys are namespaced by type; placeholder IDs (`0`) use the label. An explicit `key` provides a stable identity for composite trackers.
 - Unknown quest IDs must use `Factory.PlaceholderQuest(label, icon, coords)`. A bare `Quest(0, ...)` fails dataset validation, keeping placeholders explicit and searchable.
-- Expansion IDs in this registry use addon numbering (11 = The War Within, 12 = Midnight), not the zero-based IDs returned by item APIs.
+- Expansion IDs in this registry use addon numbering (1 = World of Warcraft: Forever, 11 = The War Within, 12 = Midnight), not the zero-based IDs returned by item APIs.
+- Each expansion belongs to a client flavor (`Data:GetExpansionFlavor()`). Forever datasets live under `Data/Forever/` and are the only ones offered on Forever clients. Forever has no Great Vault, so its datasets must not use `Factory.Vault`; its "season" slot numbers content updates.
 
 `Data/Validation.lua` provides pure-Lua schema checks for tooling and tests. It validates every registered season, including array shape, tracker requirements, time gates, coordinates, and settings-key collisions. Keep it out of refresh paths; call `ns.Data:ValidateRegistry()` after all season files have loaded.
 

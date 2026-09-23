@@ -496,13 +496,10 @@ function Journal:Initialize()
 		LoadJournalData()
 	end
 
-	-- Register events
-	self.tracker:RegisterEvents({
+	-- Register events. Collection APIs vary by client flavor (Forever has no
+	-- battle pets, toys, or housing), so only subscribe to what exists here.
+	local events = {
 		ACHIEVEMENT_EARNED = ResetAware(OnAchievementEarned),
-		NEW_MOUNT_ADDED = ResetAware(OnNewMountAdded),
-		NEW_PET_ADDED = ResetAware(OnNewPetAdded),
-		NEW_TOY_ADDED = ResetAware(OnNewToyAdded),
-		HOUSE_DECOR_ADDED_TO_CHEST = ResetAware(OnDecorAddedToChest),
 		CHAT_MSG_LOOT = OnChatMsgLoot,
 		GET_ITEM_INFO_RECEIVED = OnItemInfoReceived,
 
@@ -510,7 +507,20 @@ function Journal:Initialize()
 		PLAYER_LOGOUT = function(_tracker, _event)
 			SaveJournalData()
 		end,
-	})
+	}
+	if C_MountJournal then
+		events.NEW_MOUNT_ADDED = ResetAware(OnNewMountAdded)
+	end
+	if C_PetJournal then
+		events.NEW_PET_ADDED = ResetAware(OnNewPetAdded)
+	end
+	if C_ToyBox then
+		events.NEW_TOY_ADDED = ResetAware(OnNewToyAdded)
+	end
+	if C_HousingDecor then
+		events.HOUSE_DECOR_ADDED_TO_CHEST = ResetAware(OnDecorAddedToChest)
+	end
+	self.tracker:RegisterEvents(events)
 
 	-- Print status
 	local itemCount = self.tracker.itemCount or 0

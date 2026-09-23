@@ -17,6 +17,41 @@ local TRACKABLE_TYPES = {
 	prey = true,
 }
 
+local function IsForeverClient()
+	local flavor = ns.Data.GetClientFlavor and ns.Data:GetClientFlavor()
+	return flavor ~= nil and flavor == ns.Data.FLAVOR_FOREVER
+end
+
+local function IsForeverExpansion(expansionID)
+	return ns.Data.GetExpansionFlavor ~= nil and ns.Data:GetExpansionFlavor(expansionID) == ns.Data.FLAVOR_FOREVER
+end
+
+local function GetExpansionName(expansionID)
+	if expansionID == 11 then
+		return L["The War Within"]
+	elseif expansionID == 12 then
+		return L["Midnight"]
+	elseif IsForeverExpansion(expansionID) then
+		return L["World of Warcraft: Forever"]
+	end
+	return L["Expansion %d"]:format(expansionID)
+end
+
+local function GetSeasonName(expansionID, seasonID)
+	if seasonID == 3.5 then
+		return L["Season 3 (Midnight Pre-Patch)"]
+	elseif IsForeverExpansion(expansionID) then
+		return L["Content Update %s"]:format(seasonID)
+	end
+	return L["Season %s"]:format(seasonID)
+end
+
+-- Only offer datasets that belong to the running client flavor.
+local function GetClientExpansions()
+	local flavor = ns.Data.GetClientFlavor and ns.Data:GetClientFlavor() or nil
+	return ns.Data:GetExpansions(flavor)
+end
+
 local function BuildTrackingArgs()
 	local args = {
 		desc = {
@@ -118,16 +153,9 @@ function ConfigUI:Initialize()
 								name = L["Expansion"],
 								order = 1,
 								values = function()
-									local exps = ns.Data:GetExpansions()
 									local t = { ["auto"] = L["Automatic (Recommended)"] }
-									for _, id in ipairs(exps) do
-										if id == 11 then
-											t[id] = L["The War Within"]
-										elseif id == 12 then
-											t[id] = L["Midnight"]
-										else
-											t[id] = L["Expansion %d"]:format(id)
-										end
+									for _, id in ipairs(GetClientExpansions()) do
+										t[id] = GetExpansionName(id)
 									end
 									return t
 								end,
@@ -151,7 +179,9 @@ function ConfigUI:Initialize()
 							},
 							season = {
 								type = "select",
-								name = L["Season"],
+								name = function()
+									return IsForeverClient() and L["Content Update"] or L["Season"]
+								end,
 								order = 2,
 								values = function()
 									local t = { ["auto"] = L["Automatic (Recommended)"] }
@@ -167,11 +197,7 @@ function ConfigUI:Initialize()
 
 									local seasons = ns.Data:GetSeasons(activeExp)
 									for _, id in ipairs(seasons) do
-										if id == 3.5 then
-											t[id] = L["Season 3 (Midnight Pre-Patch)"]
-										else
-											t[id] = L["Season %s"]:format(id)
-										end
+										t[id] = GetSeasonName(activeExp, id)
 									end
 									return t
 								end,
@@ -188,11 +214,8 @@ function ConfigUI:Initialize()
 								type = "description",
 								name = function()
 									local exp, sea = ns.Data:GetRecommendedSeason()
-									local expName = (exp == 11 and L["The War Within"])
-										or (exp == 12 and L["Midnight"])
-										or (L["Expansion %d"]:format(exp))
-									local seaName = (sea == 3.5 and L["Season 3 (Midnight Pre-Patch)"])
-										or (L["Season %s"]:format(sea))
+									local expName = GetExpansionName(exp)
+									local seaName = GetSeasonName(exp, sea)
 
 									local currentStatus = ""
 									if ns.Config.selectedExpansion == "auto" or ns.Config.selectedSeason == "auto" then

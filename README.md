@@ -1,13 +1,15 @@
 # Weekly
 
-A lightweight World of Warcraft Retail addon for tracking **Great Vault** progress, **weekly quests**, **currencies**, **bag items**, and **Prey hunts**. Its customizable tracker and Weekly Journal keep weekly objectives and newly earned collectibles in view.
+A lightweight World of Warcraft addon for Retail and World of Warcraft: Forever that tracks **Great Vault** progress, **weekly quests**, **currencies**, **bag items**, and **Prey hunts**. Its customizable tracker and Weekly Journal keep weekly objectives and newly earned collectibles in view.
 
-![WoW Version](https://img.shields.io/badge/WoW-Retail-blue)
-![Interface](https://img.shields.io/badge/Interface-120100-green)
+![WoW Version](https://img.shields.io/badge/WoW-Retail%20%7C%20Forever-blue)
+![Interface](https://img.shields.io/badge/Interface-120100%20%7C%2016001-green)
 [![GitHub](https://img.shields.io/badge/GitHub-Falkicon%2FWeekly-181717?logo=github)](https://github.com/Falkicon/Weekly)
 [![Sponsor](https://img.shields.io/badge/Sponsor-pink?logo=githubsponsors)](https://github.com/sponsors/Falkicon)
 
-The manifest targets **Interface 120100**. Bundled datasets cover The War Within Season 3 and Midnight Seasons 1 and 2. New Season 2 quest IDs are marked as PTR candidates in the data file and still need in-game confirmation.
+The manifest targets **Interface 120100** (Retail) and **16001** (World of Warcraft: Forever). Bundled datasets cover The War Within Season 3, Midnight Seasons 1 and 2, and a Forever launch placeholder. New Season 2 quest IDs are marked as PTR candidates in the data file and still need in-game confirmation.
+
+On Forever, Weekly detects the client flavor, auto-selects the Forever dataset, and offers only Forever datasets in settings. Forever has no Great Vault or Mythic+, so those rows never appear there; the Journal records only the collection types the client exposes. Forever weekly objectives and raid lockouts will be added once the game launches and its IDs can be confirmed in-game.
 
 ## Features
 
@@ -30,6 +32,7 @@ The manifest targets **Interface 120100**. Bundled datasets cover The War Within
    ```
    World of Warcraft\_retail_\Interface\AddOns\
    ```
+   For World of Warcraft: Forever, use that client's own `Interface\AddOns` folder instead (the beta installs as `_classic_beta_`)
 3. Restart WoW after a new installation and enable Weekly in the AddOns list. Use `/reload` after updating an already loaded copy
 
 For a source checkout and development tools, see [Contributing](CONTRIBUTING.md).
@@ -76,7 +79,7 @@ Use `/weekly settings`, or choose settings from the Journal minimap icon's conte
 
 ## Requirements
 
-- A Retail client compatible with the manifest's Interface 120100 target
+- A Retail client compatible with the manifest's Interface 120100 target, or a World of Warcraft: Forever client (Interface 16001)
 - Required libraries are included; FenCore and Mechanic are optional integrations
 
 Older season datasets remain selectable; their inclusion does not establish support for older clients.
@@ -108,6 +111,7 @@ Older season datasets remain selectable; their inclusion does not establish supp
 - **Ace3 Framework** – Uses AceAddon, AceDB, AceConfig for robust infrastructure
 - **Data-Driven** – Centralized `Data/` folder allows easy seasonal updates
 - **Auto-Selection** – Uses client Interface build thresholds, including PTR builds, rather than a live season calendar. Choose a season explicitly in settings to override it
+- **Client Flavors** – `Data:GetClientFlavor()` distinguishes Retail from Forever by project constant or the 1.60+ build line; each dataset belongs to a flavor and only the running flavor's datasets are offered
 - **Auto-Sizing Layout** – Window calculates height/width based on content
 - **LibDataBroker** – Minimap and panel integration
 
