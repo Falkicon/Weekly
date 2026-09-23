@@ -170,9 +170,9 @@ function JournalUI:CreateWindow()
 	-- Tab container (for internal tabs at top)
 	frame.tabContainer = CreateFrame("Frame", nil, frame)
 	if frame.safeZone then
-		-- Anchor to systematic SafeZone
-		frame.tabContainer:SetPoint("TOPLEFT", frame.safeZone, "TOPLEFT", 0, -HEADER_HEIGHT)
-		frame.tabContainer:SetPoint("TOPRIGHT", frame.safeZone, "TOPRIGHT", 0, -HEADER_HEIGHT)
+		-- Anchor to systematic SafeZone (it already clears the title bar)
+		frame.tabContainer:SetPoint("TOPLEFT", frame.safeZone, "TOPLEFT", 0, 0)
+		frame.tabContainer:SetPoint("TOPRIGHT", frame.safeZone, "TOPRIGHT", 0, 0)
 	else
 		-- Fallback to manual padding
 		frame.tabContainer:SetPoint("TOPLEFT", PANEL_PADDING, -HEADER_HEIGHT)
@@ -274,21 +274,42 @@ function JournalUI:CreateWindow()
 		labelParent = frame.footer
 	end
 
-	frame.clearTabBtn = CreateFrame("Button", nil, buttonParent, "UIPanelButtonTemplate")
-	frame.clearTabBtn:SetSize(90, 22)
-	frame.clearTabBtn:SetPoint("LEFT", 0, 0)
-	frame.clearTabBtn:SetText(L["Clear Tab"])
-	frame.clearTabBtn:SetScript("OnClick", function()
-		self:OnClearTabClicked()
-	end)
+	if FenUI and FenUI.CreateButton then
+		-- FenUI buttons match the journal's look; Clear All is styled as destructive
+		frame.clearTabBtn = FenUI:CreateButton(buttonParent, {
+			text = L["Clear Tab"],
+			width = 90,
+			height = 22,
+			onClick = function()
+				self:OnClearTabClicked()
+			end,
+		})
+		frame.clearAllBtn = FenUI:CreateButton(buttonParent, {
+			text = L["Clear All"],
+			width = 90,
+			height = 22,
+			variant = "danger",
+			onClick = function()
+				self:OnClearAllClicked()
+			end,
+		})
+	else
+		frame.clearTabBtn = CreateFrame("Button", nil, buttonParent, "UIPanelButtonTemplate")
+		frame.clearTabBtn:SetSize(90, 22)
+		frame.clearTabBtn:SetText(L["Clear Tab"])
+		frame.clearTabBtn:SetScript("OnClick", function()
+			self:OnClearTabClicked()
+		end)
 
-	frame.clearAllBtn = CreateFrame("Button", nil, buttonParent, "UIPanelButtonTemplate")
-	frame.clearAllBtn:SetSize(90, 22)
+		frame.clearAllBtn = CreateFrame("Button", nil, buttonParent, "UIPanelButtonTemplate")
+		frame.clearAllBtn:SetSize(90, 22)
+		frame.clearAllBtn:SetText(L["Clear All"])
+		frame.clearAllBtn:SetScript("OnClick", function()
+			self:OnClearAllClicked()
+		end)
+	end
+	frame.clearTabBtn:SetPoint("LEFT", 0, 0)
 	frame.clearAllBtn:SetPoint("LEFT", frame.clearTabBtn, "RIGHT", 10, 0)
-	frame.clearAllBtn:SetText(L["Clear All"])
-	frame.clearAllBtn:SetScript("OnClick", function()
-		self:OnClearAllClicked()
-	end)
 
 	frame.weekLabel = labelParent:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
 	frame.weekLabel:SetPoint("RIGHT", 0, 0)
