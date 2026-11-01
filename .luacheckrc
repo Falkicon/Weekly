@@ -86,7 +86,6 @@ read_globals = {
     "HousingDashboardFrame",
     "MenuUtil",
     "StaticPopup_Show",
-    "StaticPopupDialogs",
     "CANCEL",
     "HousingFramesUtil",
     "GetMouseButtonClicked",
