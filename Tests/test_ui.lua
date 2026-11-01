@@ -96,6 +96,7 @@ end
 
 describe("Weekly tracker UI", function()
 	local afterCallback
+	local afterDelay
 
 	before_each(function()
 		ns = {
@@ -131,7 +132,8 @@ describe("Weekly tracker UI", function()
 		end
 		_G.FormatLargeNumber = tostring
 		_G.C_Timer = {
-			After = function(_, callback)
+			After = function(delay, callback)
+				afterDelay = delay
 				afterCallback = callback
 			end,
 		}
@@ -164,6 +166,7 @@ describe("Weekly tracker UI", function()
 			end
 		end
 		afterCallback = nil
+		afterDelay = nil
 		LoadFile("UI.lua")
 		ns.UI:ApplyConfig("login")
 	end)
@@ -185,6 +188,24 @@ describe("Weekly tracker UI", function()
 		assert.are.equal(1, refreshes)
 	end)
 
+	it("filters unrelated currency events while coalescing tracked updates", function()
+		ns.UI.trackedCurrencyIDs = { [123] = true }
+		ns.UI.frame:Show()
+		local refreshes = 0
+		ns.UI.RefreshRows = function(_, skipIfUnchanged)
+			assert.is_true(skipIfUnchanged)
+			refreshes = refreshes + 1
+		end
+
+		ns.UI.frame.scripts.OnEvent(nil, "CURRENCY_DISPLAY_UPDATE", 456)
+		assert.is_nil(afterCallback)
+		ns.UI.frame.scripts.OnEvent(nil, "CURRENCY_DISPLAY_UPDATE", 123)
+		ns.UI.frame.scripts.OnEvent(nil, "CURRENCY_DISPLAY_UPDATE", 123)
+		assert.are.equal(0.2, afterDelay)
+		afterCallback()
+		assert.are.equal(1, refreshes)
+	end)
+
 	it("accumulates performance counters across multiple refreshes", function()
 		ns.PerfBlocks = { uiRefresh = 10, dataQuery = 20, vaultLookup = 30, journalTrack = 40 }
 		local elapsed = 0
@@ -198,7 +219,7 @@ describe("Weekly tracker UI", function()
 		end
 		ns.UI:RefreshRows()
 		ns.UI:RefreshRows()
-		assert.are.same({ uiRefresh = 20, dataQuery = 24, vaultLookup = 32, journalTrack = 40 }, ns.PerfBlocks)
+		assert.are.same({ uiRefresh = 14, dataQuery = 24, vaultLookup = 32, journalTrack = 40 }, ns.PerfBlocks)
 	end)
 
 	it("shows the item tooltip for item-backed tracker rows", function()

@@ -567,12 +567,12 @@ MechanicLib:Register(ADDON_NAME, {
 				{
 					name = "UI Refresh",
 					msPerSec = rates.uiRefresh,
-					description = "Tracker row rendering and updates",
+					description = "Tracker processing and row updates",
 				},
 				{
 					name = "Data Query",
 					msPerSec = rates.dataQuery,
-					description = "Currency and quest API polling",
+					description = "Tracker data collection and sorting",
 				},
 				{
 					name = "Vault Lookup",

@@ -71,7 +71,16 @@ function UI:Initialize()
 		self.titleText:SetTextColor(0.6, 0.6, 0.6)
 
 		-- Events
-		self.frame:SetScript("OnEvent", function()
+		self.frame:SetScript("OnEvent", function(_, event, currencyID)
+			if
+				event == "CURRENCY_DISPLAY_UPDATE"
+				and type(currencyID) == "number"
+				and currencyID > 0
+				and self.trackedCurrencyIDs
+				and not self.trackedCurrencyIDs[currencyID]
+			then
+				return
+			end
 			self:QueueRefresh()
 		end)
 
@@ -409,7 +418,11 @@ function Utils.GetVaultDetails(categoryID)
 end
 
 function Utils.SortItems(items)
+	local blockStart = debugprofilestop()
 	local sorted = ns.Bridge:SortItems(items)
+	if ns.PerfBlocks then
+		ns.PerfBlocks.dataQuery = ns.PerfBlocks.dataQuery + (debugprofilestop() - blockStart)
+	end
 	if sorted then
 		-- Replace items in-place to maintain reference
 		for i = 1, #sorted do
@@ -425,14 +438,19 @@ end
 
 ns.Utils = Utils
 
-function UI:RefreshRows()
+function UI:RefreshRows(skipIfUnchanged)
 	local blockStart = debugprofilestop()
+	local dataQueryStart = ns.PerfBlocks and ns.PerfBlocks.dataQuery or 0
+	local vaultLookupStart = ns.PerfBlocks and ns.PerfBlocks.vaultLookup or 0
 
-	self:RenderRows()
+	self:RenderRows(skipIfUnchanged)
 
-	-- Record total UI refresh time
 	if ns.PerfBlocks then
-		ns.PerfBlocks.uiRefresh = ns.PerfBlocks.uiRefresh + (debugprofilestop() - blockStart)
+		local totalDuration = debugprofilestop() - blockStart
+		local dataDuration = ns.PerfBlocks.dataQuery - dataQueryStart
+		local vaultDuration = ns.PerfBlocks.vaultLookup - vaultLookupStart
+		local uiDuration = math.max(0, totalDuration - dataDuration - vaultDuration)
+		ns.PerfBlocks.uiRefresh = ns.PerfBlocks.uiRefresh + uiDuration
 	end
 end
 
@@ -448,29 +466,134 @@ function UI:QueueRefresh()
 		end
 		self.refreshPending = false
 		if self.frame and self.frame:IsShown() then
-			self:RefreshRows()
+			self:RefreshRows(true)
 		end
 	end
 	if C_Timer and C_Timer.After then
-		C_Timer.After(0.05, Refresh)
+		C_Timer.After(0.2, Refresh)
 	else
 		Refresh()
 	end
 end
 
-function UI:RenderRows()
+local function AppendStableValue(parts, value, visited)
+	local valueType = type(value)
+	if valueType ~= "table" then
+		table.insert(parts, valueType .. ":" .. tostring(value))
+		return
+	end
+	if visited[value] then
+		table.insert(parts, "table:<cycle>")
+		return
+	end
+
+	visited[value] = true
+	local keys = {}
+	for key in pairs(value) do
+		table.insert(keys, key)
+	end
+	table.sort(keys, function(a, b)
+		return type(a) .. ":" .. tostring(a) < type(b) .. ":" .. tostring(b)
+	end)
+	for _, key in ipairs(keys) do
+		AppendStableValue(parts, key, visited)
+		AppendStableValue(parts, value[key], visited)
+	end
+	visited[value] = nil
+end
+
+local function BuildRenderSignature(visibleRows, refreshCache)
+	local state = {
+		rows = {},
+		queries = refreshCache,
+	}
+	for index, rowData in ipairs(visibleRows) do
+		state.rows[index] = {
+			type = rowData.type,
+			key = rowData.type == "header" and rowData.text or ns.Data:GetItemConfigKey(rowData),
+			collapsed = rowData.isCollapsed,
+		}
+	end
+
+	local parts = {}
+	AppendStableValue(parts, state, {})
+	return table.concat(parts, "|")
+end
+
+local function PrimeItemState(item)
+	if item.type == "vault_visual" then
+		ns.Utils.GetVaultDetails(item.id)
+	elseif item.type == "quest" then
+		ns.Utils.GetQuestItem(item)
+	elseif item.type == "prey" then
+		ns.Utils.GetPrey(item)
+	elseif item.type == "currency" or item.type == "currency_cap" then
+		ns.Utils.GetCurrency(item.id)
+	elseif item.type == "item" then
+		ns.Utils.GetItem(item.id)
+	end
+end
+
+local function BuildVisibleRows(sections, cfg, visibilityNow)
+	local visibleRows = {}
+	local trackedCurrencyIDs = {}
+
+	for _, section in ipairs(sections) do
+		if ns.Data:IsSectionVisible(section, cfg, visibilityNow) then
+			local items = {}
+			for _, item in ipairs(section.items) do
+				local configKey = ns.Data:GetItemConfigKey(item)
+				local legacyKey = ns.Data:GetLegacyItemConfigKey(item)
+				local isHidden = cfg.hiddenItems[configKey] or (legacyKey ~= nil and cfg.hiddenItems[legacyKey])
+				if not isHidden then
+					table.insert(items, item)
+					if item.type == "currency" or item.type == "currency_cap" then
+						trackedCurrencyIDs[item.id] = true
+					end
+				end
+			end
+
+			if #items > 0 then
+				local isCollapsed = cfg.collapsedSections and cfg.collapsedSections[section.title]
+				table.insert(visibleRows, { type = "header", text = section.title, isCollapsed = isCollapsed })
+
+				if not isCollapsed then
+					if not section.noSort then
+						ns.Utils.SortItems(items)
+					end
+					for _, item in ipairs(items) do
+						table.insert(visibleRows, item)
+						PrimeItemState(item)
+					end
+				end
+			end
+		end
+	end
+
+	return visibleRows, trackedCurrencyIDs
+end
+
+function UI:RenderRows(skipIfUnchanged)
 	self.refreshCache = {}
 	local sections = ns:GetCurrentSeasonData()
 	local cfg = ns.Config
 	self.rows = self.rows or {}
 	local poolIndex = 1
 
-	-- 1. Measurement & Processing Pass
-	local visibleRows = {}
+	local visibilityNow = time()
+	local visibleRows, trackedCurrencyIDs = BuildVisibleRows(sections, cfg, visibilityNow)
+	self.trackedCurrencyIDs = trackedCurrencyIDs
+	local renderSignature = BuildRenderSignature(visibleRows, self.refreshCache)
+	if skipIfUnchanged and renderSignature == self.lastRenderSignature then
+		self.refreshCache = nil
+		return false
+	end
+	self.lastRenderSignature = renderSignature
+
+	-- 1. Measurement Pass
 	local maxLabelWidth = 0
 	local maxValueWidth = 0
 	local totalHeight = 20 -- Padding
-	local visibilityNow = time()
 
 	if not self.measureFS then
 		self.measureFS = self.content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
@@ -478,119 +601,53 @@ function UI:RenderRows()
 
 	local fontPath = LibStub("LibSharedMedia-3.0"):Fetch("font", cfg.font or "Friz Quadrata TT")
 
-	for _, section in ipairs(sections) do
-		-- Skip time-gated sections that shouldn't be visible yet
-		if not ns.Data:IsSectionVisible(section, cfg, visibilityNow) then
-			-- Section is time-gated out - skip entirely
+	for _, item in ipairs(visibleRows) do
+		local textWidth = 0
+		local valueWidth = 0
+		if item.type == "header" then
+			self.measureFS:SetFont(fontPath, cfg.headerFontSize, "OUTLINE")
+			self.measureFS:SetText("[-] " .. item.text)
+			textWidth = self.measureFS:GetStringWidth()
+			totalHeight = totalHeight + (cfg.headerFontSize + 6) + cfg.itemSpacing
 		else
-			-- A. Process Items first to check if any are visible
-			-- Create a copy for sorting so we don't mutate the data source
-			local items = {}
-			for _, item in ipairs(section.items) do
-				-- Robust ID check: if table, use first ID as key
-				local configKey = ns.Data:GetItemConfigKey(item)
-				local legacyKey = ns.Data:GetLegacyItemConfigKey(item)
-				local isHidden = cfg.hiddenItems[configKey] or (legacyKey ~= nil and cfg.hiddenItems[legacyKey])
-
-				if not isHidden then
-					table.insert(items, item)
+			self.measureFS:SetFont(fontPath, cfg.itemFontSize)
+			if item.type == "vault_visual" then
+				self.measureFS:SetText(item.label)
+				textWidth = self.measureFS:GetStringWidth()
+			elseif item.type == "quest" then
+				self.measureFS:SetText(item.label)
+				textWidth = self.measureFS:GetStringWidth()
+				local _, prog, max, _, isPercent = ns.Utils.GetQuestItem(item)
+				if max >= 1 then
+					self.measureFS:SetText(isPercent and (prog .. "%") or (prog .. " / " .. max))
+					valueWidth = self.measureFS:GetStringWidth()
 				end
+			elseif item.type == "prey" then
+				self.measureFS:SetText(item.label)
+				textWidth = self.measureFS:GetStringWidth()
+				local _, prog, max, isPartial = ns.Utils.GetPrey(item)
+				if max >= 1 then
+					self.measureFS:SetText(prog .. (isPartial and "+ / " or " / ") .. max)
+					valueWidth = self.measureFS:GetStringWidth()
+				end
+			elseif item.type == "currency" or item.type == "currency_cap" then
+				local _, amount, max, name = ns.Utils.GetCurrency(item.id)
+				self.measureFS:SetText(item.label or name)
+				textWidth = self.measureFS:GetStringWidth()
+				self.measureFS:SetText(max > 0 and (amount .. " / " .. max) or amount)
+				valueWidth = self.measureFS:GetStringWidth()
+			elseif item.type == "item" then
+				local count, name = ns.Utils.GetItem(item.id)
+				self.measureFS:SetText(item.label or name)
+				textWidth = self.measureFS:GetStringWidth()
+				self.measureFS:SetText(count)
+				valueWidth = self.measureFS:GetStringWidth()
 			end
+			totalHeight = totalHeight + (cfg.itemFontSize + 6) + cfg.itemSpacing
+		end
 
-			-- Skip section entirely if all items are hidden
-			if #items == 0 then
-			-- Empty section - skip entirely
-			else
-				-- Check if this section is collapsed
-				local isCollapsed = cfg.collapsedSections and cfg.collapsedSections[section.title]
-
-				-- B. Header (only if there are visible items)
-				table.insert(visibleRows, { type = "header", text = section.title, isCollapsed = isCollapsed })
-
-				-- Measure Header (add space for collapse indicator)
-				self.measureFS:SetFont(fontPath, cfg.headerFontSize, "OUTLINE")
-				self.measureFS:SetText("[-] " .. section.title)
-
-				-- Include header width in maxLabelWidth so collapsed sections set proper frame width
-				local headerWidth = self.measureFS:GetStringWidth()
-				if headerWidth > maxLabelWidth then
-					maxLabelWidth = headerWidth
-				end
-
-				totalHeight = totalHeight + (cfg.headerFontSize + 6) + cfg.itemSpacing
-
-				-- Only process/show items if section is NOT collapsed
-				if not isCollapsed then
-					-- Sort
-					if not section.noSort then
-						ns.Utils.SortItems(items)
-					end
-
-					-- Measure Items
-					self.measureFS:SetFont(fontPath, cfg.itemFontSize)
-
-					for _, item in ipairs(items) do
-						table.insert(visibleRows, item)
-
-						local textWidth = 0
-						local valueWidth = 0
-
-						if item.type == "vault_visual" then
-							self.measureFS:SetText(item.label)
-							textWidth = self.measureFS:GetStringWidth()
-						elseif item.type == "quest" then
-							self.measureFS:SetText(item.label)
-							textWidth = self.measureFS:GetStringWidth()
-
-							local _, prog, max, _, isPercent = ns.Utils.GetQuestItem(item)
-							if max >= 1 then
-								if isPercent then
-									self.measureFS:SetText(prog .. "%")
-								else
-									self.measureFS:SetText(prog .. " / " .. max)
-								end
-								valueWidth = self.measureFS:GetStringWidth()
-							end
-						elseif item.type == "prey" then
-							self.measureFS:SetText(item.label)
-							textWidth = self.measureFS:GetStringWidth()
-
-							local _, prog, max, isPartial = ns.Utils.GetPrey(item)
-							if max >= 1 then
-								self.measureFS:SetText(prog .. (isPartial and "+ / " or " / ") .. max)
-								valueWidth = self.measureFS:GetStringWidth()
-							end
-						elseif item.type == "currency" or item.type == "currency_cap" then
-							local _, amt, max, name = ns.Utils.GetCurrency(item.id)
-							self.measureFS:SetText(item.label or name)
-							textWidth = self.measureFS:GetStringWidth()
-
-							local valText = amt
-							if max > 0 then
-								valText = amt .. " / " .. max
-							end
-							self.measureFS:SetText(valText)
-							valueWidth = self.measureFS:GetStringWidth()
-						elseif item.type == "item" then
-							local count, name = ns.Utils.GetItem(item.id)
-							self.measureFS:SetText(item.label or name)
-							textWidth = self.measureFS:GetStringWidth()
-							self.measureFS:SetText(count)
-							valueWidth = self.measureFS:GetStringWidth()
-						end
-
-						if textWidth > maxLabelWidth then
-							maxLabelWidth = textWidth
-						end
-						if valueWidth > maxValueWidth then
-							maxValueWidth = valueWidth
-						end
-
-						totalHeight = totalHeight + (cfg.itemFontSize + 6) + cfg.itemSpacing
-					end
-				end
-			end
-		end -- Close time-gate else block
+		maxLabelWidth = math.max(maxLabelWidth, textWidth)
+		maxValueWidth = math.max(maxValueWidth, valueWidth)
 	end
 
 	-- 2. Calculate Size
@@ -639,6 +696,7 @@ function UI:RenderRows()
 		self.rows[i]:Hide()
 	end
 	self.refreshCache = nil
+	return true
 end
 
 function UI:CreateRowFrame()
@@ -1129,7 +1187,7 @@ function UI:Toggle()
 		ns.Config.visible = false
 	else
 		self.frame:Show()
-		self:RefreshRows()
+		self:RefreshRows(false)
 		ns.Config.visible = true
 	end
 end
@@ -1144,7 +1202,7 @@ function UI:ToggleSection(sectionTitle)
 	ns.Config.collapsedSections[sectionTitle] = not ns.Config.collapsedSections[sectionTitle]
 
 	-- Re-render and update button
-	self:RenderRows()
+	self:RefreshRows(false)
 	self:UpdateCollapseToggleBtn()
 end
 
@@ -1159,13 +1217,13 @@ function UI:CollapseAll()
 		ns.Config.collapsedSections[section.title] = true
 	end
 
-	self:RenderRows()
+	self:RefreshRows(false)
 end
 
 function UI:ExpandAll()
 	-- Clear all collapsed states
 	ns.Config.collapsedSections = {}
-	self:RenderRows()
+	self:RefreshRows(false)
 end
 
 function UI:AreAllCollapsed()
