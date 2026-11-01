@@ -86,7 +86,6 @@ read_globals = {
     "HousingDashboardFrame",
     "MenuUtil",
     "StaticPopup_Show",
-    "StaticPopupDialogs",
     "CANCEL",
     "HousingFramesUtil",
     "GetMouseButtonClicked",
@@ -189,6 +188,9 @@ read_globals = {
     
     -- Constants
     "Enum",
+    "WOW_PROJECT_ID",
+    "WOW_PROJECT_FOREVER",
+    "WOW_PROJECT_CAMELOT",
     "LE_EXPANSION_WAR_WITHIN",
     "LE_EXPANSION_SHADOWLANDS",
     "LE_EXPANSION_DRAGONFLIGHT",

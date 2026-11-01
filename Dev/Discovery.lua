@@ -98,6 +98,18 @@ local function GetCurrentZoneInfo()
 	}
 end
 
+-- Forever quests report no expansion and its reworked zones are not in the
+-- retail continent table, so label them by client flavor instead of "nil".
+local function ResolveExpansionName(expansion)
+	if expansion ~= nil then
+		return ns.TrackerCore.GetExpansionName(expansion)
+	end
+	if ns.Data and ns.Data.GetClientFlavor and ns.Data:GetClientFlavor() == ns.Data.FLAVOR_FOREVER then
+		return "Forever"
+	end
+	return nil
+end
+
 --------------------------------------------------------------------------------
 -- Persistence: Save/Load discovered items
 --------------------------------------------------------------------------------
@@ -355,7 +367,7 @@ function Discovery:OnCurrencyUpdate(currencyID, _quantity, _quantityChange)
 		name = info.name,
 		icon = info.iconFileID,
 		expansion = expansion,
-		expansionName = ns.TrackerCore.GetExpansionName(expansion),
+		expansionName = ResolveExpansionName(expansion),
 		hasCap = hasCap,
 		hasMax = hasMax,
 		maxWeekly = info.maxWeeklyQuantity,
@@ -419,7 +431,7 @@ function Discovery:OnQuestEvent(questID, eventType)
 	self.tracker:LogItem("quest", questID, {
 		name = questName,
 		expansion = expansion,
-		expansionName = ns.TrackerCore.GetExpansionName(expansion),
+		expansionName = ResolveExpansionName(expansion),
 		eventType = eventType,
 		isWeekly = isWeekly,
 		isDaily = isDaily,

@@ -93,6 +93,58 @@ describe("Weekly Data Loader", function()
 		assert.are.equal(2, sea)
 	end)
 
+	it("should detect the Forever flavor from a 1.60 build line", function()
+		_G.GetBuildInfo = function()
+			return "1.60.1", "69893", "Sep 17 2026", 16001
+		end
+		assert.are.equal(ns.Data.FLAVOR_FOREVER, ns.Data:GetClientFlavor())
+
+		_G.GetBuildInfo = function()
+			return "12.1.0", "12345", "Aug 2026", 120100
+		end
+		assert.are.equal(ns.Data.FLAVOR_MAINLINE, ns.Data:GetClientFlavor())
+	end)
+
+	it("should not mistake a Classic Era build line for Forever", function()
+		_G.GetBuildInfo = function()
+			return "1.15.9", "12345", "Aug 2026", 11509
+		end
+		assert.are.equal(ns.Data.FLAVOR_MAINLINE, ns.Data:GetClientFlavor())
+	end)
+
+	it("should prefer a Forever project constant when the client exposes one", function()
+		_G.WOW_PROJECT_ID = 27
+		_G.WOW_PROJECT_FOREVER = 27
+		_G.GetBuildInfo = function()
+			return "12.1.0", "12345", "Aug 2026", 120100
+		end
+		assert.are.equal(ns.Data.FLAVOR_FOREVER, ns.Data:GetClientFlavor())
+
+		_G.WOW_PROJECT_ID = 1
+		assert.are.equal(ns.Data.FLAVOR_MAINLINE, ns.Data:GetClientFlavor())
+		_G.WOW_PROJECT_ID = nil
+		_G.WOW_PROJECT_FOREVER = nil
+	end)
+
+	it("should select the Forever launch dataset on Forever clients", function()
+		_G.GetBuildInfo = function()
+			return "1.60.1", "69893", "Sep 17 2026", 16001
+		end
+
+		local exp, sea = ns.Data:GetRecommendedSeason()
+		assert.are.equal(ns.Data.FOREVER_EXPANSION, exp)
+		assert.are.equal(1, sea)
+	end)
+
+	it("should filter registered expansions by client flavor", function()
+		ns.Data:Register(ns.Data.FOREVER_EXPANSION, 1, {})
+		ns.Data:Register(12, 2, {})
+
+		assert.are.same({ ns.Data.FOREVER_EXPANSION, 12 }, ns.Data:GetExpansions())
+		assert.are.same({ ns.Data.FOREVER_EXPANSION }, ns.Data:GetExpansions(ns.Data.FLAVOR_FOREVER))
+		assert.are.same({ 12 }, ns.Data:GetExpansions(ns.Data.FLAVOR_MAINLINE))
+	end)
+
 	it("should expose the Season 2 cache objective separately from the 15-hunt ledger", function()
 		LoadFile("Data/Factories.lua")
 		LoadFile("Data/Midnight/Season2.lua")

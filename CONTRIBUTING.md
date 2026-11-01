@@ -9,6 +9,7 @@ Thanks for your interest in contributing! Weekly is a lightweight HUD for tracki
    ```
    World of Warcraft\_retail_\Interface\AddOns\Weekly\
    ```
+   A World of Warcraft: Forever client uses its own `Interface\AddOns` folder; a junction or symlink from one checkout serves both clients
 3. **Install validation tools** using the setup below and run `python Tools/validate.py` from the repository root
 4. **Restart WoW** for the first installation, then use `/reload` after source edits. Check that the loaded copy is the checkout you are editing
 

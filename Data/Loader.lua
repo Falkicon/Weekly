@@ -5,6 +5,38 @@ ns.Data = ns.Data or {}
 ns.Data.Registry = {}
 ns.Data.Sources = {}
 
+-- Client flavors. World of Warcraft: Forever runs on the modern client with a
+-- 1.60+ build line, so its datasets share this schema but must never be
+-- auto-selected on Retail (and vice versa).
+ns.Data.FLAVOR_MAINLINE = "mainline"
+ns.Data.FLAVOR_FOREVER = "forever"
+ns.Data.FOREVER_EXPANSION = 1
+
+--- Detect which client flavor is running.
+-- Prefers a project constant when the client exposes one, then falls back to
+-- the build line: Forever builds are 1.60.x (16000+) while Classic Era stays
+-- on 1.15.x, so the range is unambiguous.
+-- @return string: ns.Data.FLAVOR_FOREVER or ns.Data.FLAVOR_MAINLINE
+function ns.Data:GetClientFlavor()
+	local foreverProject = WOW_PROJECT_FOREVER or WOW_PROJECT_CAMELOT
+	if foreverProject and WOW_PROJECT_ID == foreverProject then
+		return self.FLAVOR_FOREVER
+	end
+	local _, _, _, tocversion = GetBuildInfo()
+	if type(tocversion) == "number" and tocversion >= 16000 and tocversion < 20000 then
+		return self.FLAVOR_FOREVER
+	end
+	return self.FLAVOR_MAINLINE
+end
+
+--- Flavor that owns a registered expansion ID.
+function ns.Data:GetExpansionFlavor(expansionID)
+	if expansionID == self.FOREVER_EXPANSION then
+		return self.FLAVOR_FOREVER
+	end
+	return self.FLAVOR_MAINLINE
+end
+
 local parsedDates = {}
 
 local function ParseDate(dateStr)
@@ -81,6 +113,12 @@ end
 
 --- Get the recommended expansion and season based on client version
 function ns.Data:GetRecommendedSeason()
+	-- Forever ships content updates instead of seasons. Its build line (1.60.x)
+	-- sits below every Retail threshold, so resolve the flavor first.
+	if self:GetClientFlavor() == self.FLAVOR_FOREVER then
+		return self.FOREVER_EXPANSION, 1
+	end
+
 	local _, _, _, tocversion = GetBuildInfo()
 
 	-- Expansion 12.1.0+ (Curse of Ula'tek / Midnight Season 2)
@@ -112,10 +150,13 @@ function ns.Data:Get(expansionID, seasonID)
 end
 
 --- Get all registered expansions (for Config)
-function ns.Data:GetExpansions()
+-- @param flavor string|nil: Only expansions owned by this client flavor
+function ns.Data:GetExpansions(flavor)
 	local exps = {}
 	for id, _ in pairs(self.Registry) do
-		table.insert(exps, id)
+		if flavor == nil or self:GetExpansionFlavor(id) == flavor then
+			table.insert(exps, id)
+		end
 	end
 	table.sort(exps)
 	return exps

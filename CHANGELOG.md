@@ -5,6 +5,17 @@ All notable changes to Weekly will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- World of Warcraft: Forever support: the manifest accepts Interface 16001, the loader detects the client flavor, and a Forever launch dataset auto-selects on Forever clients
+- Settings only offer datasets that belong to the running client flavor and label Forever datasets as content updates
+
+### Changed
+
+- Great Vault, Mythic+, and Journal collection APIs are checked for presence so clients without them load and run without errors
+
 ## [1.3.11] - 2026-09-23
 
 ### Changed

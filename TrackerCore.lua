@@ -397,6 +397,9 @@ local EXPANSION_NAMES = {
 -- @param expansionID number
 -- @return string
 function TrackerCore.GetExpansionName(expansionID)
+	if expansionID == nil then
+		return "Unknown"
+	end
 	return EXPANSION_NAMES[expansionID] or ("Expansion " .. tostring(expansionID))
 end
 

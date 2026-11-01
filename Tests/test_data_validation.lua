@@ -61,6 +61,7 @@ describe("Weekly season data validation", function()
 
 	it("resolves registered data at every recommended-season build boundary", function()
 		local boundaries = {
+			{ build = 16001, expansion = 1, season = 1 },
 			{ build = 119999, expansion = 11, season = 3 },
 			{ build = 120000, expansion = 11, season = 3 },
 			{ build = 120001, expansion = 12, season = 1 },

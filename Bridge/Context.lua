@@ -124,7 +124,8 @@ end
 ---@param includeDetails boolean|nil Load run history and raid lockouts for tooltips
 ---@return VaultContext
 function Context:BuildVaultContext(categoryID, includeDetails)
-	local activities = C_WeeklyRewards.GetActivities(categoryID) or {}
+	-- Forever has no Great Vault; a missing API simply means no activities.
+	local activities = C_WeeklyRewards and C_WeeklyRewards.GetActivities(categoryID) or {}
 
 	-- Sort by index for consistent ordering
 	table.sort(activities, function(a, b)
@@ -139,7 +140,7 @@ function Context:BuildVaultContext(categoryID, includeDetails)
 	}
 
 	-- Get M+ run history for dungeons
-	if includeDetails and categoryID == 1 then
+	if includeDetails and categoryID == 1 and C_MythicPlus and C_ChallengeMode then
 		local runs = C_MythicPlus.GetRunHistory(false, false)
 		if runs then
 			-- Add map names
